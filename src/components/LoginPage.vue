@@ -1,10 +1,16 @@
 <script lang="ts">
 export default {
   name: 'LoginPage',
+  emits: ['goToRegister'],
   data() {
     return {
       username: '',
       password: ''
+    }
+  },
+  methods: {
+    goToRegister() {
+      this.$emit('goToRegister')
     }
   }
 }
@@ -14,9 +20,9 @@ export default {
   <div class="login-container">
     <!-- GitHub Logo -->
     <div class="logo">
-      <svg height="48" aria-hidden="true" viewBox="0 0 16 16" version="1.1" width="48" data-view-component="true">
-        <path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
-      </svg>
+      <a href="#" class="github-logo">
+        <img src="/logo.png" height="48" width="48" alt="Logo" />
+      </a>
     </div>
 
     <h1 class="title">Sign in to GitHub</h1>
@@ -54,7 +60,7 @@ export default {
     <!-- Create Account -->
     <div class="create-account-box">
       <span>New to GitHub?</span>
-      <a href="#">Create an account</a>
+      <a href="#" @click.prevent="goToRegister">Create an account</a>
     </div>
 
     <!-- Footer -->
@@ -76,21 +82,26 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #0d1117;
+  background-color: #ffffff;
   padding: 24px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
 }
 
 .logo {
-  color: #f0f6fc;
+  color: #1f2328;
   margin-bottom: 24px;
+}
+
+.github-logo {
+  color: #1f2328;
+  text-decoration: none;
 }
 
 .title {
   font-size: 24px;
   font-weight: 300;
   letter-spacing: -0.5px;
-  color: #f0f6fc;
+  color: #1f2328;
   margin: 0 0 16px 0;
   text-align: center;
 }
@@ -98,8 +109,8 @@ export default {
 .login-box {
   width: 100%;
   max-width: 308px;
-  background-color: #161b22;
-  border: 1px solid #30363d;
+  background-color: #ffffff;
+  border: 1px solid #d0d7de;
   border-radius: 6px;
   padding: 16px;
   margin-top: 16px;
@@ -117,8 +128,9 @@ label {
   display: block;
   font-size: 14px;
   font-weight: 400;
-  color: #f0f6fc;
+  color: #1f2328;
   margin-bottom: 8px;
+  text-align: left;
 }
 
 .label-row {
@@ -129,7 +141,7 @@ label {
 
 .forgot-link {
   font-size: 12px;
-  color: #2f81f7;
+  color: #0969da;
   text-decoration: none;
 }
 
@@ -139,12 +151,12 @@ label {
 
 input {
   width: 100%;
-  padding: 5px 12px;
+  padding: 6px 12px;
   font-size: 14px;
   line-height: 20px;
-  color: #f0f6fc;
-  background-color: #0d1117;
-  border: 1px solid #30363d;
+  color: #1f2328;
+  background-color: #ffffff;
+  border: 1px solid #d0d7de;
   border-radius: 6px;
   outline: none;
   box-sizing: border-box;
@@ -152,27 +164,27 @@ input {
 }
 
 input:focus {
-  border-color: #2f81f7;
-  box-shadow: inset 0 0 0 1px #2f81f7;
+  border-color: #0969da;
+  box-shadow: inset 0 0 0 1px #0969da;
 }
 
 .sign-in-btn {
   width: 100%;
   margin-top: 16px;
-  padding: 5px 16px;
+  padding: 6px 16px;
   font-size: 14px;
   font-weight: 500;
   line-height: 20px;
   color: #ffffff;
-  background-color: #238636;
-  border: 1px solid rgba(240, 246, 252, 0.1);
+  background-color: #2da44e;
+  border: 1px solid rgba(27, 31, 36, 0.15);
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .sign-in-btn:hover {
-  background-color: #2ea043;
+  background-color: #2c974b;
 }
 
 .create-account-box {
@@ -180,15 +192,15 @@ input:focus {
   max-width: 308px;
   margin-top: 16px;
   padding: 16px;
-  border: 1px solid #30363d;
+  border: 1px solid #d0d7de;
   border-radius: 6px;
   text-align: center;
   font-size: 14px;
-  color: #f0f6fc;
+  color: #1f2328;
 }
 
 .create-account-box a {
-  color: #2f81f7;
+  color: #0969da;
   text-decoration: none;
   margin-left: 4px;
 }
@@ -207,12 +219,12 @@ input:focus {
 }
 
 .footer a {
-  color: #8b949e;
+  color: #656d76;
   text-decoration: none;
 }
 
 .footer a:hover {
-  color: #2f81f7;
+  color: #0969da;
   text-decoration: underline;
 }
 </style>
