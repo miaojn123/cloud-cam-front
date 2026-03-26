@@ -1,7 +1,6 @@
 <script lang="ts">
 export default {
   name: 'LoginPage',
-  emits: ['goToRegister'],
   data() {
     return {
       username: '',
@@ -10,7 +9,7 @@ export default {
   },
   methods: {
     goToRegister() {
-      this.$emit('goToRegister')
+      this.$router.push('/register')
     }
   }
 }
@@ -18,49 +17,51 @@ export default {
 
 <template>
   <div class="login-container">
-    <!-- GitHub Logo -->
-    <div class="logo">
-      <a href="#" class="github-logo">
-        <img src="/logo.png" height="48" width="48" alt="Logo" />
-      </a>
-    </div>
+    <div class="login-main">
+      <!-- qjcam Logo -->
+      <div class="logo">
+        <a href="#" class="qjcam-logo">
+          <img src="/logo.ico" height="48" width="48" alt="Logo" />
+        </a>
+      </div>
 
-    <h1 class="title">Sign in to GitHub</h1>
+      <h1 class="title">Sign in to QJCAM</h1>
 
-    <!-- Login Form -->
-    <div class="login-box">
-      <form @submit.prevent>
-        <div class="form-group">
-          <label for="username">Username or email address</label>
-          <input 
-            id="username" 
-            type="text" 
-            v-model="username"
-            autocomplete="username"
-          />
-        </div>
-
-        <div class="form-group">
-          <div class="label-row">
-            <label for="password">Password</label>
-            <a href="#" class="forgot-link">Forgot password?</a>
+      <!-- Login Form -->
+      <div class="login-box">
+        <form @submit.prevent>
+          <div class="form-group">
+            <label for="username">Username or email address</label>
+            <input 
+              id="username" 
+              type="text" 
+              v-model="username"
+              autocomplete="username"
+            />
           </div>
-          <input 
-            id="password" 
-            type="password" 
-            v-model="password"
-            autocomplete="current-password"
-          />
-        </div>
 
-        <button type="submit" class="sign-in-btn">Sign in</button>
-      </form>
-    </div>
+          <div class="form-group">
+            <div class="label-row">
+              <label for="password">Password</label>
+              <a href="#" class="forgot-link">Forgot password?</a>
+            </div>
+            <input 
+              id="password" 
+              type="password" 
+              v-model="password"
+              autocomplete="current-password"
+            />
+          </div>
 
-    <!-- Create Account -->
-    <div class="create-account-box">
-      <span>New to GitHub?</span>
-      <a href="#" @click.prevent="goToRegister">Create an account</a>
+          <button type="submit" class="sign-in-btn">Sign in</button>
+        </form>
+      </div>
+
+      <!-- Create Account -->
+      <div class="create-account-box">
+        <span>New to qjcam?</span>
+        <a href="#" @click.prevent="goToRegister">Create an account</a>
+      </div>
     </div>
 
     <!-- Footer -->
@@ -77,7 +78,7 @@ export default {
 
 <style scoped>
 .login-container {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -85,6 +86,16 @@ export default {
   background-color: #ffffff;
   padding: 24px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
+
+.login-main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
 }
 
 .logo {
@@ -92,7 +103,7 @@ export default {
   margin-bottom: 24px;
 }
 
-.github-logo {
+.qjcam-logo {
   color: #1f2328;
   text-decoration: none;
 }
@@ -210,7 +221,7 @@ input:focus {
 }
 
 .footer {
-  margin-top: 40px;
+  padding-top: 24px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;

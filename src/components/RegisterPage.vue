@@ -1,7 +1,6 @@
 <script lang="ts">
 export default {
   name: 'RegisterPage',
-  emits: ['goToLogin'],
   data() {
     return {
       email: '',
@@ -12,7 +11,7 @@ export default {
   },
   methods: {
     goToLogin() {
-      this.$emit('goToLogin')
+      this.$router.push('/login')
     }
   }
 }
@@ -20,15 +19,16 @@ export default {
 
 <template>
   <div class="signup-container">
-    <!-- Header Logo -->
-    <div class="header">
-      <a href="#" class="github-logo">
-        <img src="/logo.png" height="32" width="32" alt="Logo" />
-      </a>
-    </div>
+    <div class="signup-main">
+      <!-- Header Logo -->
+      <div class="header">
+        <a href="#" class="qjcam-logo">
+          <img src="/logo.ico" height="32" width="32" alt="Logo" />
+        </a>
+      </div>
 
-    <!-- Signup Form -->
-    <div class="signup-content">
+      <!-- Signup Form -->
+      <div class="signup-content">
       <h1 class="title">Create your account</h1>
 
       <form @submit.prevent class="signup-form">
@@ -96,28 +96,43 @@ export default {
       <div class="signin-link">
         Already have an account？ <a href="#" @click.prevent="goToLogin">Sign in </a>
       </div>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .signup-container {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   background-color: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
+
+.signup-main {
+  width: 100%;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Header */
 .header {
-  padding: 32px 32px 0;
+  padding: 0 0 16px;
 }
 
-.github-logo {
+.qjcam-logo {
   color: #1f2328;
   text-decoration: none;
 }
 
-.github-logo:hover {
+.qjcam-logo:hover {
   color: #656d76;
 }
 
@@ -125,7 +140,7 @@ export default {
 .signup-content {
   max-width: 340px;
   margin: 0 auto;
-  padding: 32px 16px;
+  padding: 0 16px;
 }
 
 .title {
