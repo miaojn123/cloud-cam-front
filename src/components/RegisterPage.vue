@@ -14,9 +14,6 @@ export default {
     }
   },
   methods: {
-    goToLogin() {
-      this.$emit('goToLogin')
-    },
     sendEmailCode() {
       if (!this.email) {
         alert('请先输入邮箱地址')
@@ -31,6 +28,9 @@ export default {
           clearInterval(timer)
         }
       }, 1000)
+    },
+    goToLogin() {
+      this.$emit('goToLogin')
     }
   }
 }

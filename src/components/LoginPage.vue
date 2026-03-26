@@ -1,6 +1,7 @@
 <script lang="ts">
 export default {
   name: 'LoginPage',
+  emits: ['goToRegister'],
   data() {
     return {
       username: '',
@@ -11,9 +12,6 @@ export default {
     }
   },
   methods: {
-    goToRegister() {
-      this.$emit('goToRegister')
-    },
     switchToCodeMode() {
       this.isCodeMode = true
     },
@@ -30,6 +28,9 @@ export default {
           clearInterval(timer)
         }
       }, 1000)
+    },
+    goToRegister() {
+      this.$emit('goToRegister')
     }
   }
 }

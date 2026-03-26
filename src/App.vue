@@ -1,16 +1,26 @@
-<script setup lang="ts">
-import { ref } from 'vue'
+<script lang="ts">
 import RegisterPage from './components/RegisterPage.vue'
 import LoginPage from './components/LoginPage.vue'
 
-const currentPage = ref<'register' | 'login'>('register')
-
-const goToLogin = () => {
-  currentPage.value = 'login'
-}
-
-const goToRegister = () => {
-  currentPage.value = 'register'
+export default {
+  name: 'App',
+  components: {
+    RegisterPage,
+    LoginPage
+  },
+  data() {
+    return {
+      currentPage: 'register' as 'register' | 'login'
+    }
+  },
+  methods: {
+    goToLogin() {
+      this.currentPage = 'login'
+    },
+    goToRegister() {
+      this.currentPage = 'register'
+    }
+  }
 }
 </script>
 
