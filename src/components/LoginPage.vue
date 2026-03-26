@@ -4,12 +4,32 @@ export default {
   data() {
     return {
       username: '',
-      password: ''
+      password: '',
+      code: '',
+      isCodeMode: false,
+      countdown: 0
     }
   },
   methods: {
     goToRegister() {
-      this.$router.push('/register')
+      this.$emit('goToRegister')
+    },
+    switchToCodeMode() {
+      this.isCodeMode = true
+    },
+    switchToPasswordMode() {
+      this.isCodeMode = false
+    },
+    sendCode() {
+      // TODO: 实现发送验证码逻辑
+      console.log('发送验证码到:', this.username)
+      this.countdown = 60
+      const timer = setInterval(() => {
+        this.countdown--
+        if (this.countdown <= 0) {
+          clearInterval(timer)
+        }
+      }, 1000)
     }
   }
 }
@@ -29,49 +49,103 @@ export default {
 
       <!-- Login Form -->
       <div class="login-box">
-        <form @submit.prevent>
-          <div class="form-group">
-            <label for="username">Username or email address</label>
-            <input 
-              id="username" 
-              type="text" 
+        <el-form @submit.prevent>
+          <el-form-item class="form-item-no-margin">
+            <template #label>
+              <label class="custom-label">Username or email address</label>
+            </template>
+            <el-input
               v-model="username"
               autocomplete="username"
+              class="custom-input"
             />
-          </div>
+          </el-form-item>
 
-          <div class="form-group">
-            <div class="label-row">
-              <label for="password">Password</label>
-              <a href="#" class="forgot-link">Forgot password?</a>
-            </div>
-            <input 
-              id="password" 
-              type="password" 
+          <el-form-item v-if="!isCodeMode" class="form-item-no-margin">
+            <template #label>
+              <div class="label-row">
+                <label class="custom-label">Password</label>
+                <div class="label-links">
+                  <el-link
+                    type="primary"
+                    :underline="false"
+                    class="forgot-link"
+                    @click="switchToCodeMode"
+                  >
+                    使用验证码登录
+                  </el-link>
+                  <el-link type="primary" :underline="false" class="forgot-link">
+                    Forgot password?
+                  </el-link>
+                </div>
+              </div>
+            </template>
+            <el-input
               v-model="password"
+              type="password"
               autocomplete="current-password"
+              show-password
+              class="custom-input"
             />
-          </div>
+          </el-form-item>
 
-          <button type="submit" class="sign-in-btn">Sign in</button>
-        </form>
+          <el-form-item v-else class="form-item-no-margin">
+            <template #label>
+              <div class="label-row">
+                <label class="custom-label">Verification Code</label>
+                <el-link
+                  type="primary"
+                  :underline="false"
+                  class="forgot-link"
+                  @click="switchToPasswordMode"
+                >
+                  使用密码登录
+                </el-link>
+              </div>
+            </template>
+            <div class="code-input-wrapper">
+              <el-input
+                v-model="code"
+                placeholder="请输入验证码"
+                autocomplete="one-time-code"
+                class="custom-input code-input"
+              />
+              <el-button
+                type="primary"
+                class="send-code-btn"
+                :disabled="countdown > 0"
+                @click="sendCode"
+              >
+                {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+              </el-button>
+            </div>
+          </el-form-item>
+
+          <el-form-item class="form-item-no-margin submit-item">
+            <el-button type="primary" native-type="submit" class="sign-in-btn">
+              Sign in
+            </el-button>
+          </el-form-item>
+        </el-form>
       </div>
 
       <!-- Create Account -->
       <div class="create-account-box">
         <span>New to qjcam?</span>
-        <a href="#" @click.prevent="goToRegister">Create an account</a>
+        <el-link type="primary" :underline="false" @click="goToRegister">
+          Create an account
+        </el-link>
       </div>
     </div>
 
     <!-- Footer -->
     <footer class="footer">
-      <a href="#">Terms</a>
-      <a href="#">Privacy</a>
-      <a href="#">Docs</a>
-      <a href="#">Contact</a>
-      <a href="#">Manage cookies</a>
-      <a href="#">Do not share my personal information</a>
+      <el-link type="info" :underline="false">Terms</el-link>
+      <el-link type="info" :underline="false">Privacy</el-link>
+      <el-link type="info" :underline="false">Docs</el-link>
+      <el-link type="info" :underline="false">Contact</el-link>
+      <el-link type="info" :underline="false">Manage cookies</el-link>
+      <el-link type="info" :underline="false">Do not share my personal information</el-link>
     </footer>
   </div>
 </template>
@@ -86,6 +160,7 @@ export default {
   background-color: #ffffff;
   padding: 24px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  font-size: 14px;
   overflow: hidden;
 }
 
@@ -127,75 +202,213 @@ export default {
   margin-top: 16px;
 }
 
-.form-group {
-  margin-bottom: 16px;
+.form-item-no-margin {
+  margin-bottom: 16px !important;
 }
 
-.form-group:last-of-type {
+.form-item-no-margin:last-of-type {
+  margin-bottom: 0 !important;
+}
+
+.submit-item {
+  margin-bottom: 0 !important;
+  margin-top: 16px !important;
+}
+
+/* 覆盖 Element Plus Form 样式 */
+.login-box :deep(.el-form-item) {
   margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-label {
+.login-box :deep(.el-form-item__label) {
+  padding: 0 !important;
+  line-height: normal !important;
+  width: 100% !important;
+  text-align: left !important;
+  justify-content: flex-start !important;
+  margin-bottom: 8px !important;
+}
+
+.login-box :deep(.el-form-item__content) {
+  width: 100%;
+  margin-left: 0 !important;
+}
+
+.custom-label {
   display: block;
-  font-size: 14px;
-  font-weight: 400;
-  color: #1f2328;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #1f2328 !important;
   margin-bottom: 8px;
   text-align: left;
+  line-height: 1.5 !important;
 }
 
 .label-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.forgot-link {
-  font-size: 12px;
-  color: #0969da;
-  text-decoration: none;
-}
-
-.forgot-link:hover {
-  text-decoration: underline;
-}
-
-input {
   width: 100%;
-  padding: 6px 12px;
-  font-size: 14px;
-  line-height: 20px;
-  color: #1f2328;
-  background-color: #ffffff;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-input:focus {
-  border-color: #0969da;
-  box-shadow: inset 0 0 0 1px #0969da;
+.label-links {
+  display: flex;
+  gap: 12px;
+}
+
+/* 覆盖 Element Plus Link 样式 */
+.forgot-link {
+  font-size: 12px !important;
+}
+
+.forgot-link :deep(.el-link__inner) {
+  color: #0969da !important;
+}
+
+.forgot-link:hover :deep(.el-link__inner) {
+  text-decoration: underline !important;
+}
+
+/* 覆盖 Element Plus Input 样式 */
+.login-box :deep(.el-input) {
+  --el-input-border: #d0d7de;
+  --el-input-border-color: #d0d7de;
+  --el-input-bg-color: #ffffff;
+  --el-input-text-color: #1f2328;
+  --el-input-placeholder-color: #6e7781;
+  --el-input-hover-border: #d0d7de;
+  --el-input-focus-border: #0969da;
+}
+
+.login-box :deep(.el-input__wrapper) {
+  width: 100%;
+  padding: 1px 12px !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  background-color: #ffffff !important;
+  border: 1px solid #d0d7de !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+
+.login-box :deep(.el-input__wrapper:hover) {
+  border-color: #d0d7de !important;
+  box-shadow: none !important;
+}
+
+.login-box :deep(.el-input__wrapper.is-focus) {
+  border-color: #0969da !important;
+  box-shadow: inset 0 0 0 1px #0969da !important;
+}
+
+.login-box :deep(.el-input__inner) {
+  height: 32px !important;
+  line-height: 32px !important;
+  color: #1f2328 !important;
+  font-size: 14px !important;
+}
+
+.login-box :deep(.el-input__inner::placeholder) {
+  color: #6e7781 !important;
+}
+
+/* 密码输入框的图标 */
+.login-box :deep(.el-input__suffix) {
+  height: 32px;
+}
+
+.login-box :deep(.el-input__suffix-inner) {
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.login-box :deep(.el-input__icon) {
+  height: 32px;
+  line-height: 32px;
+}
+
+.code-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.code-input {
+  width: 100%;
+}
+
+.code-input :deep(.el-input__wrapper) {
+  padding-right: 100px !important;
+}
+
+/* 覆盖 Element Plus Button 样式 */
+.send-code-btn {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 20px !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  --el-button-bg-color: #0969da !important;
+  --el-button-border-color: #0969da !important;
+  --el-button-text-color: #ffffff !important;
+  --el-button-hover-bg-color: #0866c8 !important;
+  --el-button-hover-border-color: #0866c8 !important;
+  --el-button-disabled-bg-color: #8b949e !important;
+  --el-button-disabled-border-color: #8b949e !important;
+  --el-button-disabled-text-color: #ffffff !important;
+  background-color: #0969da !important;
+  border-color: #0969da !important;
+  border-radius: 4px !important;
+  cursor: pointer;
+  transition: all 0.2s !important;
+  white-space: nowrap;
+}
+
+.send-code-btn:hover:not(:disabled) {
+  background-color: #0866c8 !important;
+  border-color: #0866c8 !important;
+}
+
+.send-code-btn:disabled {
+  background-color: #8b949e !important;
+  border-color: #8b949e !important;
+  cursor: not-allowed;
 }
 
 .sign-in-btn {
   width: 100%;
-  margin-top: 16px;
-  padding: 6px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 20px;
-  color: #ffffff;
-  background-color: #2da44e;
-  border: 1px solid rgba(27, 31, 36, 0.15);
-  border-radius: 6px;
+  padding: 6px 16px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 20px !important;
+  height: 32px !important;
+  --el-button-bg-color: #2da44e !important;
+  --el-button-border-color: rgba(27, 31, 36, 0.15) !important;
+  --el-button-text-color: #ffffff !important;
+  --el-button-hover-bg-color: #2c974b !important;
+  --el-button-hover-border-color: rgba(27, 31, 36, 0.15) !important;
+  background-color: #2da44e !important;
+  border-color: rgba(27, 31, 36, 0.15) !important;
+  border-radius: 6px !important;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s !important;
 }
 
 .sign-in-btn:hover {
-  background-color: #2c974b;
+  background-color: #2c974b !important;
+  border-color: rgba(27, 31, 36, 0.15) !important;
 }
 
 .create-account-box {
@@ -210,14 +423,16 @@ input:focus {
   color: #1f2328;
 }
 
-.create-account-box a {
-  color: #0969da;
-  text-decoration: none;
+.create-account-box :deep(.el-link) {
   margin-left: 4px;
 }
 
-.create-account-box a:hover {
-  text-decoration: underline;
+.create-account-box :deep(.el-link__inner) {
+  color: #0969da !important;
+}
+
+.create-account-box :deep(.el-link:hover .el-link__inner) {
+  text-decoration: underline !important;
 }
 
 .footer {
@@ -229,13 +444,13 @@ input:focus {
   font-size: 12px;
 }
 
-.footer a {
-  color: #656d76;
-  text-decoration: none;
+.footer :deep(.el-link__inner) {
+  color: #656d76 !important;
+  font-size: 12px !important;
 }
 
-.footer a:hover {
-  color: #0969da;
-  text-decoration: underline;
+.footer :deep(.el-link:hover .el-link__inner) {
+  color: #0969da !important;
+  text-decoration: underline !important;
 }
 </style>
