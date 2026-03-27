@@ -4,11 +4,12 @@ import RegisterPage from '@/components/RegisterPage.vue'
 import ResetPassword from '@/components/ResetPassword.vue'
 import FilePage from '@/components/FilePage.vue'
 import { TOKEN_KEY } from '@/api'
+import { isDesktopEmbed } from '@/utils/desktopBridge'
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', redirect: '/login' },
+    { path: '/', redirect: (to) => ({ path: '/login', query: to.query }) },
     { path: '/login', name: 'login', component: LoginPage },
     { path: '/register', name: 'register', component: RegisterPage },
     { path: '/reset-password', name: 'reset-password', component: ResetPassword },
@@ -21,7 +22,8 @@ router.beforeEach((to) => {
   if (to.meta.requiresAuth && !token) {
     return '/login'
   }
-  if (to.path === '/login' && token) {
+  // 桌面嵌入登录页由 Qt 接管后续流程，避免这里自动跳到 /files。
+  if (to.path === '/login' && token && !isDesktopEmbed(to.query)) {
     return '/files'
   }
   return true

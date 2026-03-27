@@ -1,6 +1,7 @@
 <script lang="ts">
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores'
+import { preserveDesktopClientQuery } from '@/utils/desktopBridge'
 
 export default {
   name: 'RegisterPage',
@@ -44,13 +45,15 @@ export default {
         const userStore = useUserStore()
         await userStore.registerByCode(this.email, this.emailCode, this.password, this.username)
         ElMessage.success('注册成功，请登录')
-        this.$router.push('/login')
+        const q = preserveDesktopClientQuery(this.$route.query)
+        this.$router.push(Object.keys(q).length ? { path: '/login', query: q } : '/login')
       } catch {
         ElMessage.error('注册失败')
       }
     },
     goToLogin() {
-      this.$router.push('/login')
+      const q = preserveDesktopClientQuery(this.$route.query)
+      this.$router.push(Object.keys(q).length ? { path: '/login', query: q } : '/login')
     }
   }
 }
@@ -61,7 +64,7 @@ export default {
     <div class="signup-main">
       <!-- Header Logo -->
       <div class="header">
-        <a href="#" class="qjcam-logo">
+        <a href="#" class="app-logo">
           <img src="/logo.ico" height="32" width="32" alt="Logo" />
         </a>
       </div>
@@ -201,12 +204,12 @@ export default {
   padding: 0 0 16px;
 }
 
-.qjcam-logo {
+.app-logo {
   color: #1f2328;
   text-decoration: none;
 }
 
-.qjcam-logo:hover {
+.app-logo:hover {
   color: #656d76;
 }
 

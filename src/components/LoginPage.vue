@@ -1,6 +1,11 @@
 <script lang="ts">
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores'
+import {
+  isDesktopEmbed,
+  notifyDesktopLoginSuccess,
+  preserveDesktopClientQuery
+} from '@/utils/desktopBridge'
 
 export default {
   name: 'LoginPage',
@@ -59,6 +64,23 @@ export default {
         }
         await userStore.fetchCurrentUser()
         ElMessage.success('登录成功')
+        if (isDesktopEmbed(this.$route.query)) {
+          // 桌面嵌入模式下由 Qt 接管后续流程，这里只回传登录信息，不做前端路由跳转。
+          const handedToQt = notifyDesktopLoginSuccess({
+            token: userStore.token,
+            user: {
+              uuid: userStore.currentUser?.uuid || '',
+              userName: userStore.currentUser?.userName || '',
+              nickName: userStore.currentUser?.nickName || '',
+              email: userStore.currentUser?.email || '',
+              phone: userStore.currentUser?.phone || '',
+              sex: userStore.currentUser?.sex ?? 0,
+              avatar: userStore.currentUser?.avatar || '',
+              role: userStore.currentUser?.role ?? 0
+            }
+          })
+          if (handedToQt) return
+        }
         this.$router.push('/files')
       } catch (error) {
         const message = error instanceof Error ? error.message : '登录失败'
@@ -66,10 +88,12 @@ export default {
       }
     },
     goToRegister() {
-      this.$router.push('/register')
+      const q = preserveDesktopClientQuery(this.$route.query)
+      this.$router.push(Object.keys(q).length ? { path: '/register', query: q } : '/register')
     },
     goToReset() {
-      this.$router.push('/reset-password')
+      const q = preserveDesktopClientQuery(this.$route.query)
+      this.$router.push(Object.keys(q).length ? { path: '/reset-password', query: q } : '/reset-password')
     }
   }
 }
@@ -78,9 +102,9 @@ export default {
 <template>
   <div class="login-container">
     <div class="login-main">
-      <!-- qjcam Logo -->
+      <!-- App Logo -->
       <div class="logo">
-        <a href="#" class="qjcam-logo">
+        <a href="#" class="app-logo">
           <img src="/logo.ico" height="48" width="48" alt="Logo" />
         </a>
       </div>
@@ -235,7 +259,7 @@ export default {
   margin-bottom: 24px;
 }
 
-.qjcam-logo {
+.app-logo {
   color: #1f2328;
   text-decoration: none;
 }

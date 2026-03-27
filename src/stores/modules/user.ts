@@ -9,6 +9,43 @@ import {
 } from '@/api/auth'
 import { getCurrentUserApi, type CurrentUser } from '@/api/user'
 
+// 缓存当前用户“展示所需”的最小字段（供桌面端/启动探测使用）
+// 说明：桌面端启动探测应尽量不依赖网络请求（CEF 环境下 fetch/代理可能不稳定）。
+const CURRENT_USER_CACHE_KEY = 'current_user_cache' as const
+
+type CurrentUserCache = {
+  uuid: string
+  nickName: string
+  userName: string
+  email: string
+  phone: string
+  sex: number
+  avatar: string
+  role: number
+}
+
+function setCurrentUserCache(user: CurrentUser | null) {
+  if (!user) {
+    localStorage.removeItem(CURRENT_USER_CACHE_KEY)
+    return
+  }
+  const cache: CurrentUserCache = {
+    uuid: user.uuid || '',
+    nickName: user.nickName || '',
+    userName: user.userName || '',
+    email: user.email || '',
+    phone: user.phone || '',
+    sex: typeof user.sex === 'number' ? user.sex : 0,
+    avatar: user.avatar || '',
+    role: typeof user.role === 'number' ? user.role : 0
+  }
+  localStorage.setItem(CURRENT_USER_CACHE_KEY, JSON.stringify(cache))
+}
+
+function clearCurrentUserCache() {
+  localStorage.removeItem(CURRENT_USER_CACHE_KEY)
+}
+
 interface UserState {
   loading: boolean
   token: string
@@ -37,10 +74,16 @@ export const useUserStore = defineStore('user', {
       this.token = token
       localStorage.setItem(TOKEN_KEY, token)
     },
+    /** Qt 主窗在 Vue 已挂载后注入 token 时可调用（与仅写 localStorage 后刷新二选一） */
+    async applyExternalToken(token: string) {
+      this.setToken(token)
+      return this.fetchCurrentUser()
+    },
     clearAuth() {
       this.token = ''
       this.currentUser = null
       localStorage.removeItem(TOKEN_KEY)
+      clearCurrentUserCache()
     },
     async sendLoginCode(account: string) {
       return sendCodeApi(account, 'LOGIN')
@@ -72,6 +115,8 @@ export const useUserStore = defineStore('user', {
     async fetchCurrentUser() {
       const result = await getCurrentUserApi()
       this.currentUser = result.data?.user || null
+      // 仅缓存展示字段，降低耦合与敏感数据落盘风险
+      setCurrentUserCache(this.currentUser)
       return this.currentUser
     },
     async logout() {
