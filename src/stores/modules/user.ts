@@ -91,6 +91,11 @@ export const useUserStore = defineStore('user', {
     async sendRegisterCode(account: string) {
       return sendCodeApi(account, 'REGISTER')
     },
+    async sendResetCode(account: string) {
+      // 占位：重置密码验证码场景需与后端约定 scene 字符串
+      // 后端若暂未区分场景，也可先沿用 send-code 接口统一发送
+      return sendCodeApi(account, 'RESET_PASSWORD')
+    },
     async loginByPassword(account: string, password: string) {
       const result = await loginByPasswordApi(account, password)
       const token = result.data?.token || ''

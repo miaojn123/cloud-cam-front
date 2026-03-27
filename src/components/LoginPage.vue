@@ -16,7 +16,19 @@ export default {
       password: '',
       code: '',
       isCodeMode: false,
-      countdown: 0
+      countdown: 0,
+      passwordTouched: false,
+      emailTouched: false
+    }
+  },
+  computed: {
+    passwordValid() {
+      if (!this.password) return true
+      return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$/.test(this.password)
+    },
+    emailValid() {
+      if (!this.email) return true
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
     }
   },
   methods: {
@@ -94,6 +106,12 @@ export default {
     goToReset() {
       const q = preserveDesktopClientQuery(this.$route.query)
       this.$router.push(Object.keys(q).length ? { path: '/reset-password', query: q } : '/reset-password')
+    },
+    onPasswordBlur() {
+      this.passwordTouched = true
+    },
+    onEmailBlur() {
+      this.emailTouched = true
     }
   }
 }
@@ -138,7 +156,11 @@ export default {
               type="email"
               autocomplete="email"
               class="custom-input"
+              @blur="onEmailBlur"
             />
+            <div v-if="emailTouched && !emailValid" class="password-hint password-hint-error">
+              请输入正确邮箱
+            </div>
           </el-form-item>
 
           <el-form-item v-if="!isCodeMode" class="form-item-no-margin">
@@ -167,7 +189,11 @@ export default {
               autocomplete="current-password"
               show-password
               class="custom-input"
+              @blur="onPasswordBlur"
             />
+            <div class="password-hint" :class="{ 'password-hint-error': passwordTouched && !passwordValid }">
+              8-20位字符，且至少包含一个数字和一个字母
+            </div>
           </el-form-item>
 
           <el-form-item v-else class="form-item-no-margin">
@@ -218,16 +244,6 @@ export default {
         </el-link>
       </div>
     </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <el-link type="info" underline="never">服务条款</el-link>
-      <el-link type="info" underline="never">隐私政策</el-link>
-      <el-link type="info" underline="never">文档</el-link>
-      <el-link type="info" underline="never">联系我们</el-link>
-      <el-link type="info" underline="never">管理 Cookie</el-link>
-      <el-link type="info" underline="never">不要分享我的个人信息</el-link>
-    </footer>
   </div>
 </template>
 
@@ -365,13 +381,15 @@ export default {
 
 .login-box :deep(.el-input__wrapper) {
   width: 100%;
-  padding: 1px 12px !important;
+  padding: 0 12px !important;
+  height: 32px !important;
   font-size: 14px !important;
-  line-height: 20px !important;
   background-color: #ffffff !important;
   border: 1px solid #d0d7de !important;
   border-radius: 6px !important;
   box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
   box-sizing: border-box;
   transition: border-color 0.2s, box-shadow 0.2s !important;
 }
@@ -387,8 +405,8 @@ export default {
 }
 
 .login-box :deep(.el-input__inner) {
-  height: 32px !important;
-  line-height: 32px !important;
+  height: auto !important;
+  line-height: 20px !important;
   color: #1f2328 !important;
   font-size: 14px !important;
 }
@@ -426,6 +444,17 @@ export default {
 
 .code-input :deep(.el-input__wrapper) {
   padding-right: 100px !important;
+}
+
+.password-hint {
+  font-size: 12px;
+  color: #8b949e;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.password-hint-error {
+  color: #cf222e;
 }
 
 /* 覆盖 Element Plus Button 样式 */
