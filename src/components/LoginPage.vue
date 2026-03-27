@@ -220,16 +220,6 @@ export default {
         </el-link>
       </div>
     </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <el-link type="info" underline="never">服务条款</el-link>
-      <el-link type="info" underline="never">隐私政策</el-link>
-      <el-link type="info" underline="never">文档</el-link>
-      <el-link type="info" underline="never">联系我们</el-link>
-      <el-link type="info" underline="never">管理 Cookie</el-link>
-      <el-link type="info" underline="never">不要分享我的个人信息</el-link>
-    </footer>
   </div>
 </template>
 
