@@ -1,10 +1,11 @@
 <script lang="ts">
 export default {
   name: 'LoginPage',
-  emits: ['goToRegister'],
+  emits: ['goToRegister', 'goToReset'],
   data() {
     return {
       username: '',
+      email: '',
       password: '',
       code: '',
       isCodeMode: false,
@@ -20,7 +21,7 @@ export default {
     },
     sendCode() {
       // TODO: 实现发送验证码逻辑
-      console.log('发送验证码到:', this.username)
+      console.log('发送验证码到:', this.email)
       this.countdown = 60
       const timer = setInterval(() => {
         this.countdown--
@@ -31,6 +32,9 @@ export default {
     },
     goToRegister() {
       this.$emit('goToRegister')
+    },
+    goToReset() {
+      this.$emit('goToReset')
     }
   }
 }
@@ -46,18 +50,34 @@ export default {
         </a>
       </div>
 
-      <h1 class="title">Sign in to QJCAM</h1>
+      <h1 class="title">登录 QJCAM</h1>
 
       <!-- Login Form -->
       <div class="login-box">
         <el-form @submit.prevent>
-          <el-form-item class="form-item-no-margin">
+          <!-- 密码模式：用户名或邮箱 -->
+          <el-form-item v-if="!isCodeMode" class="form-item-no-margin">
             <template #label>
-              <label class="custom-label">Username or email address</label>
+              <label class="custom-label">用户名或邮箱地址</label>
             </template>
             <el-input
               v-model="username"
+              placeholder="请输入用户名或邮箱"
               autocomplete="username"
+              class="custom-input"
+            />
+          </el-form-item>
+
+          <!-- 验证码模式：邮箱 -->
+          <el-form-item v-else class="form-item-no-margin">
+            <template #label>
+              <label class="custom-label">邮箱地址</label>
+            </template>
+            <el-input
+              v-model="email"
+              placeholder="请输入邮箱"
+              type="email"
+              autocomplete="email"
               class="custom-input"
             />
           </el-form-item>
@@ -65,7 +85,7 @@ export default {
           <el-form-item v-if="!isCodeMode" class="form-item-no-margin">
             <template #label>
               <div class="label-row">
-                <label class="custom-label">Password</label>
+                <label class="custom-label">密码</label>
                 <div class="label-links">
                   <el-link
                     type="primary"
@@ -75,8 +95,8 @@ export default {
                   >
                     使用验证码登录
                   </el-link>
-                  <el-link type="primary" :underline="false" class="forgot-link">
-                    Forgot password?
+                  <el-link type="primary" :underline="false" class="forgot-link" @click.stop.prevent="goToReset">
+                    忘记密码？
                   </el-link>
                 </div>
               </div>
@@ -84,6 +104,7 @@ export default {
             <el-input
               v-model="password"
               type="password"
+              placeholder="请输入密码"
               autocomplete="current-password"
               show-password
               class="custom-input"
@@ -93,7 +114,7 @@ export default {
           <el-form-item v-else class="form-item-no-margin">
             <template #label>
               <div class="label-row">
-                <label class="custom-label">Verification Code</label>
+                <label class="custom-label">验证码</label>
                 <el-link
                   type="primary"
                   :underline="false"
@@ -124,7 +145,7 @@ export default {
 
           <el-form-item class="form-item-no-margin submit-item">
             <el-button type="primary" native-type="submit" class="sign-in-btn">
-              Sign in
+              登录
             </el-button>
           </el-form-item>
         </el-form>
@@ -132,21 +153,21 @@ export default {
 
       <!-- Create Account -->
       <div class="create-account-box">
-        <span>New to qjcam?</span>
+        <span>还没有账户？</span>
         <el-link type="primary" :underline="false" @click="goToRegister">
-          Create an account
+          立即注册
         </el-link>
       </div>
     </div>
 
     <!-- Footer -->
     <footer class="footer">
-      <el-link type="info" :underline="false">Terms</el-link>
-      <el-link type="info" :underline="false">Privacy</el-link>
-      <el-link type="info" :underline="false">Docs</el-link>
-      <el-link type="info" :underline="false">Contact</el-link>
-      <el-link type="info" :underline="false">Manage cookies</el-link>
-      <el-link type="info" :underline="false">Do not share my personal information</el-link>
+      <el-link type="info" :underline="false">服务条款</el-link>
+      <el-link type="info" :underline="false">隐私政策</el-link>
+      <el-link type="info" :underline="false">文档</el-link>
+      <el-link type="info" :underline="false">联系我们</el-link>
+      <el-link type="info" :underline="false">管理 Cookie</el-link>
+      <el-link type="info" :underline="false">不要分享我的个人信息</el-link>
     </footer>
   </div>
 </template>
@@ -186,10 +207,9 @@ export default {
 
 .title {
   font-size: 24px;
-  font-weight: 300;
-  letter-spacing: -0.5px;
+  font-weight: 400;
   color: #1f2328;
-  margin: 0 0 16px 0;
+  margin: 0 0 24px 0;
   text-align: center;
 }
 
@@ -226,11 +246,11 @@ export default {
 
 .login-box :deep(.el-form-item__label) {
   padding: 0 !important;
-  line-height: normal !important;
+  line-height: 1.5 !important;
   width: 100% !important;
   text-align: left !important;
   justify-content: flex-start !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 0 !important;
 }
 
 .login-box :deep(.el-form-item__content) {
@@ -240,10 +260,10 @@ export default {
 
 .custom-label {
   display: block;
-  font-size: 14px !important;
+  font-size: 16px !important;
   font-weight: 400 !important;
   color: #1f2328 !important;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   text-align: left;
   line-height: 1.5 !important;
 }
@@ -416,20 +436,22 @@ export default {
   width: 100%;
   max-width: 308px;
   margin-top: 16px;
-  padding: 16px;
+  padding: 8px 16px;
   border: 1px solid #d0d7de;
   border-radius: 6px;
   text-align: center;
   font-size: 14px;
   color: #1f2328;
-}
-
-.create-account-box :deep(.el-link) {
-  margin-left: 4px;
+  background-color: #f6f8fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
 }
 
 .create-account-box :deep(.el-link__inner) {
   color: #0969da !important;
+  font-size: 14px !important;
 }
 
 .create-account-box :deep(.el-link:hover .el-link__inner) {

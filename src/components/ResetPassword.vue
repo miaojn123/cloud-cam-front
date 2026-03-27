@@ -1,32 +1,39 @@
 <script lang="ts">
 export default {
-  name: 'RegisterPage',
+  name: 'ResetPassword',
   emits: ['goToLogin'],
   data() {
     return {
+      step: 1 as 1 | 2,
       email: '',
+      code: '',
       password: '',
-      username: '',
-      emailCode: '',
-      receiveUpdates: false,
-      emailCountdown: 0
+      confirmPassword: '',
+      countdown: 0
     }
   },
   methods: {
-    sendEmailCode() {
+    sendCode() {
       if (!this.email) {
         alert('请先输入邮箱地址')
         return
       }
-      // TODO: 实现发送邮箱验证码逻辑
+      // TODO: 实现发送验证码逻辑
       console.log('发送验证码到:', this.email)
-      this.emailCountdown = 60
+      this.countdown = 60
       const timer = setInterval(() => {
-        this.emailCountdown--
-        if (this.emailCountdown <= 0) {
+        this.countdown--
+        if (this.countdown <= 0) {
           clearInterval(timer)
         }
       }, 1000)
+    },
+    nextStep() {
+      // TODO: 验证验证码是否正确
+      this.step = 2
+    },
+    prevStep() {
+      this.step = 1
     },
     goToLogin() {
       this.$emit('goToLogin')
@@ -36,8 +43,8 @@ export default {
 </script>
 
 <template>
-  <div class="signup-container">
-    <div class="signup-main">
+  <div class="reset-container">
+    <div class="reset-main">
       <!-- Header Logo -->
       <div class="header">
         <a href="#" class="qjcam-logo">
@@ -45,15 +52,16 @@ export default {
         </a>
       </div>
 
-      <!-- Signup Form -->
-      <div class="signup-content">
-        <h1 class="title">创建账户</h1>
+      <!-- Reset Form -->
+      <div class="reset-content">
+        <h1 class="title">重置密码</h1>
 
-        <el-form @submit.prevent class="signup-form">
+        <!-- Step 1: Email and Code -->
+        <el-form v-if="step === 1" @submit.prevent class="reset-form">
           <!-- Email -->
           <el-form-item class="form-item-custom">
             <template #label>
-              <label class="custom-label">邮箱地址</label>
+              <label class="custom-label">输入您的邮箱</label>
             </template>
             <el-input
               v-model="email"
@@ -64,14 +72,14 @@ export default {
             />
           </el-form-item>
 
-          <!-- Email Verification Code -->
+          <!-- Verification Code -->
           <el-form-item class="form-item-custom">
             <template #label>
               <label class="custom-label">邮箱验证码</label>
             </template>
             <div class="code-input-wrapper">
               <el-input
-                v-model="emailCode"
+                v-model="code"
                 placeholder="请输入验证码"
                 autocomplete="one-time-code"
                 class="custom-input code-input"
@@ -79,18 +87,28 @@ export default {
               <el-button
                 type="primary"
                 class="send-code-btn"
-                :disabled="emailCountdown > 0"
-                @click="sendEmailCode"
+                :disabled="countdown > 0"
+                @click="sendCode"
               >
-                {{ emailCountdown > 0 ? `${emailCountdown}s` : '获取验证码' }}
+                {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
               </el-button>
             </div>
           </el-form-item>
 
+          <!-- Next Step Button -->
+          <el-form-item class="form-item-custom submit-item">
+            <el-button type="primary" class="next-btn" @click="nextStep">
+              下一步
+            </el-button>
+          </el-form-item>
+        </el-form>
+
+        <!-- Step 2: Password -->
+        <el-form v-else class="reset-form">
           <!-- Password -->
           <el-form-item class="form-item-custom">
             <template #label>
-              <label class="custom-label">输入密码</label>
+              <label class="custom-label">输入新密码</label>
             </template>
             <div class="password-input-wrapper">
               <el-input
@@ -105,43 +123,30 @@ export default {
             </div>
           </el-form-item>
 
-          <!-- Username -->
+          <!-- Confirm Password -->
           <el-form-item class="form-item-custom">
             <template #label>
-              <label class="custom-label">输入用户名</label>
+              <label class="custom-label">确认新密码</label>
             </template>
             <el-input
-              v-model="username"
-              type="text"
-              placeholder="用户名"
-              autocomplete="username"
+              v-model="confirmPassword"
+              type="password"
+              placeholder="确认密码"
+              autocomplete="new-password"
+              show-password
               class="custom-input"
             />
           </el-form-item>
 
-          <!-- Receive Updates -->
-          <el-form-item class="form-item-custom checkbox-group">
-            <el-checkbox v-model="receiveUpdates" class="custom-checkbox">
-              <span class="checkbox-text">
-                通过邮件接收产品更新和公告。
-                <el-link type="primary" :underline="false" class="text-link">您可以随时取消订阅</el-link>。
-              </span>
-            </el-checkbox>
-          </el-form-item>
-
-          <!-- Submit Button -->
-          <el-form-item class="form-item-custom submit-item">
-            <el-button type="primary" native-type="submit" class="create-account-btn">
-              创建账户
+          <!-- Buttons -->
+          <el-form-item class="form-item-custom submit-item button-group">
+            <el-button class="prev-btn" @click="prevStep">
+              上一步
+            </el-button>
+            <el-button type="primary" native-type="submit" class="reset-btn">
+              重置密码
             </el-button>
           </el-form-item>
-
-          <!-- Terms Notice -->
-          <p class="terms-notice">
-            创建账户即表示您同意我们的
-            <el-link type="primary" :underline="false">服务条款</el-link> 和
-            <el-link type="primary" :underline="false">隐私政策</el-link>。
-          </p>
         </el-form>
 
         <!-- Sign In Link -->
@@ -154,7 +159,7 @@ export default {
 </template>
 
 <style scoped>
-.signup-container {
+.reset-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -166,7 +171,7 @@ export default {
   overflow: hidden;
 }
 
-.signup-main {
+.reset-main {
   width: 100%;
   flex: 1 1 auto;
   display: flex;
@@ -190,7 +195,7 @@ export default {
 }
 
 /* Content */
-.signup-content {
+.reset-content {
   max-width: 340px;
   margin: 0 auto;
   padding: 0 16px;
@@ -205,7 +210,7 @@ export default {
 }
 
 /* Form */
-.signup-form {
+.reset-form {
   border-radius: 6px;
 }
 
@@ -218,14 +223,14 @@ export default {
 }
 
 /* 覆盖 Element Plus Form 样式 */
-.signup-form :deep(.el-form-item) {
+.reset-form :deep(.el-form-item) {
   margin-bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
 
-.signup-form :deep(.el-form-item__label) {
+.reset-form :deep(.el-form-item__label) {
   padding: 0 !important;
   line-height: 1.5 !important;
   width: 100% !important;
@@ -234,7 +239,7 @@ export default {
   margin-bottom: 0 !important;
 }
 
-.signup-form :deep(.el-form-item__content) {
+.reset-form :deep(.el-form-item__content) {
   width: 100%;
   margin-left: 0 !important;
 }
@@ -250,7 +255,7 @@ export default {
 }
 
 /* 覆盖 Element Plus Input 样式 */
-.signup-form :deep(.el-input) {
+.reset-form :deep(.el-input) {
   --el-input-border: #d0d7de;
   --el-input-border-color: #d0d7de;
   --el-input-bg-color: #ffffff;
@@ -260,7 +265,7 @@ export default {
   --el-input-focus-border: #0969da;
 }
 
-.signup-form :deep(.el-input__wrapper) {
+.reset-form :deep(.el-input__wrapper) {
   width: 100%;
   padding: 1px 12px !important;
   font-size: 14px !important;
@@ -273,39 +278,39 @@ export default {
   transition: border-color 0.2s, box-shadow 0.2s !important;
 }
 
-.signup-form :deep(.el-input__wrapper:hover) {
+.reset-form :deep(.el-input__wrapper:hover) {
   border-color: #d0d7de !important;
   box-shadow: none !important;
 }
 
-.signup-form :deep(.el-input__wrapper.is-focus) {
+.reset-form :deep(.el-input__wrapper.is-focus) {
   border-color: #0969da !important;
   box-shadow: inset 0 0 0 1px #0969da !important;
 }
 
-.signup-form :deep(.el-input__inner) {
+.reset-form :deep(.el-input__inner) {
   height: 32px !important;
   line-height: 32px !important;
   color: #1f2328 !important;
   font-size: 14px !important;
 }
 
-.signup-form :deep(.el-input__inner::placeholder) {
+.reset-form :deep(.el-input__inner::placeholder) {
   color: #6e7781 !important;
 }
 
 /* 密码输入框的图标 */
-.signup-form :deep(.el-input__suffix) {
+.reset-form :deep(.el-input__suffix) {
   height: 32px;
 }
 
-.signup-form :deep(.el-input__suffix-inner) {
+.reset-form :deep(.el-input__suffix-inner) {
   height: 32px;
   display: flex;
   align-items: center;
 }
 
-.signup-form :deep(.el-input__icon) {
+.reset-form :deep(.el-input__icon) {
   height: 32px;
   line-height: 32px;
 }
@@ -390,72 +395,8 @@ export default {
   cursor: not-allowed;
 }
 
-/* Checkbox */
-.checkbox-group {
-  margin-top: 8px !important;
-  margin-bottom: 0 !important;
-}
-
-.custom-checkbox {
-  display: flex;
-  align-items: flex-start;
-}
-
-.signup-form :deep(.el-checkbox__label) {
-  display: inline-flex;
-  align-items: center;
-  font-size: 12px !important;
-  color: #656d76 !important;
-  line-height: 1.5 !important;
-  padding-left: 8px !important;
-}
-
-.signup-form :deep(.el-checkbox__inner) {
-  width: 16px !important;
-  height: 16px !important;
-  border: 1px solid #d0d7de !important;
-  border-radius: 3px !important;
-  background-color: #ffffff !important;
-}
-
-.signup-form :deep(.el-checkbox__inner::after) {
-  height: 8px !important;
-  left: 4.5px !important;
-  top: 1px !important;
-  width: 4px !important;
-  border: 1.5px solid #fff !important;
-  border-left: 0 !important;
-  border-top: 0 !important;
-  background: transparent !important;
-  transform: rotate(45deg) translate(1px, 0.5px) !important;
-}
-
-.signup-form :deep(.el-checkbox.is-checked .el-checkbox__inner) {
-  background-color: #0969da !important;
-  border-color: #0969da !important;
-}
-
-.signup-form :deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
-  color: #656d76 !important;
-}
-
-.checkbox-text {
-  font-size: 12px !important;
-  color: #656d76 !important;
-  line-height: 1.5 !important;
-}
-
-.text-link :deep(.el-link__inner) {
-  color: #0969da !important;
-  font-size: 12px !important;
-}
-
-.text-link:hover :deep(.el-link__inner) {
-  text-decoration: underline !important;
-}
-
 /* Button */
-.create-account-btn {
+.next-btn {
   width: 100%;
   padding: 6px 16px !important;
   font-size: 14px !important;
@@ -474,36 +415,58 @@ export default {
   transition: background-color 0.2s !important;
 }
 
-.create-account-btn:hover {
+.next-btn:hover {
   background-color: #2c974b !important;
   border-color: rgba(27, 31, 36, 0.15) !important;
 }
 
-/* Terms Notice */
-.terms-notice {
-  font-size: 12px;
-  color: #656d76;
-  text-align: center;
-  margin: 16px 0 0 0;
-  line-height: 1.5;
+.button-group {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 0;
+  gap: 12px;
 }
 
-.terms-notice :deep(.el-link) {
-  display: inline;
+.prev-btn {
+  flex: 1;
+  padding: 6px 16px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 20px !important;
+  height: 32px !important;
+  background-color: #f6f8fa !important;
+  border-color: #d0d7de !important;
+  color: #1f2328 !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  transition: background-color 0.2s !important;
 }
 
-.terms-notice :deep(.el-link__inner) {
-  color: #0969da !important;
-  font-size: 12px !important;
+.prev-btn:hover {
+  background-color: #f3f4f6 !important;
+  border-color: #d0d7de !important;
 }
 
-.terms-notice :deep(.el-link:hover .el-link__inner) {
-  text-decoration: underline !important;
+.reset-btn {
+  flex: 1;
+  padding: 6px 16px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 20px !important;
+  height: 32px !important;
+  --el-button-bg-color: #2da44e !important;
+  --el-button-border-color: rgba(27, 31, 36, 0.15) !important;
+  --el-button-text-color: #ffffff !important;
+  --el-button-hover-bg-color: #2c974b !important;
+  --el-button-hover-border-color: rgba(27, 31, 36, 0.15) !important;
+  background-color: #2da44e !important;
+  border-color: rgba(27, 31, 36, 0.15) !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  transition: background-color 0.2s !important;
+}
+
+.reset-btn:hover {
+  background-color: #2c974b !important;
+  border-color: rgba(27, 31, 36, 0.15) !important;
 }
 
 /* Sign In Link */
