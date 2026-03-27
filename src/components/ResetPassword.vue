@@ -1,7 +1,6 @@
 <script lang="ts">
 export default {
   name: 'ResetPassword',
-  emits: ['goToLogin'],
   data() {
     return {
       step: 1 as 1 | 2,
@@ -36,7 +35,7 @@ export default {
       this.step = 1
     },
     goToLogin() {
-      this.$emit('goToLogin')
+      this.$router.push('/login')
     }
   }
 }
@@ -151,7 +150,7 @@ export default {
 
         <!-- Sign In Link -->
         <div class="signin-link">
-          已有账户？ <el-link type="primary" :underline="false" @click="goToLogin">登录</el-link>
+          已有账户？ <el-link type="primary" underline="never" @click="goToLogin">登录</el-link>
         </div>
       </div>
     </div>

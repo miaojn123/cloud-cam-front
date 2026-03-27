@@ -1,7 +1,6 @@
 <script lang="ts">
 export default {
   name: 'RegisterPage',
-  emits: ['goToLogin'],
   data() {
     return {
       email: '',
@@ -29,7 +28,7 @@ export default {
       }, 1000)
     },
     goToLogin() {
-      this.$emit('goToLogin')
+      this.$router.push('/login')
     }
   }
 }
@@ -124,7 +123,7 @@ export default {
             <el-checkbox v-model="receiveUpdates" class="custom-checkbox">
               <span class="checkbox-text">
                 通过邮件接收产品更新和公告。
-                <el-link type="primary" :underline="false" class="text-link">您可以随时取消订阅</el-link>。
+                <el-link type="primary" underline="never" class="text-link">您可以随时取消订阅</el-link>。
               </span>
             </el-checkbox>
           </el-form-item>
@@ -139,14 +138,14 @@ export default {
           <!-- Terms Notice -->
           <p class="terms-notice">
             创建账户即表示您同意我们的
-            <el-link type="primary" :underline="false">服务条款</el-link> 和
-            <el-link type="primary" :underline="false">隐私政策</el-link>。
+            <el-link type="primary" underline="never">服务条款</el-link> 和
+            <el-link type="primary" underline="never">隐私政策</el-link>。
           </p>
         </el-form>
 
         <!-- Sign In Link -->
         <div class="signin-link">
-          已有账户？ <el-link type="primary" :underline="false" @click="goToLogin">登录</el-link>
+          已有账户？ <el-link type="primary" underline="never" @click="goToLogin">登录</el-link>
         </div>
       </div>
     </div>

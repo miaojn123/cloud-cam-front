@@ -1,7 +1,6 @@
 <script lang="ts">
 export default {
   name: 'LoginPage',
-  emits: ['goToRegister', 'goToReset'],
   data() {
     return {
       username: '',
@@ -31,10 +30,10 @@ export default {
       }, 1000)
     },
     goToRegister() {
-      this.$emit('goToRegister')
+      this.$router.push('/register')
     },
     goToReset() {
-      this.$emit('goToReset')
+      this.$router.push('/reset-password')
     }
   }
 }
@@ -89,13 +88,13 @@ export default {
                 <div class="label-links">
                   <el-link
                     type="primary"
-                    :underline="false"
+                    underline="never"
                     class="forgot-link"
                     @click="switchToCodeMode"
                   >
                     使用验证码登录
                   </el-link>
-                  <el-link type="primary" :underline="false" class="forgot-link" @click.stop.prevent="goToReset">
+                  <el-link type="primary" underline="never" class="forgot-link" @click.stop.prevent="goToReset">
                     忘记密码？
                   </el-link>
                 </div>
@@ -117,7 +116,7 @@ export default {
                 <label class="custom-label">验证码</label>
                 <el-link
                   type="primary"
-                  :underline="false"
+                  underline="never"
                   class="forgot-link"
                   @click="switchToPasswordMode"
                 >
@@ -154,7 +153,7 @@ export default {
       <!-- Create Account -->
       <div class="create-account-box">
         <span>还没有账户？</span>
-        <el-link type="primary" :underline="false" @click="goToRegister">
+        <el-link type="primary" underline="never" @click="goToRegister">
           立即注册
         </el-link>
       </div>
@@ -162,12 +161,12 @@ export default {
 
     <!-- Footer -->
     <footer class="footer">
-      <el-link type="info" :underline="false">服务条款</el-link>
-      <el-link type="info" :underline="false">隐私政策</el-link>
-      <el-link type="info" :underline="false">文档</el-link>
-      <el-link type="info" :underline="false">联系我们</el-link>
-      <el-link type="info" :underline="false">管理 Cookie</el-link>
-      <el-link type="info" :underline="false">不要分享我的个人信息</el-link>
+      <el-link type="info" underline="never">服务条款</el-link>
+      <el-link type="info" underline="never">隐私政策</el-link>
+      <el-link type="info" underline="never">文档</el-link>
+      <el-link type="info" underline="never">联系我们</el-link>
+      <el-link type="info" underline="never">管理 Cookie</el-link>
+      <el-link type="info" underline="never">不要分享我的个人信息</el-link>
     </footer>
   </div>
 </template>
