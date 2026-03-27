@@ -1,4 +1,7 @@
 <script lang="ts">
+import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores'
+
 export default {
   name: 'LoginPage',
   data() {
@@ -18,16 +21,49 @@ export default {
     switchToPasswordMode() {
       this.isCodeMode = false
     },
-    sendCode() {
-      // TODO: 实现发送验证码逻辑
-      console.log('发送验证码到:', this.email)
-      this.countdown = 60
-      const timer = setInterval(() => {
-        this.countdown--
-        if (this.countdown <= 0) {
-          clearInterval(timer)
+    async sendCode() {
+      if (!this.email) {
+        ElMessage.warning('请先输入邮箱或手机号')
+        return
+      }
+      try {
+        const userStore = useUserStore()
+        await userStore.sendLoginCode(this.email)
+        ElMessage.success('验证码已发送')
+        this.countdown = 60
+        const timer = setInterval(() => {
+          this.countdown--
+          if (this.countdown <= 0) {
+            clearInterval(timer)
+          }
+        }, 1000)
+      } catch {
+        ElMessage.error('发送验证码失败')
+      }
+    },
+    async submitLogin() {
+      const userStore = useUserStore()
+      try {
+        if (!this.isCodeMode) {
+          if (!this.username || !this.password) {
+            ElMessage.warning('请输入账号和密码')
+            return
+          }
+          await userStore.loginByPassword(this.username, this.password)
+        } else {
+          if (!this.email || !this.code) {
+            ElMessage.warning('请输入账号和验证码')
+            return
+          }
+          await userStore.loginByCode(this.email, this.code)
         }
-      }, 1000)
+        await userStore.fetchCurrentUser()
+        ElMessage.success('登录成功')
+        this.$router.push('/files')
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '登录失败'
+        ElMessage.error(message)
+      }
     },
     goToRegister() {
       this.$router.push('/register')
@@ -53,7 +89,7 @@ export default {
 
       <!-- Login Form -->
       <div class="login-box">
-        <el-form @submit.prevent>
+        <el-form @submit.prevent="submitLogin">
           <!-- 密码模式：用户名或邮箱 -->
           <el-form-item v-if="!isCodeMode" class="form-item-no-margin">
             <template #label>

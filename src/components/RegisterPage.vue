@@ -1,4 +1,7 @@
 <script lang="ts">
+import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores'
+
 export default {
   name: 'RegisterPage',
   data() {
@@ -12,20 +15,39 @@ export default {
     }
   },
   methods: {
-    sendEmailCode() {
+    async sendEmailCode() {
       if (!this.email) {
-        alert('请先输入邮箱地址')
+        ElMessage.warning('请先输入邮箱地址')
         return
       }
-      // TODO: 实现发送邮箱验证码逻辑
-      console.log('发送验证码到:', this.email)
-      this.emailCountdown = 60
-      const timer = setInterval(() => {
-        this.emailCountdown--
-        if (this.emailCountdown <= 0) {
-          clearInterval(timer)
-        }
-      }, 1000)
+      try {
+        const userStore = useUserStore()
+        await userStore.sendRegisterCode(this.email)
+        ElMessage.success('验证码已发送')
+        this.emailCountdown = 60
+        const timer = setInterval(() => {
+          this.emailCountdown--
+          if (this.emailCountdown <= 0) {
+            clearInterval(timer)
+          }
+        }, 1000)
+      } catch {
+        ElMessage.error('发送验证码失败')
+      }
+    },
+    async submitRegister() {
+      if (!this.email || !this.emailCode || !this.password || !this.username) {
+        ElMessage.warning('请完整填写注册信息')
+        return
+      }
+      try {
+        const userStore = useUserStore()
+        await userStore.registerByCode(this.email, this.emailCode, this.password, this.username)
+        ElMessage.success('注册成功，请登录')
+        this.$router.push('/login')
+      } catch {
+        ElMessage.error('注册失败')
+      }
     },
     goToLogin() {
       this.$router.push('/login')
@@ -48,7 +70,7 @@ export default {
       <div class="signup-content">
         <h1 class="title">创建账户</h1>
 
-        <el-form @submit.prevent class="signup-form">
+        <el-form @submit.prevent="submitRegister" class="signup-form">
           <!-- Email -->
           <el-form-item class="form-item-custom">
             <template #label>
