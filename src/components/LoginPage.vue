@@ -357,13 +357,15 @@ export default {
 
 .login-box :deep(.el-input__wrapper) {
   width: 100%;
-  padding: 1px 12px !important;
+  padding: 0 12px !important;
+  height: 32px !important;
   font-size: 14px !important;
-  line-height: 20px !important;
   background-color: #ffffff !important;
   border: 1px solid #d0d7de !important;
   border-radius: 6px !important;
   box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
   box-sizing: border-box;
   transition: border-color 0.2s, box-shadow 0.2s !important;
 }
@@ -379,8 +381,8 @@ export default {
 }
 
 .login-box :deep(.el-input__inner) {
-  height: 32px !important;
-  line-height: 32px !important;
+  height: auto !important;
+  line-height: 20px !important;
   color: #1f2328 !important;
   font-size: 14px !important;
 }
