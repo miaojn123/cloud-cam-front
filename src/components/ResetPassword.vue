@@ -1,4 +1,7 @@
 <script lang="ts">
+import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores'
+
 export default {
   name: 'ResetPassword',
   data() {
@@ -8,24 +11,42 @@ export default {
       code: '',
       password: '',
       confirmPassword: '',
-      countdown: 0
+      countdown: 0,
+      passwordTouched: false,
+      confirmPasswordTouched: false,
+      emailTouched: false
+    }
+  },
+  computed: {
+    passwordValid() {
+      if (!this.password) return true
+      return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$/.test(this.password)
+    },
+    confirmPasswordValid() {
+      if (!this.confirmPassword) return true
+      return this.password === this.confirmPassword
+    },
+    emailValid() {
+      if (!this.email) return true
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
     }
   },
   methods: {
-    sendCode() {
-      if (!this.email) {
-        alert('请先输入邮箱地址')
-        return
+    async sendCode() {
+      try {
+        const userStore = useUserStore()
+        await userStore.sendResetCode(this.email)
+        ElMessage.success('验证码已发送')
+        this.countdown = 60
+        const timer = setInterval(() => {
+          this.countdown--
+          if (this.countdown <= 0) {
+            clearInterval(timer)
+          }
+        }, 1000)
+      } catch {
+        ElMessage.error('发送验证码失败')
       }
-      // TODO: 实现发送验证码逻辑
-      console.log('发送验证码到:', this.email)
-      this.countdown = 60
-      const timer = setInterval(() => {
-        this.countdown--
-        if (this.countdown <= 0) {
-          clearInterval(timer)
-        }
-      }, 1000)
     },
     nextStep() {
       // TODO: 验证验证码是否正确
@@ -34,8 +55,22 @@ export default {
     prevStep() {
       this.step = 1
     },
+    async resetPassword() {
+      // TODO: 实现重置密码逻辑
+      ElMessage.success('密码重置成功')
+      this.$router.push('/login')
+    },
     goToLogin() {
       this.$router.push('/login')
+    },
+    onPasswordBlur() {
+      this.passwordTouched = true
+    },
+    onConfirmPasswordBlur() {
+      this.confirmPasswordTouched = true
+    },
+    onEmailBlur() {
+      this.emailTouched = true
     }
   }
 }
@@ -68,7 +103,11 @@ export default {
               placeholder="请输入邮箱"
               autocomplete="email"
               class="custom-input"
+              @blur="onEmailBlur"
             />
+            <div v-if="emailTouched && !emailValid" class="password-hint password-hint-error">
+              请输入正确邮箱
+            </div>
           </el-form-item>
 
           <!-- Verification Code -->
@@ -109,16 +148,17 @@ export default {
             <template #label>
               <label class="custom-label">输入新密码</label>
             </template>
-            <div class="password-input-wrapper">
-              <el-input
-                v-model="password"
-                type="password"
-                placeholder="密码"
-                autocomplete="new-password"
-                show-password
-                class="custom-input password-input"
-              />
-              <span class="password-hint-inline">8-20位字母或数字</span>
+            <el-input
+              v-model="password"
+              type="password"
+              placeholder="请输入新密码"
+              autocomplete="new-password"
+              show-password
+              class="custom-input"
+              @blur="onPasswordBlur"
+            />
+            <div class="password-hint" :class="{ 'password-hint-error': passwordTouched && !passwordValid }">
+              8-20位字符，且至少包含一个数字和一个字母
             </div>
           </el-form-item>
 
@@ -130,11 +170,15 @@ export default {
             <el-input
               v-model="confirmPassword"
               type="password"
-              placeholder="确认密码"
+              placeholder="请再次输入密码"
               autocomplete="new-password"
               show-password
               class="custom-input"
+              @blur="onConfirmPasswordBlur"
             />
+            <div v-if="confirmPasswordTouched && !confirmPasswordValid" class="password-hint password-hint-error">
+              两次输入的密码不一致
+            </div>
           </el-form-item>
 
           <!-- Buttons -->
@@ -142,7 +186,7 @@ export default {
             <el-button class="prev-btn" @click="prevStep">
               上一步
             </el-button>
-            <el-button type="primary" native-type="submit" class="reset-btn">
+            <el-button type="primary" native-type="submit" class="reset-btn" @click="resetPassword">
               重置密码
             </el-button>
           </el-form-item>
@@ -329,30 +373,15 @@ export default {
   padding-right: 100px !important;
 }
 
-.password-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.password-input {
-  width: 100%;
-}
-
-.password-input :deep(.el-input__wrapper) {
-  padding-right: 140px !important;
-}
-
-.password-hint-inline {
-  position: absolute;
-  right: 36px;
-  top: 50%;
-  transform: translateY(-50%);
+.password-hint {
   font-size: 12px;
   color: #8b949e;
-  pointer-events: none;
-  white-space: nowrap;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.password-hint-error {
+  color: #cf222e;
 }
 
 /* 覆盖 Element Plus Button 样式 */

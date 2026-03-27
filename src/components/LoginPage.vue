@@ -11,7 +11,19 @@ export default {
       password: '',
       code: '',
       isCodeMode: false,
-      countdown: 0
+      countdown: 0,
+      passwordTouched: false,
+      emailTouched: false
+    }
+  },
+  computed: {
+    passwordValid() {
+      if (!this.password) return true
+      return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$/.test(this.password)
+    },
+    emailValid() {
+      if (!this.email) return true
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
     }
   },
   methods: {
@@ -70,6 +82,12 @@ export default {
     },
     goToReset() {
       this.$router.push('/reset-password')
+    },
+    onPasswordBlur() {
+      this.passwordTouched = true
+    },
+    onEmailBlur() {
+      this.emailTouched = true
     }
   }
 }
@@ -114,7 +132,11 @@ export default {
               type="email"
               autocomplete="email"
               class="custom-input"
+              @blur="onEmailBlur"
             />
+            <div v-if="emailTouched && !emailValid" class="password-hint password-hint-error">
+              请输入正确邮箱
+            </div>
           </el-form-item>
 
           <el-form-item v-if="!isCodeMode" class="form-item-no-margin">
@@ -143,7 +165,11 @@ export default {
               autocomplete="current-password"
               show-password
               class="custom-input"
+              @blur="onPasswordBlur"
             />
+            <div class="password-hint" :class="{ 'password-hint-error': passwordTouched && !passwordValid }">
+              8-20位字符，且至少包含一个数字和一个字母
+            </div>
           </el-form-item>
 
           <el-form-item v-else class="form-item-no-margin">
@@ -402,6 +428,17 @@ export default {
 
 .code-input :deep(.el-input__wrapper) {
   padding-right: 100px !important;
+}
+
+.password-hint {
+  font-size: 12px;
+  color: #8b949e;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.password-hint-error {
+  color: #cf222e;
 }
 
 /* 覆盖 Element Plus Button 样式 */

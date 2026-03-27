@@ -11,15 +11,23 @@ export default {
       username: '',
       emailCode: '',
       receiveUpdates: false,
-      emailCountdown: 0
+      emailCountdown: 0,
+      passwordTouched: false,
+      emailTouched: false
+    }
+  },
+  computed: {
+    passwordValid() {
+      if (!this.password) return true
+      return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$/.test(this.password)
+    },
+    emailValid() {
+      if (!this.email) return true
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
     }
   },
   methods: {
     async sendEmailCode() {
-      if (!this.email) {
-        ElMessage.warning('请先输入邮箱地址')
-        return
-      }
       try {
         const userStore = useUserStore()
         await userStore.sendRegisterCode(this.email)
@@ -51,6 +59,12 @@ export default {
     },
     goToLogin() {
       this.$router.push('/login')
+    },
+    onPasswordBlur() {
+      this.passwordTouched = true
+    },
+    onEmailBlur() {
+      this.emailTouched = true
     }
   }
 }
@@ -82,7 +96,11 @@ export default {
               placeholder="请输入邮箱"
               autocomplete="email"
               class="custom-input"
+              @blur="onEmailBlur"
             />
+            <div v-if="emailTouched && !emailValid" class="password-hint password-hint-error">
+              请输入正确邮箱
+            </div>
           </el-form-item>
 
           <!-- Email Verification Code -->
@@ -113,16 +131,17 @@ export default {
             <template #label>
               <label class="custom-label">输入密码</label>
             </template>
-            <div class="password-input-wrapper">
-              <el-input
-                v-model="password"
-                type="password"
-                placeholder="密码"
-                autocomplete="new-password"
-                show-password
-                class="custom-input password-input"
-              />
-              <span class="password-hint-inline">8-20位字母或数字</span>
+            <el-input
+              v-model="password"
+              type="password"
+              placeholder="请输入密码"
+              autocomplete="new-password"
+              show-password
+              class="custom-input"
+              @blur="onPasswordBlur"
+            />
+            <div class="password-hint" :class="{ 'password-hint-error': passwordTouched && !passwordValid }">
+              8-20位字符，且至少包含一个数字和一个字母
             </div>
           </el-form-item>
 
@@ -346,30 +365,15 @@ export default {
   padding-right: 100px !important;
 }
 
-.password-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.password-input {
-  width: 100%;
-}
-
-.password-input :deep(.el-input__wrapper) {
-  padding-right: 140px !important;
-}
-
-.password-hint-inline {
-  position: absolute;
-  right: 36px;
-  top: 50%;
-  transform: translateY(-50%);
+.password-hint {
   font-size: 12px;
   color: #8b949e;
-  pointer-events: none;
-  white-space: nowrap;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.password-hint-error {
+  color: #cf222e;
 }
 
 /* 覆盖 Element Plus Button 样式 */
