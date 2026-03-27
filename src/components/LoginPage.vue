@@ -127,7 +127,7 @@ export default {
         </a>
       </div>
 
-      <h1 class="title">登录 QJCAM</h1>
+      <h1 class="title">登录</h1>
 
       <!-- Login Form -->
       <div class="login-box">
