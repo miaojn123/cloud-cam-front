@@ -52,9 +52,6 @@ export default {
       // TODO: 验证验证码是否正确
       this.step = 2
     },
-    prevStep() {
-      this.step = 1
-    },
     async resetPassword() {
       // TODO: 实现重置密码逻辑
       ElMessage.success('密码重置成功')
@@ -183,9 +180,6 @@ export default {
 
           <!-- Buttons -->
           <el-form-item class="form-item-custom submit-item button-group">
-            <el-button class="prev-btn" @click="prevStep">
-              上一步
-            </el-button>
             <el-button type="primary" native-type="submit" class="reset-btn" @click="resetPassword">
               重置密码
             </el-button>
@@ -453,26 +447,6 @@ export default {
 .button-group {
   display: flex;
   gap: 12px;
-}
-
-.prev-btn {
-  flex: 1;
-  padding: 6px 16px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  line-height: 20px !important;
-  height: 32px !important;
-  background-color: #f6f8fa !important;
-  border-color: #d0d7de !important;
-  color: #1f2328 !important;
-  border-radius: 6px !important;
-  cursor: pointer;
-  transition: background-color 0.2s !important;
-}
-
-.prev-btn:hover {
-  background-color: #f3f4f6 !important;
-  border-color: #d0d7de !important;
 }
 
 .reset-btn {
