@@ -57,7 +57,7 @@ export default {
       }
       this.passwordTouched = true
       if (!this.passwordValid) {
-        ElMessage.warning('密码需为 8-20 位，且至少包含字母与数字')
+        ElMessage.warning('密码需为 8-32 位，且至少包含字母与数字')
         return
       }
       try {
@@ -87,116 +87,115 @@ export default {
 <template>
   <div class="signup-container">
     <div class="signup-main">
-      <!-- Header Logo -->
-      <div class="header">
-        <a href="#" class="app-logo">
-          <img src="/logo.ico" height="32" width="32" alt="Logo" />
-        </a>
-      </div>
-
       <!-- Signup Form -->
       <div class="signup-content">
-        <h1 class="title">创建账户</h1>
+        <!-- 图标与标题同一行居中 -->
+        <div class="page-heading">
+          <a href="#" class="app-logo">
+            <img src="/logo.ico" height="32" width="32" alt="Logo" />
+          </a>
+          <h1 class="title">创建账户</h1>
+        </div>
 
         <div class="auth-form-card">
           <el-form @submit.prevent="submitRegister" class="signup-form">
-          <!-- Email -->
-          <el-form-item class="form-item-custom">
-            <template #label>
-              <label class="custom-label">邮箱地址</label>
-            </template>
-            <el-input
-              v-model="email"
-              type="email"
-              placeholder="请输入邮箱"
-              autocomplete="email"
-              class="custom-input"
-              @blur="onEmailBlur"
-            />
-            <div v-if="emailTouched && !emailValid" class="password-hint password-hint-error">
-              请输入正确邮箱
-            </div>
-          </el-form-item>
-
-          <!-- Email Verification Code -->
-          <el-form-item class="form-item-custom">
-            <template #label>
-              <label class="custom-label">邮箱验证码</label>
-            </template>
-            <div class="code-input-wrapper">
+            <!-- Email -->
+            <el-form-item class="form-item-custom">
+              <template #label>
+                <label class="custom-label">邮箱地址</label>
+              </template>
               <el-input
-                v-model="emailCode"
-                placeholder="请输入验证码"
-                autocomplete="one-time-code"
-                class="custom-input code-input"
+                v-model="email"
+                type="email"
+                placeholder="请输入邮箱"
+                autocomplete="email"
+                class="custom-input"
+                @blur="onEmailBlur"
               />
+              <div v-if="emailTouched && !emailValid" class="password-hint password-hint-error">
+                请输入正确邮箱
+              </div>
+            </el-form-item>
+
+            <!-- Email Verification Code -->
+            <el-form-item class="form-item-custom">
+              <template #label>
+                <label class="custom-label">邮箱验证码</label>
+              </template>
+              <div class="code-input-wrapper">
+                <el-input
+                  v-model="emailCode"
+                  placeholder="请输入验证码"
+                  autocomplete="one-time-code"
+                  class="custom-input code-input"
+                />
+                <el-button
+                  type="primary"
+                  class="send-code-btn"
+                  :disabled="emailCountdown > 0"
+                  @click="sendEmailCode"
+                >
+                  {{ emailCountdown > 0 ? `${emailCountdown}s` : '获取验证码' }}
+                </el-button>
+              </div>
+            </el-form-item>
+
+            <!-- Password -->
+            <el-form-item class="form-item-custom">
+              <template #label>
+                <label class="custom-label">输入密码</label>
+              </template>
+              <el-input
+                v-model="password"
+                type="password"
+                placeholder="请输入密码"
+                autocomplete="new-password"
+                show-password
+                class="custom-input"
+                @blur="onPasswordBlur"
+              />
+              <div class="password-hint" :class="{ 'password-hint-error': passwordTouched && !passwordValid }">
+                8-32位字符，且至少包含一个数字和一个字母
+              </div>
+            </el-form-item>
+
+            <!-- Username -->
+            <el-form-item class="form-item-custom">
+              <template #label>
+                <label class="custom-label">输入用户名</label>
+              </template>
+              <el-input
+                v-model="username"
+                type="text"
+                placeholder="用户名"
+                autocomplete="username"
+                class="custom-input"
+              />
+            </el-form-item>
+
+            <!-- 同意条款（必选，勾选后才可点击创建账户） -->
+            <el-form-item class="form-item-custom checkbox-group">
+              <el-checkbox v-model="agreeTerms" class="custom-checkbox">
+                <span class="checkbox-text">
+                  创建账户即表示您同意我们的
+                  <el-link type="primary" underline="never" href="#" @click.prevent>服务条款</el-link>
+                  和
+                  <el-link type="primary" underline="never" href="#" @click.prevent>隐私政策</el-link>。
+                </span>
+              </el-checkbox>
+            </el-form-item>
+
+            <el-form-item class="form-item-custom submit-item">
               <el-button
                 type="primary"
-                class="send-code-btn"
-                :disabled="emailCountdown > 0"
-                @click="sendEmailCode"
+                native-type="submit"
+                class="create-account-btn"
+                :disabled="!agreeTerms"
               >
-                {{ emailCountdown > 0 ? `${emailCountdown}s` : '获取验证码' }}
+                创建账户
               </el-button>
-            </div>
-          </el-form-item>
-
-          <!-- Password -->
-          <el-form-item class="form-item-custom">
-            <template #label>
-              <label class="custom-label">输入密码</label>
-            </template>
-            <el-input
-              v-model="password"
-              type="password"
-              placeholder="请输入密码"
-              autocomplete="new-password"
-              show-password
-              class="custom-input"
-              @blur="onPasswordBlur"
-            />
-            <div class="password-hint" :class="{ 'password-hint-error': passwordTouched && !passwordValid }">
-              8-20位字符，且至少包含一个数字和一个字母
-            </div>
-          </el-form-item>
-
-          <!-- Username -->
-          <el-form-item class="form-item-custom">
-            <template #label>
-              <label class="custom-label">输入用户名</label>
-            </template>
-            <el-input
-              v-model="username"
-              type="text"
-              placeholder="用户名"
-              autocomplete="username"
-              class="custom-input"
-            />
-          </el-form-item>
-
-          <!-- 同意条款（必选，勾选后才可点击创建账户） -->
-          <el-form-item class="form-item-custom checkbox-group">
-            <el-checkbox v-model="agreeTerms" class="custom-checkbox">
-              <span class="checkbox-text">
-                创建账户即表示您同意我们的
-                <el-link type="primary" underline="never" href="#" @click.prevent>服务条款</el-link>
-                和
-                <el-link type="primary" underline="never" href="#" @click.prevent>隐私政策</el-link>。
-              </span>
-            </el-checkbox>
-          </el-form-item>
-
-          <el-form-item class="form-item-custom submit-item">
-            <el-button
-              type="primary"
-              native-type="submit"
-              class="create-account-btn"
-              :disabled="!agreeTerms"
-            >
-              创建账户
-            </el-button>
-          </el-form-item>
-        </el-form>
+            </el-form-item>
+          </el-form>
         </div>
 
         <!-- Sign In Link -->
@@ -233,14 +232,21 @@ export default {
   justify-content: center;
 }
 
-/* Header */
-.header {
-  padding: 0 0 12px;
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  width: 100%;
 }
 
 .app-logo {
   color: #1f2328;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .app-logo:hover {
@@ -255,12 +261,12 @@ export default {
   padding: 0;
 }
 
-.title {
+.page-heading .title {
   font-size: 24px;
   font-weight: 400;
   color: #1f2328;
-  margin: 0 0 12px 0;
-  text-align: center;
+  margin: 0;
+  line-height: 1.2;
 }
 
 /* Form */
@@ -272,8 +278,10 @@ export default {
   margin-bottom: 12px !important;
 }
 
+/* 创建账户按钮：收紧与勾选区、下方登录入口的间距 */
 .submit-item {
-  margin-top: 12px !important;
+  margin-top: 6px !important;
+  margin-bottom: 4px !important;
 }
 
 /* 覆盖 Element Plus Form 样式 */
@@ -532,7 +540,7 @@ export default {
 
 /* Sign In Link */
 .signin-link {
-  margin-top: 12px;
+  margin-top: 6px;
   padding: 8px 16px;
   border: 1px solid #d0d7de;
   border-radius: 6px;

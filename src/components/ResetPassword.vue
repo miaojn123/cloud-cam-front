@@ -39,11 +39,11 @@ export default {
     async sendCode() {
       this.accountTouched = true
       if (!this.account.trim()) {
-        ElMessage.warning('请先输入邮箱或手机号')
+        ElMessage.warning('请先输入邮箱')
         return
       }
       if (!this.accountValid) {
-        ElMessage.warning('请输入正确的邮箱或手机号')
+        ElMessage.warning('请输入正确的邮箱')
         return
       }
       try {
@@ -66,11 +66,11 @@ export default {
       this.passwordTouched = true
       this.confirmPasswordTouched = true
       if (!this.account.trim()) {
-        ElMessage.warning('请输入邮箱或手机号')
+        ElMessage.warning('请输入邮箱')
         return
       }
       if (!this.accountValid) {
-        ElMessage.warning('请输入正确的邮箱或手机号')
+        ElMessage.warning('请输入正确的邮箱')
         return
       }
       if (!this.code.trim()) {
@@ -120,99 +120,98 @@ export default {
 <template>
   <div class="reset-container">
     <div class="reset-main">
-      <!-- Header Logo -->
-      <div class="header">
-        <a href="#" class="app-logo">
-          <img src="/logo.ico" height="32" width="32" alt="Logo" />
-        </a>
-      </div>
-
       <!-- Reset Form -->
       <div class="reset-content">
-        <h1 class="title">重置密码</h1>
+        <!-- 图标与标题同一行居中 -->
+        <div class="page-heading">
+          <a href="#" class="app-logo">
+            <img src="/logo.ico" height="32" width="32" alt="Logo" />
+          </a>
+          <h1 class="title">重置密码</h1>
+        </div>
 
         <div class="auth-form-card">
           <el-form @submit.prevent class="reset-form">
-          <el-form-item class="form-item-custom">
-            <template #label>
-              <label class="custom-label">邮箱或手机号</label>
-            </template>
-            <el-input
-              v-model="account"
-              type="text"
-              placeholder="请输入邮箱或手机号"
-              autocomplete="username"
-              class="custom-input"
-              @blur="onAccountBlur"
-            />
-            <div v-if="accountTouched && !accountValid" class="password-hint password-hint-error">
-              请输入正确的邮箱或 11 位手机号
-            </div>
-          </el-form-item>
-
-          <el-form-item class="form-item-custom">
-            <template #label>
-              <label class="custom-label">验证码</label>
-            </template>
-            <div class="code-input-wrapper">
+            <el-form-item class="form-item-custom">
+              <template #label>
+                <label class="custom-label">邮箱</label>
+              </template>
               <el-input
-                v-model="code"
-                placeholder="请输入验证码"
-                autocomplete="one-time-code"
-                class="custom-input code-input"
+                v-model="account"
+                type="text"
+                placeholder="请输入邮箱"
+                autocomplete="username"
+                class="custom-input"
+                @blur="onAccountBlur"
               />
-              <el-button
-                type="primary"
-                class="send-code-btn"
-                :disabled="countdown > 0"
-                @click="sendCode"
-              >
-                {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+              <div v-if="accountTouched && !accountValid" class="password-hint password-hint-error">
+                请输入正确的邮箱
+              </div>
+            </el-form-item>
+
+            <el-form-item class="form-item-custom">
+              <template #label>
+                <label class="custom-label">验证码</label>
+              </template>
+              <div class="code-input-wrapper">
+                <el-input
+                  v-model="code"
+                  placeholder="请输入验证码"
+                  autocomplete="one-time-code"
+                  class="custom-input code-input"
+                />
+                <el-button
+                  type="primary"
+                  class="send-code-btn"
+                  :disabled="countdown > 0"
+                  @click="sendCode"
+                >
+                  {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+                </el-button>
+              </div>
+            </el-form-item>
+
+            <el-form-item class="form-item-custom">
+              <template #label>
+                <label class="custom-label">新密码</label>
+              </template>
+              <el-input
+                v-model="password"
+                type="password"
+                placeholder="请输入新密码"
+                autocomplete="new-password"
+                show-password
+                class="custom-input"
+                @blur="onPasswordBlur"
+              />
+              <div class="password-hint" :class="{ 'password-hint-error': passwordTouched && !passwordValid }">
+                8-32 位字符，且至少包含一个数字和一个字母
+              </div>
+            </el-form-item>
+
+            <el-form-item class="form-item-custom">
+              <template #label>
+                <label class="custom-label">确认新密码</label>
+              </template>
+              <el-input
+                v-model="confirmPassword"
+                type="password"
+                placeholder="请再次输入密码"
+                autocomplete="new-password"
+                show-password
+                class="custom-input"
+                @blur="onConfirmPasswordBlur"
+              />
+              <div v-if="confirmPasswordTouched && !confirmPasswordValid" class="password-hint password-hint-error">
+                两次输入的密码不一致
+              </div>
+            </el-form-item>
+
+            <el-form-item class="form-item-custom submit-item">
+              <el-button type="primary" class="reset-btn" @click="resetPassword">
+                重置密码
               </el-button>
-            </div>
-          </el-form-item>
-
-          <el-form-item class="form-item-custom">
-            <template #label>
-              <label class="custom-label">新密码</label>
-            </template>
-            <el-input
-              v-model="password"
-              type="password"
-              placeholder="请输入新密码"
-              autocomplete="new-password"
-              show-password
-              class="custom-input"
-              @blur="onPasswordBlur"
-            />
-            <div class="password-hint" :class="{ 'password-hint-error': passwordTouched && !passwordValid }">
-              8-32 位字符，且至少包含一个数字和一个字母
-            </div>
-          </el-form-item>
-
-          <el-form-item class="form-item-custom">
-            <template #label>
-              <label class="custom-label">确认新密码</label>
-            </template>
-            <el-input
-              v-model="confirmPassword"
-              type="password"
-              placeholder="请再次输入密码"
-              autocomplete="new-password"
-              show-password
-              class="custom-input"
-              @blur="onConfirmPasswordBlur"
-            />
-            <div v-if="confirmPasswordTouched && !confirmPasswordValid" class="password-hint password-hint-error">
-              两次输入的密码不一致
-            </div>
-          </el-form-item>
-
-          <el-form-item class="form-item-custom submit-item">
-            <el-button type="primary" class="reset-btn" @click="resetPassword">
-              重置密码
-            </el-button>
-          </el-form-item>
+            </el-form-item>
           </el-form>
         </div>
 
@@ -250,14 +249,21 @@ export default {
   justify-content: center;
 }
 
-/* Header */
-.header {
-  padding: 0 0 12px;
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  width: 100%;
 }
 
 .app-logo {
   color: #1f2328;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .app-logo:hover {
@@ -272,12 +278,12 @@ export default {
   padding: 0;
 }
 
-.title {
+.page-heading .title {
   font-size: 24px;
   font-weight: 400;
   color: #1f2328;
-  margin: 0 0 12px 0;
-  text-align: center;
+  margin: 0;
+  line-height: 1.2;
 }
 
 /* Form */

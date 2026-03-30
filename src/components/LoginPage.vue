@@ -17,6 +17,8 @@ export default {
       code: '',
       isCodeMode: false,
       countdown: 0,
+      /** 用户名失焦或提交后用于显示非空校验 */
+      usernameTouched: false,
       passwordTouched: false,
       emailTouched: false,
       /** 是否已阅读并同意用户协议与隐私政策（登录前必选） */
@@ -24,10 +26,6 @@ export default {
     }
   },
   computed: {
-    passwordValid() {
-      if (!this.password) return true
-      return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$/.test(this.password)
-    },
     emailValid() {
       if (!this.email) return true
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
@@ -42,7 +40,7 @@ export default {
     },
     async sendCode() {
       if (!this.email) {
-        ElMessage.warning('请先输入邮箱或手机号')
+        ElMessage.warning('请先输入邮箱')
         return
       }
       try {
@@ -68,11 +66,13 @@ export default {
       const userStore = useUserStore()
       try {
         if (!this.isCodeMode) {
-          if (!this.username || !this.password) {
-            ElMessage.warning('请输入账号和密码')
+          // 非空校验：错误在输入框下方展示，不使用 Message
+          this.usernameTouched = true
+          this.passwordTouched = true
+          if (!this.username.trim() || !this.password) {
             return
           }
-          await userStore.loginByPassword(this.username, this.password)
+          await userStore.loginByPassword(this.username.trim(), this.password)
         } else {
           if (!this.email || !this.code) {
             ElMessage.warning('请输入账号和验证码')
@@ -113,6 +113,9 @@ export default {
       const q = preserveDesktopClientQuery(this.$route.query)
       this.$router.push(Object.keys(q).length ? { path: '/reset-password', query: q } : '/reset-password')
     },
+    onUsernameBlur() {
+      this.usernameTouched = true
+    },
     onPasswordBlur() {
       this.passwordTouched = true
     },
@@ -126,14 +129,13 @@ export default {
 <template>
   <div class="login-container">
     <div class="login-main">
-      <!-- App Logo -->
-      <div class="logo">
+      <!-- 图标与标题同一行居中 -->
+      <div class="page-heading">
         <a href="#" class="app-logo">
           <img src="/logo.ico" height="32" width="32" alt="Logo" />
         </a>
+        <h1 class="title">登录 QJCAM</h1>
       </div>
-
-      <h1 class="title">登录 QJCAM</h1>
 
       <!-- Login Form -->
       <div class="login-box">
@@ -148,7 +150,14 @@ export default {
               placeholder="请输入用户名或邮箱"
               autocomplete="username"
               class="custom-input"
+              @blur="onUsernameBlur"
             />
+            <div
+              v-if="usernameTouched && !username.trim()"
+              class="password-hint password-hint-error"
+            >
+              请输入用户名或邮箱
+            </div>
           </el-form-item>
 
           <!-- 验证码模式：邮箱 -->
@@ -197,8 +206,9 @@ export default {
               class="custom-input"
               @blur="onPasswordBlur"
             />
-            <div class="password-hint" :class="{ 'password-hint-error': passwordTouched && !passwordValid }">
-              8-20位字符，且至少包含一个数字和一个字母
+            <!-- 登录仅校验非空；新密码格式规则仅在注册/重置页校验 -->
+            <div v-if="passwordTouched && !password" class="password-hint password-hint-error">
+              请输入密码
             </div>
           </el-form-item>
 
@@ -296,22 +306,29 @@ export default {
   flex: 1 1 auto;
 }
 
-.logo {
-  color: #1f2328;
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   margin-bottom: 12px;
+  width: 100%;
 }
 
 .app-logo {
   color: #1f2328;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
-.title {
+.page-heading .title {
   font-size: 24px;
   font-weight: 400;
   color: #1f2328;
-  margin: 0 0 12px 0;
-  text-align: center;
+  margin: 0;
+  line-height: 1.2;
 }
 
 .login-box {
@@ -335,7 +352,7 @@ export default {
 
 .submit-item {
   margin-bottom: 0 !important;
-  margin-top: 16px !important;
+  margin-top: 20px !important;
 }
 
 /* 覆盖 Element Plus Form 样式 */
