@@ -185,6 +185,10 @@ export default {
                   {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
                 </el-button>
               </div>
+              <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
+              <div class="auth-input-hint">
+                {{ '\u00A0' }}
+              </div>
             </el-form-item>
 
             <el-form-item class="form-item-custom">
@@ -369,11 +373,11 @@ export default {
 }
 
 .form-item-custom {
-  margin-bottom: 12px !important;
+  margin-bottom: 0 !important;
 }
 
 .submit-item {
-  margin-top: 12px !important;
+  margin-top: 8px !important;
 }
 
 /* 覆盖 Element Plus Form 样式 */

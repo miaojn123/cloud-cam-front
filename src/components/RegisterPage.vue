@@ -385,7 +385,7 @@ export default {
 }
 
 .form-item-custom {
-  margin-bottom: 0px !important;
+  margin-bottom: 0 !important;
 }
 
 /* 创建账户按钮：收紧与勾选区、下方登录入口的间距 */
