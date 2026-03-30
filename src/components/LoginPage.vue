@@ -4,8 +4,8 @@ import { useUserStore } from '@/stores'
 import {
   isDesktopEmbed,
   notifyDesktopLoginSuccess,
-  preserveDesktopClientQuery
 } from '@/utils/desktopBridge'
+import { pushWithDesktopQuery } from '@/utils/desktopNav'
 
 export default {
   name: 'LoginPage',
@@ -26,6 +26,10 @@ export default {
     }
   },
   computed: {
+    /** Qt 内嵌或 ?client=desktop 时为 true；Web 独立访问为 false */
+    isDesktopEmbedMode() {
+      return isDesktopEmbed(this.$route.query)
+    },
     emailValid() {
       if (!this.email) return true
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
@@ -106,12 +110,10 @@ export default {
       }
     },
     goToRegister() {
-      const q = preserveDesktopClientQuery(this.$route.query)
-      this.$router.push(Object.keys(q).length ? { path: '/register', query: q } : '/register')
+      pushWithDesktopQuery(this.$router, this.$route.query, '/register')
     },
     goToReset() {
-      const q = preserveDesktopClientQuery(this.$route.query)
-      this.$router.push(Object.keys(q).length ? { path: '/reset-password', query: q } : '/reset-password')
+      pushWithDesktopQuery(this.$router, this.$route.query, '/reset-password')
     },
     onUsernameBlur() {
       this.usernameTouched = true
@@ -127,21 +129,33 @@ export default {
 </script>
 
 <template>
-  <div class="login-container">
-    <div class="login-main">
-      <!-- 图标与标题同一行居中 -->
+  <div
+    class="login-container"
+    :class="{
+      'login-container--web-bg': !isDesktopEmbedMode,
+      'login-container--desktop': isDesktopEmbedMode
+    }"
+  >
+    <div
+      class="login-main"
+      :class="{
+        'login-main--web-frame': !isDesktopEmbedMode,
+        'login-main--desktop': isDesktopEmbedMode
+      }"
+    >
+      <!-- Logo 与标题同一行，左右两端对齐 -->
       <div class="page-heading">
         <a href="#" class="app-logo">
-          <img src="/logo.ico" height="32" width="32" alt="Logo" />
+          <img src="/qjcam-logo.png" alt="QJCAM" class="app-logo-img" />
         </a>
-        <h1 class="title">登录 QJCAM</h1>
+        <h1 class="title">登录</h1>
       </div>
 
       <!-- Login Form -->
       <div class="login-box">
         <el-form @submit.prevent="submitLogin">
           <!-- 密码模式：用户名或邮箱 -->
-          <el-form-item v-if="!isCodeMode" class="form-item-no-margin">
+          <el-form-item v-if="!isCodeMode">
             <template #label>
               <label class="custom-label">用户名或邮箱地址</label>
             </template>
@@ -152,16 +166,17 @@ export default {
               class="custom-input"
               @blur="onUsernameBlur"
             />
+            <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
             <div
-              v-if="usernameTouched && !username.trim()"
-              class="password-hint password-hint-error"
+              class="auth-input-hint"
+              :class="{ 'auth-input-hint--error': usernameTouched && !username.trim() }"
             >
-              请输入用户名或邮箱
+              {{ usernameTouched && !username.trim() ? '请输入用户名或邮箱' : '\u00A0' }}
             </div>
           </el-form-item>
 
           <!-- 验证码模式：邮箱 -->
-          <el-form-item v-else class="form-item-no-margin">
+          <el-form-item v-else>
             <template #label>
               <label class="custom-label">邮箱地址</label>
             </template>
@@ -173,12 +188,16 @@ export default {
               class="custom-input"
               @blur="onEmailBlur"
             />
-            <div v-if="emailTouched && !emailValid" class="password-hint password-hint-error">
-              请输入正确邮箱
+            <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
+            <div
+              class="auth-input-hint"
+              :class="{ 'auth-input-hint--error': emailTouched && !emailValid }"
+            >
+              {{ emailTouched && !emailValid ? '请输入正确邮箱' : '\u00A0' }}
             </div>
           </el-form-item>
 
-          <el-form-item v-if="!isCodeMode" class="form-item-no-margin">
+          <el-form-item v-if="!isCodeMode" >
             <template #label>
               <div class="label-row">
                 <label class="custom-label">密码</label>
@@ -207,12 +226,16 @@ export default {
               @blur="onPasswordBlur"
             />
             <!-- 登录仅校验非空；新密码格式规则仅在注册/重置页校验 -->
-            <div v-if="passwordTouched && !password" class="password-hint password-hint-error">
-              请输入密码
+            <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
+            <div
+              class="auth-input-hint"
+              :class="{ 'auth-input-hint--error': passwordTouched && !password }"
+            >
+              {{ passwordTouched && !password ? '请输入密码' : '\u00A0' }}
             </div>
           </el-form-item>
 
-          <el-form-item v-else class="form-item-no-margin">
+          <el-form-item v-else>
             <template #label>
               <div class="label-row">
                 <label class="custom-label">验证码</label>
@@ -245,7 +268,7 @@ export default {
           </el-form-item>
 
           <!-- 同意协议（必选，勾选后才可登录） -->
-          <el-form-item class="form-item-no-margin terms-checkbox-row">
+          <el-form-item class="terms-checkbox-row">
             <el-checkbox v-model="agreeTerms" class="terms-checkbox">
               <span class="terms-checkbox-text">
                 我已阅读并同意
@@ -256,7 +279,7 @@ export default {
             </el-checkbox>
           </el-form-item>
 
-          <el-form-item class="form-item-no-margin submit-item">
+          <el-form-item class="submit-item">
             <el-button
               type="primary"
               native-type="submit"
@@ -293,8 +316,33 @@ export default {
   /* 与注册/重置页一致，适配 Qt 固定窗口 */
   padding: 12px 16px 16px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
-  font-size: 14px;
+  font-size: var(--auth-fs-root);
   overflow: hidden;
+}
+
+/* Qt 内嵌：垂直居中（与原生窗口/固定尺寸的视觉更一致） */
+.login-container.login-container--desktop {
+  justify-content: center;
+}
+
+/* Web 独立访问：全屏背景图；Qt 内嵌不加此类，保持白底。
+   Vite public 资源映射到站点根路径，须用 /background.png，勿写 /public/... */
+.login-container.login-container--web-bg {
+  background-image: url('/background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* 整块登录区靠右，落在背景图偏右侧纯色区域 */
+  align-items: flex-end;
+  padding-right: clamp(24px, 10vw, 120px);
+  padding-left: 16px;
+}
+
+@media (max-width: 640px) {
+  .login-container.login-container--web-bg {
+    align-items: center;
+    padding-right: 16px;
+  }
 }
 
 .login-main {
@@ -306,48 +354,87 @@ export default {
   flex: 1 1 auto;
 }
 
+/* Qt 内嵌：保持与容器一致的居中布局 */
+.login-main.login-main--desktop {
+  justify-content: center;
+  padding-top: 0;
+}
+
+/* WEB：外框随内容高度（不撑满视口），白底 + 阴影过渡；Qt 不加此类 */
+.login-main.login-main--web-frame {
+  flex: 0 0 auto;
+  align-self: flex-end;
+  max-width: var(--auth-web-frame-max-width);
+  width: 100%;
+  margin-inline: 0;
+  padding: var(--auth-web-frame-pad-top) var(--auth-web-frame-pad-x)
+    var(--auth-web-frame-pad-bottom);
+  box-sizing: border-box;
+  border: 1px solid #d8dee4;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow:
+    0 4px 6px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+@media (max-width: 640px) {
+  .login-main.login-main--web-frame {
+    align-self: center;
+  }
+}
+
 .page-heading {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
   width: 100%;
 }
 
+/* 桌面端：标题行与表单同宽，避免左右撑满容器造成“超出边界”的观感 */
+.login-main.login-main--desktop .page-heading {
+  max-width: 340px;
+}
+
 .app-logo {
-  color: #1f2328;
+  color: var(--auth-text-title);
   text-decoration: none;
   display: flex;
   align-items: center;
   flex-shrink: 0;
 }
 
+/* PNG 保持高度、宽度随比例，避免拉伸 */
+.app-logo-img {
+  display: block;
+  height: 32px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+}
+
 .page-heading .title {
-  font-size: 24px;
+  font-size: var(--auth-fs-title);
   font-weight: 400;
-  color: #1f2328;
+  color: var(--auth-text-title);
   margin: 0;
   line-height: 1.2;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 .login-box {
   width: 100%;
   max-width: 340px;
-  background-color: #ffffff;
-  border: 1px solid #d0d7de;
+  background-color: transparent;
+  border: none;
   border-radius: 6px;
   /* 仅登录页：表单区内边距略大，与注册/重置区分 */
-  padding: 18px 18px 20px;
+  /* 内部无边界表单：padding 置 0，保证每行左右对齐 */
+  padding: 0;
   margin-top: 16px;
-}
-
-.form-item-no-margin {
-  margin-bottom: 16px !important;
-}
-
-.form-item-no-margin:last-of-type {
-  margin-bottom: 0 !important;
 }
 
 .submit-item {
@@ -379,9 +466,9 @@ export default {
 
 .custom-label {
   display: block;
-  font-size: 16px !important;
+  font-size: var(--auth-fs-label) !important;
   font-weight: 400 !important;
-  color: #1f2328 !important;
+  color: var(--auth-text) !important;
   margin-bottom: 4px;
   text-align: left;
   line-height: 1.5 !important;
@@ -401,7 +488,7 @@ export default {
 
 /* 覆盖 Element Plus Link 样式 */
 .forgot-link {
-  font-size: 12px !important;
+  font-size: var(--auth-fs-small) !important;
 }
 
 .forgot-link :deep(.el-link__inner) {
@@ -417,8 +504,8 @@ export default {
   --el-input-border: #d0d7de;
   --el-input-border-color: #d0d7de;
   --el-input-bg-color: #ffffff;
-  --el-input-text-color: #1f2328;
-  --el-input-placeholder-color: #6e7781;
+  --el-input-text-color: var(--auth-text);
+  --el-input-placeholder-color: var(--auth-text-muted);
   --el-input-hover-border: #d0d7de;
   --el-input-focus-border: #0969da;
 }
@@ -450,9 +537,9 @@ export default {
 
 .login-box :deep(.el-input__inner) {
   height: auto !important;
-  line-height: 20px !important;
-  color: #1f2328 !important;
-  font-size: 14px !important;
+  line-height: 19px !important;
+  color: var(--auth-text) !important;
+  font-size: var(--auth-fs-input) !important;
 }
 
 .login-box :deep(.el-input__inner::placeholder) {
@@ -515,8 +602,8 @@ export default {
 .login-box :deep(.terms-checkbox .el-checkbox__label) {
   display: inline-flex;
   align-items: center;
-  font-size: 12px !important;
-  color: #656d76 !important;
+  font-size: var(--auth-fs-small) !important;
+  color: var(--auth-text-muted) !important;
   line-height: 1.5 !important;
   padding-left: 8px !important;
 }
@@ -547,18 +634,18 @@ export default {
 }
 
 .login-box :deep(.terms-checkbox.el-checkbox.is-checked .el-checkbox__label) {
-  color: #656d76 !important;
+  color: var(--auth-text-muted) !important;
 }
 
 .terms-checkbox-text {
-  font-size: 12px !important;
-  color: #656d76 !important;
+  font-size: var(--auth-fs-small) !important;
+  color: var(--auth-text-muted) !important;
   line-height: 1.5 !important;
 }
 
 .terms-checkbox-text :deep(.el-link__inner) {
   color: #0969da !important;
-  font-size: 12px !important;
+  font-size: var(--auth-fs-small) !important;
 }
 
 .terms-checkbox-text :deep(.el-link:hover .el-link__inner) {
@@ -607,42 +694,41 @@ export default {
 .sign-in-btn {
   width: 100%;
   padding: 6px 16px !important;
-  font-size: 14px !important;
+  font-size: var(--auth-fs-input) !important;
   font-weight: 500 !important;
   line-height: 20px !important;
   height: 32px !important;
-  --el-button-bg-color: #2da44e !important;
-  --el-button-border-color: rgba(27, 31, 36, 0.15) !important;
-  --el-button-text-color: #ffffff !important;
-  --el-button-hover-bg-color: #2c974b !important;
-  --el-button-hover-border-color: rgba(27, 31, 36, 0.15) !important;
-  background-color: #2da44e !important;
-  border-color: rgba(27, 31, 36, 0.15) !important;
-  border-radius: 6px !important;
+  /* 主按钮统一样式：渐变背景 + 无边框 + 圆角 10px */
+  background-image: linear-gradient(to right, #8317bd, #61abff) !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: #ffffff !important;
   cursor: pointer;
-  transition: background-color 0.2s !important;
+  transition: filter 0.2s !important;
 }
 
 .sign-in-btn:hover:not(:disabled) {
-  background-color: #2c974b !important;
-  border-color: rgba(27, 31, 36, 0.15) !important;
+  filter: brightness(1.05);
 }
 
 .sign-in-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+  filter: none;
 }
 
 .create-account-box {
   width: 100%;
   max-width: 340px;
-  margin-top: 12px;
+  /* 登录按钮与“还没有账户”区间距：避免视觉过挤 */
+  margin-top: 20px;
   padding: 8px 16px;
   border: 1px solid #d0d7de;
   border-radius: 6px;
   text-align: center;
-  font-size: 14px;
-  color: #1f2328;
+  font-size: var(--auth-fs-input);
+  color: var(--auth-text);
   background-color: #f6f8fa;
   display: flex;
   justify-content: center;
@@ -665,12 +751,12 @@ export default {
   flex-wrap: wrap;
   justify-content: center;
   gap: 16px;
-  font-size: 12px;
+  font-size: var(--auth-fs-small);
 }
 
 .footer :deep(.el-link__inner) {
-  color: #656d76 !important;
-  font-size: 12px !important;
+  color: var(--auth-text-muted) !important;
+  font-size: var(--auth-fs-small) !important;
 }
 
 .footer :deep(.el-link:hover .el-link__inner) {

@@ -1,6 +1,7 @@
 <script lang="ts">
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores'
+import { pushWithDesktopQuery } from '@/utils/desktopNav'
 
 export default {
   name: 'FilePage',
@@ -39,7 +40,7 @@ export default {
         ElMessage.error('退出失败')
       } finally {
         this.loading = false
-        this.$router.push('/login')
+        pushWithDesktopQuery(this.$router, this.$route.query, '/login')
       }
     }
   }

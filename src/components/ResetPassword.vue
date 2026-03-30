@@ -1,7 +1,8 @@
 <script lang="ts">
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores'
-import { preserveDesktopClientQuery } from '@/utils/desktopBridge'
+import { isDesktopEmbed } from '@/utils/desktopBridge'
+import { pushWithDesktopQuery } from '@/utils/desktopNav'
 import { isResetPasswordValid } from '@/utils/passwordPolicy'
 
 export default {
@@ -19,6 +20,10 @@ export default {
     }
   },
   computed: {
+    /** Qt 内嵌或 ?client=desktop 时为 true；Web 独立访问为 false（与登录页一致） */
+    isDesktopEmbedMode() {
+      return isDesktopEmbed(this.$route.query)
+    },
     passwordValid() {
       if (!this.password) return true
       return isResetPasswordValid(this.password)
@@ -94,15 +99,13 @@ export default {
         )
         const msg = typeof result?.msg === 'string' ? result.msg : ''
         ElMessage.success(msg || '密码重置成功')
-        const q = preserveDesktopClientQuery(this.$route.query)
-        this.$router.push(Object.keys(q).length ? { path: '/login', query: q } : '/login')
+        pushWithDesktopQuery(this.$router, this.$route.query, '/login')
       } catch {
         // 业务错误由 http 拦截器提示；此处保留静默
       }
     },
     goToLogin() {
-      const q = preserveDesktopClientQuery(this.$route.query)
-      this.$router.push(Object.keys(q).length ? { path: '/login', query: q } : '/login')
+      pushWithDesktopQuery(this.$router, this.$route.query, '/login')
     },
     onPasswordBlur() {
       this.passwordTouched = true
@@ -118,14 +121,23 @@ export default {
 </script>
 
 <template>
-  <div class="reset-container">
-    <div class="reset-main">
+  <div
+    class="reset-container"
+    :class="{
+      'reset-container--web-bg': !isDesktopEmbedMode,
+      'reset-container--desktop': isDesktopEmbedMode
+    }"
+  >
+    <div
+      class="reset-main"
+      :class="{ 'reset-main--web-frame': !isDesktopEmbedMode }"
+    >
       <!-- Reset Form -->
       <div class="reset-content">
         <!-- 图标与标题同一行居中 -->
         <div class="page-heading">
           <a href="#" class="app-logo">
-            <img src="/logo.ico" height="32" width="32" alt="Logo" />
+            <img src="/qjcam-logo.png" alt="QJCAM" class="app-logo-img" />
           </a>
           <h1 class="title">重置密码</h1>
         </div>
@@ -144,8 +156,12 @@ export default {
                 class="custom-input"
                 @blur="onAccountBlur"
               />
-              <div v-if="accountTouched && !accountValid" class="password-hint password-hint-error">
-                请输入正确的邮箱
+              <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
+              <div
+                class="auth-input-hint"
+                :class="{ 'auth-input-hint--error': accountTouched && !accountValid }"
+              >
+                {{ accountTouched && !accountValid ? '请输入正确的邮箱' : '\u00A0' }}
               </div>
             </el-form-item>
 
@@ -184,7 +200,7 @@ export default {
                 class="custom-input"
                 @blur="onPasswordBlur"
               />
-              <div class="password-hint" :class="{ 'password-hint-error': passwordTouched && !passwordValid }">
+              <div class="auth-input-hint" :class="{ 'auth-input-hint--error': passwordTouched && !passwordValid }">
                 8-32 位字符，且至少包含一个数字和一个字母
               </div>
             </el-form-item>
@@ -202,8 +218,12 @@ export default {
                 class="custom-input"
                 @blur="onConfirmPasswordBlur"
               />
-              <div v-if="confirmPasswordTouched && !confirmPasswordValid" class="password-hint password-hint-error">
-                两次输入的密码不一致
+              <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
+              <div
+                class="auth-input-hint"
+                :class="{ 'auth-input-hint--error': confirmPasswordTouched && !confirmPasswordValid }"
+              >
+                {{ confirmPasswordTouched && !confirmPasswordValid ? '两次输入的密码不一致' : '\u00A0' }}
               </div>
             </el-form-item>
 
@@ -236,8 +256,31 @@ export default {
   background-color: #ffffff;
   padding: 12px 16px 16px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
-  font-size: 14px;
+  font-size: var(--auth-fs-root);
   overflow: hidden;
+}
+
+/* Qt 内嵌：垂直居中（与原生窗口/固定尺寸的视觉更一致） */
+.reset-container.reset-container--desktop {
+  justify-content: center;
+}
+
+/* Web：全屏背景 + 内容区靠右（与登录页一致） */
+.reset-container.reset-container--web-bg {
+  background-image: url('/background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  align-items: flex-end;
+  padding-right: clamp(24px, 10vw, 120px);
+  padding-left: 16px;
+}
+
+@media (max-width: 640px) {
+  .reset-container.reset-container--web-bg {
+    align-items: center;
+    padding-right: 16px;
+  }
 }
 
 .reset-main {
@@ -249,17 +292,41 @@ export default {
   justify-content: center;
 }
 
+/* WEB：白底外框随内容高度，带阴影；Qt 不加 */
+.reset-main.reset-main--web-frame {
+  flex: 0 0 auto;
+  align-self: flex-end;
+  max-width: var(--auth-web-frame-max-width);
+  width: 100%;
+  margin-inline: 0;
+  padding: var(--auth-web-frame-pad-top) var(--auth-web-frame-pad-x)
+    var(--auth-web-frame-pad-bottom);
+  box-sizing: border-box;
+  border: 1px solid #d8dee4;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow:
+    0 4px 6px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+@media (max-width: 640px) {
+  .reset-main.reset-main--web-frame {
+    align-self: center;
+  }
+}
+
 .page-heading {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
   width: 100%;
 }
 
 .app-logo {
-  color: #1f2328;
+  color: var(--auth-text-title);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -268,6 +335,14 @@ export default {
 
 .app-logo:hover {
   color: #656d76;
+}
+
+.app-logo-img {
+  display: block;
+  height: 32px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
 }
 
 /* Content */
@@ -279,11 +354,13 @@ export default {
 }
 
 .page-heading .title {
-  font-size: 24px;
+  font-size: var(--auth-fs-title);
   font-weight: 400;
-  color: #1f2328;
+  color: var(--auth-text-title);
   margin: 0;
   line-height: 1.2;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 /* Form */
@@ -314,6 +391,7 @@ export default {
   text-align: left !important;
   justify-content: flex-start !important;
   margin-bottom: 0 !important;
+  height:24px;
 }
 
 .reset-form :deep(.el-form-item__content) {
@@ -323,9 +401,9 @@ export default {
 
 .custom-label {
   display: block;
-  font-size: 16px !important;
+  font-size: var(--auth-fs-label) !important;
   font-weight: 400 !important;
-  color: #1f2328 !important;
+  color: var(--auth-text) !important;
   margin-bottom: 4px;
   text-align: left;
   line-height: 1.5 !important;
@@ -336,8 +414,8 @@ export default {
   --el-input-border: #d0d7de;
   --el-input-border-color: #d0d7de;
   --el-input-bg-color: #ffffff;
-  --el-input-text-color: #1f2328;
-  --el-input-placeholder-color: #6e7781;
+  --el-input-text-color: var(--auth-text);
+  --el-input-placeholder-color: var(--auth-text-muted);
   --el-input-hover-border: #d0d7de;
   --el-input-focus-border: #0969da;
 }
@@ -346,7 +424,7 @@ export default {
   width: 100%;
   padding: 0 12px !important;
   height: 32px !important;
-  font-size: 14px !important;
+  font-size: var(--auth-fs-input) !important;
   background-color: #ffffff !important;
   border: 1px solid #d0d7de !important;
   border-radius: 6px !important;
@@ -369,9 +447,9 @@ export default {
 
 .reset-form :deep(.el-input__inner) {
   height: auto !important;
-  line-height: 20px !important;
-  color: #1f2328 !important;
-  font-size: 14px !important;
+  line-height: 19px !important;
+  color: var(--auth-text) !important;
+  font-size: var(--auth-fs-input) !important;
 }
 
 .reset-form :deep(.el-input__inner::placeholder) {
@@ -427,7 +505,7 @@ export default {
   top: 50%;
   transform: translateY(-50%);
   padding: 4px 10px !important;
-  font-size: 12px !important;
+  font-size: var(--auth-fs-small) !important;
   font-weight: 400 !important;
   line-height: 20px !important;
   height: 26px !important;
@@ -462,25 +540,22 @@ export default {
 .reset-btn {
   width: 100%;
   padding: 6px 16px !important;
-  font-size: 14px !important;
+  font-size: var(--auth-fs-input) !important;
   font-weight: 500 !important;
   line-height: 20px !important;
   height: 32px !important;
-  --el-button-bg-color: #2da44e !important;
-  --el-button-border-color: rgba(27, 31, 36, 0.15) !important;
-  --el-button-text-color: #ffffff !important;
-  --el-button-hover-bg-color: #2c974b !important;
-  --el-button-hover-border-color: rgba(27, 31, 36, 0.15) !important;
-  background-color: #2da44e !important;
-  border-color: rgba(27, 31, 36, 0.15) !important;
-  border-radius: 6px !important;
+  /* 主按钮统一样式：渐变背景 + 无边框 + 圆角 10px */
+  background-image: linear-gradient(to right, #8317bd, #61abff) !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: #ffffff !important;
   cursor: pointer;
-  transition: background-color 0.2s !important;
+  transition: filter 0.2s !important;
 }
 
 .reset-btn:hover {
-  background-color: #2c974b !important;
-  border-color: rgba(27, 31, 36, 0.15) !important;
+  filter: brightness(1.05);
 }
 
 /* Sign In Link */
@@ -490,8 +565,8 @@ export default {
   border: 1px solid #d0d7de;
   border-radius: 6px;
   text-align: center;
-  font-size: 14px;
-  color: #1f2328;
+  font-size: var(--auth-fs-input);
+  color: var(--auth-text);
   background-color: #f6f8fa;
   display: flex;
   justify-content: center;
@@ -501,7 +576,7 @@ export default {
 
 .signin-link :deep(.el-link__inner) {
   color: #0969da !important;
-  font-size: 14px !important;
+  font-size: var(--auth-fs-input) !important;
 }
 
 .signin-link :deep(.el-link:hover .el-link__inner) {

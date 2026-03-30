@@ -19,14 +19,54 @@ body {
 }
 
 /**
+ * 登录/注册/重置：表单字色偏深灰、字号略小于正文，三页共用 var 便于一致维护。
+ */
+:root {
+  --auth-text: #444c56;
+  --auth-text-title: #3d444d;
+  --auth-text-muted: #6e7781;
+  --auth-fs-root: 13px;
+  --auth-fs-label: 14px;
+  --auth-fs-input: 13px;
+  --auth-fs-small: 11px;
+  --auth-fs-title: 22px;
+  /**
+   * WEB 端最外层白底卡片（*-main--web-frame）内边距；
+   * 内容区 max-width 340px，外框宽度 = 340 + 左右 padding。
+   */
+  --auth-web-frame-pad-x: 48px;
+  --auth-web-frame-pad-top: 56px;
+  --auth-web-frame-pad-bottom: 52px;
+  --auth-web-frame-max-width: calc(340px + 2 * var(--auth-web-frame-pad-x));
+}
+
+/**
  * Qt 嵌入 CEF 时登录/注册/重置三页共用：与 LoginPage.login-box 同宽同边框，避免切换路由时视觉跳变。
  */
 .auth-form-card {
   width: 100%;
   max-width: 340px;
   margin: 0 auto;
-  border: 1px solid #d0d7de;
+  /* 仅保留“卡片内边距”，去掉内部边框（底部 signin-link 边框另有样式保留） */
+  border: none;
   border-radius: 6px;
-  padding: 14px 16px 16px;
+  /* 内部无边界表单：padding 置 0，保证每行左右对齐 */
+  padding: 0;
   box-sizing: border-box;
+  background: transparent;
+}
+
+/**
+ * 表单提示统一样式（预留区域，避免提示出现/消失导致布局抖动）
+ */
+.auth-input-hint {
+  font-size: 12px;
+  color: #8b949e;
+  margin-top: 4px;
+  line-height: 1.5;
+  min-height: calc(12px * 1.5);
+}
+
+.auth-input-hint--error {
+  color: #cf222e;
 }

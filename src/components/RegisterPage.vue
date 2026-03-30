@@ -1,7 +1,8 @@
 <script lang="ts">
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores'
-import { preserveDesktopClientQuery } from '@/utils/desktopBridge'
+import { isDesktopEmbed } from '@/utils/desktopBridge'
+import { pushWithDesktopQuery } from '@/utils/desktopNav'
 import { isRegisterPasswordValid } from '@/utils/passwordPolicy'
 
 export default {
@@ -16,10 +17,16 @@ export default {
       agreeTerms: false,
       emailCountdown: 0,
       passwordTouched: false,
-      emailTouched: false
+      emailTouched: false,
+      emailCodeTouched: false,
+      usernameTouched: false
     }
   },
   computed: {
+    /** Qt 内嵌或 ?client=desktop 时为 true；Web 独立访问为 false（与登录页一致） */
+    isDesktopEmbedMode() {
+      return isDesktopEmbed(this.$route.query)
+    },
     passwordValid() {
       if (!this.password) return true
       return isRegisterPasswordValid(this.password)
@@ -27,6 +34,13 @@ export default {
     emailValid() {
       if (!this.email) return true
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
+    },
+    registerPasswordHintText() {
+      if (this.passwordTouched && !this.password) return '请输入密码'
+      return '8-32位字符，且至少包含一个数字和一个字母'
+    },
+    registerPasswordHasError() {
+      return this.passwordTouched && (!this.password || !this.passwordValid)
     }
   },
   methods: {
@@ -51,48 +65,67 @@ export default {
         ElMessage.warning('请阅读并勾选同意服务条款与隐私政策')
         return
       }
-      if (!this.email || !this.emailCode || !this.password || !this.username) {
-        ElMessage.warning('请完整填写注册信息')
-        return
-      }
+      // 中文注释：注册页不允许空输入，优先在输入框下方展示提示（避免只弹 Message）。
+      this.emailTouched = true
+      this.emailCodeTouched = true
       this.passwordTouched = true
-      if (!this.passwordValid) {
-        ElMessage.warning('密码需为 8-32 位，且至少包含字母与数字')
-        return
-      }
+      this.usernameTouched = true
+
+      if (!this.email || !this.emailValid) return
+      if (!this.emailCode.trim()) return
+      if (!this.password || !this.passwordValid) return
+      if (!this.username.trim()) return
       try {
         const userStore = useUserStore()
-        await userStore.registerByCode(this.email, this.emailCode, this.password, this.username)
+        await userStore.registerByCode(
+          this.email.trim(),
+          this.emailCode.trim(),
+          this.password,
+          this.username.trim()
+        )
         ElMessage.success('注册成功，请登录')
-        const q = preserveDesktopClientQuery(this.$route.query)
-        this.$router.push(Object.keys(q).length ? { path: '/login', query: q } : '/login')
+        pushWithDesktopQuery(this.$router, this.$route.query, '/login')
       } catch {
         ElMessage.error('注册失败')
       }
     },
     goToLogin() {
-      const q = preserveDesktopClientQuery(this.$route.query)
-      this.$router.push(Object.keys(q).length ? { path: '/login', query: q } : '/login')
+      pushWithDesktopQuery(this.$router, this.$route.query, '/login')
     },
     onPasswordBlur() {
       this.passwordTouched = true
     },
     onEmailBlur() {
       this.emailTouched = true
+    },
+    onEmailCodeBlur() {
+      this.emailCodeTouched = true
+    },
+    onUsernameBlur() {
+      this.usernameTouched = true
     }
   }
 }
 </script>
 
 <template>
-  <div class="signup-container">
-    <div class="signup-main">
+  <div
+    class="signup-container"
+    :class="{
+      'signup-container--web-bg': !isDesktopEmbedMode,
+      'signup-container--desktop': isDesktopEmbedMode
+    }"
+  >
+    <div
+      class="signup-main"
+      :class="{ 'signup-main--web-frame': !isDesktopEmbedMode }"
+    >
       <!-- Signup Form -->
       <div class="signup-content">
         <!-- 图标与标题同一行居中 -->
         <div class="page-heading">
           <a href="#" class="app-logo">
-            <img src="/logo.ico" height="32" width="32" alt="Logo" />
+            <img src="/qjcam-logo.png" alt="QJCAM" class="app-logo-img" />
           </a>
           <h1 class="title">创建账户</h1>
         </div>
@@ -112,8 +145,9 @@ export default {
                 class="custom-input"
                 @blur="onEmailBlur"
               />
-              <div v-if="emailTouched && !emailValid" class="password-hint password-hint-error">
-                请输入正确邮箱
+              <!-- 预留提示区域：避免错误提示出现时表单抖动 -->
+              <div class="auth-input-hint" :class="{ 'auth-input-hint--error': emailTouched && !emailValid }">
+                {{ emailTouched && !emailValid ? '请输入正确邮箱' : '\u00A0' }}
               </div>
             </el-form-item>
 
@@ -128,6 +162,7 @@ export default {
                   placeholder="请输入验证码"
                   autocomplete="one-time-code"
                   class="custom-input code-input"
+                  @blur="onEmailCodeBlur"
                 />
                 <el-button
                   type="primary"
@@ -137,6 +172,13 @@ export default {
                 >
                   {{ emailCountdown > 0 ? `${emailCountdown}s` : '获取验证码' }}
                 </el-button>
+              </div>
+              <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
+              <div
+                class="auth-input-hint"
+                :class="{ 'auth-input-hint--error': emailCodeTouched && !emailCode.trim() }"
+              >
+                {{ emailCodeTouched && !emailCode.trim() ? '请输入验证码' : '\u00A0' }}
               </div>
             </el-form-item>
 
@@ -154,8 +196,11 @@ export default {
                 class="custom-input"
                 @blur="onPasswordBlur"
               />
-              <div class="password-hint" :class="{ 'password-hint-error': passwordTouched && !passwordValid }">
-                8-32位字符，且至少包含一个数字和一个字母
+              <div
+                class="auth-input-hint"
+                :class="{ 'auth-input-hint--error': registerPasswordHasError }"
+              >
+                {{ registerPasswordHintText }}
               </div>
             </el-form-item>
 
@@ -170,7 +215,15 @@ export default {
                 placeholder="用户名"
                 autocomplete="username"
                 class="custom-input"
+                @blur="onUsernameBlur"
               />
+              <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
+              <div
+                class="auth-input-hint"
+                :class="{ 'auth-input-hint--error': usernameTouched && !username.trim() }"
+              >
+                {{ usernameTouched && !username.trim() ? '请输入用户名' : '\u00A0' }}
+              </div>
             </el-form-item>
 
             <!-- 同意条款（必选，勾选后才可点击创建账户） -->
@@ -219,8 +272,31 @@ export default {
   background-color: #ffffff;
   padding: 12px 16px 16px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
-  font-size: 14px;
+  font-size: var(--auth-fs-root);
   overflow: hidden;
+}
+
+/* Qt 内嵌：垂直居中（与原生窗口/固定尺寸的视觉更一致） */
+.signup-container.signup-container--desktop {
+  justify-content: center;
+}
+
+/* Web：全屏背景 + 内容区靠右（与登录页一致） */
+.signup-container.signup-container--web-bg {
+  background-image: url('/background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  align-items: flex-end;
+  padding-right: clamp(24px, 10vw, 120px);
+  padding-left: 16px;
+}
+
+@media (max-width: 640px) {
+  .signup-container.signup-container--web-bg {
+    align-items: center;
+    padding-right: 16px;
+  }
 }
 
 .signup-main {
@@ -232,17 +308,41 @@ export default {
   justify-content: center;
 }
 
+/* WEB：白底外框随内容高度，带阴影；Qt 不加 */
+.signup-main.signup-main--web-frame {
+  flex: 0 0 auto;
+  align-self: flex-end;
+  max-width: var(--auth-web-frame-max-width);
+  width: 100%;
+  margin-inline: 0;
+  padding: var(--auth-web-frame-pad-top) var(--auth-web-frame-pad-x)
+    var(--auth-web-frame-pad-bottom);
+  box-sizing: border-box;
+  border: 1px solid #d8dee4;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow:
+    0 4px 6px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+@media (max-width: 640px) {
+  .signup-main.signup-main--web-frame {
+    align-self: center;
+  }
+}
+
 .page-heading {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
   width: 100%;
 }
 
 .app-logo {
-  color: #1f2328;
+  color: var(--auth-text-title);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -251,6 +351,14 @@ export default {
 
 .app-logo:hover {
   color: #656d76;
+}
+
+.app-logo-img {
+  display: block;
+  height: 32px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
 }
 
 /* Content */
@@ -262,11 +370,13 @@ export default {
 }
 
 .page-heading .title {
-  font-size: 24px;
+  font-size: var(--auth-fs-title);
   font-weight: 400;
-  color: #1f2328;
+  color: var(--auth-text-title);
   margin: 0;
   line-height: 1.2;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 /* Form */
@@ -275,13 +385,13 @@ export default {
 }
 
 .form-item-custom {
-  margin-bottom: 12px !important;
+  margin-bottom: 0px !important;
 }
 
 /* 创建账户按钮：收紧与勾选区、下方登录入口的间距 */
 .submit-item {
-  margin-top: 6px !important;
-  margin-bottom: 4px !important;
+  margin-top: 4px !important;
+  margin-bottom: 2px !important;
 }
 
 /* 覆盖 Element Plus Form 样式 */
@@ -299,6 +409,7 @@ export default {
   text-align: left !important;
   justify-content: flex-start !important;
   margin-bottom: 0 !important;
+  height:24px;
 }
 
 .signup-form :deep(.el-form-item__content) {
@@ -308,9 +419,9 @@ export default {
 
 .custom-label {
   display: block;
-  font-size: 16px !important;
+  font-size: var(--auth-fs-label) !important;
   font-weight: 400 !important;
-  color: #1f2328 !important;
+  color: var(--auth-text) !important;
   margin-bottom: 4px;
   text-align: left;
   line-height: 1.5 !important;
@@ -321,8 +432,8 @@ export default {
   --el-input-border: #d0d7de;
   --el-input-border-color: #d0d7de;
   --el-input-bg-color: #ffffff;
-  --el-input-text-color: #1f2328;
-  --el-input-placeholder-color: #6e7781;
+  --el-input-text-color: var(--auth-text);
+  --el-input-placeholder-color: var(--auth-text-muted);
   --el-input-hover-border: #d0d7de;
   --el-input-focus-border: #0969da;
 }
@@ -331,7 +442,7 @@ export default {
   width: 100%;
   padding: 0 12px !important;
   height: 32px !important;
-  font-size: 14px !important;
+  font-size: var(--auth-fs-input) !important;
   background-color: #ffffff !important;
   border: 1px solid #d0d7de !important;
   border-radius: 6px !important;
@@ -354,9 +465,9 @@ export default {
 
 .signup-form :deep(.el-input__inner) {
   height: auto !important;
-  line-height: 20px !important;
-  color: #1f2328 !important;
-  font-size: 14px !important;
+  line-height: 19px !important;
+  color: var(--auth-text) !important;
+  font-size: var(--auth-fs-input) !important;
 }
 
 .signup-form :deep(.el-input__inner::placeholder) {
@@ -395,8 +506,8 @@ export default {
 }
 
 .password-hint {
-  font-size: 12px;
-  color: #8b949e;
+  font-size: var(--auth-fs-small);
+  color: var(--auth-text-muted);
   margin-top: 4px;
   line-height: 1.5;
 }
@@ -458,8 +569,8 @@ export default {
 .signup-form :deep(.el-checkbox__label) {
   display: inline-flex;
   align-items: center;
-  font-size: 12px !important;
-  color: #656d76 !important;
+  font-size: var(--auth-fs-small) !important;
+  color: var(--auth-text-muted) !important;
   line-height: 1.5 !important;
   padding-left: 8px !important;
 }
@@ -512,41 +623,39 @@ export default {
 .create-account-btn {
   width: 100%;
   padding: 6px 16px !important;
-  font-size: 14px !important;
+  font-size: var(--auth-fs-input) !important;
   font-weight: 500 !important;
   line-height: 20px !important;
   height: 32px !important;
-  --el-button-bg-color: #2da44e !important;
-  --el-button-border-color: rgba(27, 31, 36, 0.15) !important;
-  --el-button-text-color: #ffffff !important;
-  --el-button-hover-bg-color: #2c974b !important;
-  --el-button-hover-border-color: rgba(27, 31, 36, 0.15) !important;
-  background-color: #2da44e !important;
-  border-color: rgba(27, 31, 36, 0.15) !important;
-  border-radius: 6px !important;
+  /* 主按钮统一样式：渐变背景 + 无边框 + 圆角 10px */
+  background-image: linear-gradient(to right, #8317bd, #61abff) !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: #ffffff !important;
   cursor: pointer;
-  transition: background-color 0.2s !important;
+  transition: filter 0.2s !important;
 }
 
 .create-account-btn:hover:not(:disabled) {
-  background-color: #2c974b !important;
-  border-color: rgba(27, 31, 36, 0.15) !important;
+  filter: brightness(1.05);
 }
 
 .create-account-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+  filter: none;
 }
 
 /* Sign In Link */
 .signin-link {
-  margin-top: 6px;
+  margin-top: 10px;
   padding: 8px 16px;
   border: 1px solid #d0d7de;
   border-radius: 6px;
   text-align: center;
-  font-size: 14px;
-  color: #1f2328;
+  font-size: var(--auth-fs-input);
+  color: var(--auth-text);
   background-color: #f6f8fa;
   display: flex;
   justify-content: center;
@@ -556,7 +665,7 @@ export default {
 
 .signin-link :deep(.el-link__inner) {
   color: #0969da !important;
-  font-size: 14px !important;
+  font-size: var(--auth-fs-input) !important;
 }
 
 .signin-link :deep(.el-link:hover .el-link__inner) {
