@@ -306,7 +306,6 @@ export default {
 <style scoped>
 .login-container {
   box-sizing: border-box;
-  min-height: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -352,12 +351,6 @@ export default {
   align-items: center;
   justify-content: center;
   flex: 1 1 auto;
-}
-
-/* Qt 内嵌：保持与容器一致的居中布局 */
-.login-main.login-main--desktop {
-  justify-content: center;
-  padding-top: 0;
 }
 
 /* WEB：外框随内容高度（不撑满视口），白底 + 阴影过渡；Qt 不加此类 */
@@ -505,7 +498,8 @@ export default {
   --el-input-border-color: #d0d7de;
   --el-input-bg-color: #ffffff;
   --el-input-text-color: var(--auth-text);
-  --el-input-placeholder-color: var(--auth-text-muted);
+  /* 与变量统一 placeholder 色，避免额外 ::placeholder 规则 */
+  --el-input-placeholder-color: #6e7781;
   --el-input-hover-border: #d0d7de;
   --el-input-focus-border: #0969da;
 }
@@ -514,6 +508,7 @@ export default {
   width: 100%;
   padding: 0 12px !important;
   height: 32px !important;
+  /* 与历史样式一致：外层 14px，内层仍由 .el-input__inner 的 --auth-fs-input 控制 */
   font-size: 14px !important;
   background-color: #ffffff !important;
   border: 1px solid #d0d7de !important;
@@ -540,10 +535,6 @@ export default {
   line-height: 19px !important;
   color: var(--auth-text) !important;
   font-size: var(--auth-fs-input) !important;
-}
-
-.login-box :deep(.el-input__inner::placeholder) {
-  color: #6e7781 !important;
 }
 
 /* 密码输入框的图标 */
@@ -575,17 +566,6 @@ export default {
 
 .code-input :deep(.el-input__wrapper) {
   padding-right: 100px !important;
-}
-
-.password-hint {
-  font-size: 12px;
-  color: #8b949e;
-  margin-top: 4px;
-  line-height: 1.5;
-}
-
-.password-hint-error {
-  color: #cf222e;
 }
 
 /* 用户协议勾选（与注册页风格一致） */
@@ -659,6 +639,7 @@ export default {
   top: 50%;
   transform: translateY(-50%);
   padding: 4px 10px !important;
+  /* 保持原 12px，与全局 --auth-fs-small(11px) 区分 */
   font-size: 12px !important;
   font-weight: 400 !important;
   line-height: 20px !important;
@@ -672,23 +653,10 @@ export default {
   --el-button-disabled-bg-color: #8b949e !important;
   --el-button-disabled-border-color: #8b949e !important;
   --el-button-disabled-text-color: #ffffff !important;
-  background-color: #0969da !important;
-  border-color: #0969da !important;
   border-radius: 4px !important;
   cursor: pointer;
   transition: all 0.2s !important;
   white-space: nowrap;
-}
-
-.send-code-btn:hover:not(:disabled) {
-  background-color: #0866c8 !important;
-  border-color: #0866c8 !important;
-}
-
-.send-code-btn:disabled {
-  background-color: #8b949e !important;
-  border-color: #8b949e !important;
-  cursor: not-allowed;
 }
 
 .sign-in-btn {
@@ -742,25 +710,6 @@ export default {
 }
 
 .create-account-box :deep(.el-link:hover .el-link__inner) {
-  text-decoration: underline !important;
-}
-
-.footer {
-  padding-top: 24px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
-  font-size: var(--auth-fs-small);
-}
-
-.footer :deep(.el-link__inner) {
-  color: var(--auth-text-muted) !important;
-  font-size: var(--auth-fs-small) !important;
-}
-
-.footer :deep(.el-link:hover .el-link__inner) {
-  color: #0969da !important;
   text-decoration: underline !important;
 }
 </style>

@@ -145,8 +145,10 @@ export default {
                 class="custom-input"
                 @blur="onEmailBlur"
               />
-              <!-- 预留提示区域：避免错误提示出现时表单抖动 -->
-              <div class="auth-input-hint" :class="{ 'auth-input-hint--error': emailTouched && !emailValid }">
+              <div
+                class="auth-input-hint"
+                :class="{ 'auth-input-hint--error': emailTouched && !emailValid }"
+              >
                 {{ emailTouched && !emailValid ? '请输入正确邮箱' : '\u00A0' }}
               </div>
             </el-form-item>
@@ -173,7 +175,6 @@ export default {
                   {{ emailCountdown > 0 ? `${emailCountdown}s` : '获取验证码' }}
                 </el-button>
               </div>
-              <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
               <div
                 class="auth-input-hint"
                 :class="{ 'auth-input-hint--error': emailCodeTouched && !emailCode.trim() }"
@@ -197,7 +198,7 @@ export default {
                 @blur="onPasswordBlur"
               />
               <div
-                class="auth-input-hint"
+                class="auth-input-hint auth-input-hint--helper"
                 :class="{ 'auth-input-hint--error': registerPasswordHasError }"
               >
                 {{ registerPasswordHintText }}
@@ -217,7 +218,6 @@ export default {
                 class="custom-input"
                 @blur="onUsernameBlur"
               />
-              <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
               <div
                 class="auth-input-hint"
                 :class="{ 'auth-input-hint--error': usernameTouched && !username.trim() }"
@@ -263,7 +263,6 @@ export default {
 <style scoped>
 .signup-container {
   box-sizing: border-box;
-  min-height: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -274,11 +273,6 @@ export default {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
   font-size: var(--auth-fs-root);
   overflow: hidden;
-}
-
-/* Qt 内嵌：垂直居中（与原生窗口/固定尺寸的视觉更一致） */
-.signup-container.signup-container--desktop {
-  justify-content: center;
 }
 
 /* Web：全屏背景 + 内容区靠右（与登录页一致） */
@@ -415,6 +409,10 @@ export default {
 .signup-form :deep(.el-form-item__content) {
   width: 100%;
   margin-left: 0 !important;
+  /* 输入框与底部提示上下排列，避免 flex 子项高度被压成 0 */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .custom-label {
@@ -433,7 +431,8 @@ export default {
   --el-input-border-color: #d0d7de;
   --el-input-bg-color: #ffffff;
   --el-input-text-color: var(--auth-text);
-  --el-input-placeholder-color: var(--auth-text-muted);
+  /* 与变量统一 placeholder 色，避免额外 ::placeholder 规则 */
+  --el-input-placeholder-color: #6e7781;
   --el-input-hover-border: #d0d7de;
   --el-input-focus-border: #0969da;
 }
@@ -470,10 +469,6 @@ export default {
   font-size: var(--auth-fs-input) !important;
 }
 
-.signup-form :deep(.el-input__inner::placeholder) {
-  color: #6e7781 !important;
-}
-
 /* 密码输入框的图标 */
 .signup-form :deep(.el-input__suffix) {
   height: 32px;
@@ -505,17 +500,6 @@ export default {
   padding-right: 100px !important;
 }
 
-.password-hint {
-  font-size: var(--auth-fs-small);
-  color: var(--auth-text-muted);
-  margin-top: 4px;
-  line-height: 1.5;
-}
-
-.password-hint-error {
-  color: #cf222e;
-}
-
 /* 覆盖 Element Plus Button 样式 */
 .send-code-btn {
   position: absolute;
@@ -536,23 +520,10 @@ export default {
   --el-button-disabled-bg-color: #8b949e !important;
   --el-button-disabled-border-color: #8b949e !important;
   --el-button-disabled-text-color: #ffffff !important;
-  background-color: #0969da !important;
-  border-color: #0969da !important;
   border-radius: 4px !important;
   cursor: pointer;
   transition: all 0.2s !important;
   white-space: nowrap;
-}
-
-.send-code-btn:hover:not(:disabled) {
-  background-color: #0866c8 !important;
-  border-color: #0866c8 !important;
-}
-
-.send-code-btn:disabled {
-  background-color: #8b949e !important;
-  border-color: #8b949e !important;
-  cursor: not-allowed;
 }
 
 /* Checkbox */
@@ -670,5 +641,30 @@ export default {
 
 .signin-link :deep(.el-link:hover .el-link__inner) {
   text-decoration: underline !important;
+}
+
+/* 注册页：无错误时底部留 4px；错误/说明文案用 1.5 行高约 24px（12px 字号） */
+.auth-input-hint {
+  display: block;
+  width: 100%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #8b949e;
+  line-height: 4px;
+  min-height: 4px !important;
+  overflow: hidden;
+}
+
+.auth-input-hint--error,
+.auth-input-hint--helper {
+  line-height: 1.5;
+  min-height: auto !important;
+  overflow: visible;
+}
+
+.auth-input-hint--error {
+  color: #cf222e;
 }
 </style>
