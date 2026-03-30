@@ -2,41 +2,53 @@
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores'
 import { preserveDesktopClientQuery } from '@/utils/desktopBridge'
+import { isResetPasswordValid } from '@/utils/passwordPolicy'
 
 export default {
   name: 'ResetPassword',
   data() {
     return {
-      step: 1 as 1 | 2,
-      email: '',
+      account: '',
       code: '',
       password: '',
       confirmPassword: '',
       countdown: 0,
       passwordTouched: false,
       confirmPasswordTouched: false,
-      emailTouched: false
+      accountTouched: false
     }
   },
   computed: {
     passwordValid() {
       if (!this.password) return true
-      return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$/.test(this.password)
+      return isResetPasswordValid(this.password)
     },
     confirmPasswordValid() {
       if (!this.confirmPassword) return true
       return this.password === this.confirmPassword
     },
-    emailValid() {
-      if (!this.email) return true
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
+    accountValid() {
+      if (!this.account) return true
+      const s = this.account.trim()
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
+      const phoneOk = /^1\d{10}$/.test(s)
+      return emailOk || phoneOk
     }
   },
   methods: {
     async sendCode() {
+      this.accountTouched = true
+      if (!this.account.trim()) {
+        ElMessage.warning('请先输入邮箱或手机号')
+        return
+      }
+      if (!this.accountValid) {
+        ElMessage.warning('请输入正确的邮箱或手机号')
+        return
+      }
       try {
         const userStore = useUserStore()
-        await userStore.sendResetCode(this.email)
+        await userStore.sendResetCode(this.account.trim())
         ElMessage.success('验证码已发送')
         this.countdown = 60
         const timer = setInterval(() => {
@@ -49,14 +61,44 @@ export default {
         ElMessage.error('发送验证码失败')
       }
     },
-    nextStep() {
-      // TODO: 验证验证码是否正确
-      this.step = 2
-    },
     async resetPassword() {
-      // TODO: 实现重置密码逻辑
-      ElMessage.success('密码重置成功')
-      this.$router.push('/login')
+      this.accountTouched = true
+      this.passwordTouched = true
+      this.confirmPasswordTouched = true
+      if (!this.account.trim()) {
+        ElMessage.warning('请输入邮箱或手机号')
+        return
+      }
+      if (!this.accountValid) {
+        ElMessage.warning('请输入正确的邮箱或手机号')
+        return
+      }
+      if (!this.code.trim()) {
+        ElMessage.warning('请输入验证码')
+        return
+      }
+      if (!this.password || !this.passwordValid) {
+        ElMessage.warning('密码需为 8-32 位，且至少包含字母与数字')
+        return
+      }
+      if (!this.confirmPasswordValid) {
+        ElMessage.warning('两次输入的密码不一致')
+        return
+      }
+      try {
+        const userStore = useUserStore()
+        const result = await userStore.resetPassword(
+          this.account.trim(),
+          this.code.trim(),
+          this.password
+        )
+        const msg = typeof result?.msg === 'string' ? result.msg : ''
+        ElMessage.success(msg || '密码重置成功')
+        const q = preserveDesktopClientQuery(this.$route.query)
+        this.$router.push(Object.keys(q).length ? { path: '/login', query: q } : '/login')
+      } catch {
+        // 业务错误由 http 拦截器提示；此处保留静默
+      }
     },
     goToLogin() {
       const q = preserveDesktopClientQuery(this.$route.query)
@@ -68,8 +110,8 @@ export default {
     onConfirmPasswordBlur() {
       this.confirmPasswordTouched = true
     },
-    onEmailBlur() {
-      this.emailTouched = true
+    onAccountBlur() {
+      this.accountTouched = true
     }
   }
 }
@@ -89,30 +131,27 @@ export default {
       <div class="reset-content">
         <h1 class="title">重置密码</h1>
 
-        <!-- Step 1: Email and Code -->
-        <el-form v-if="step === 1" @submit.prevent class="reset-form">
-          <!-- Email -->
+        <el-form @submit.prevent class="reset-form">
           <el-form-item class="form-item-custom">
             <template #label>
-              <label class="custom-label">输入您的邮箱</label>
+              <label class="custom-label">邮箱或手机号</label>
             </template>
             <el-input
-              v-model="email"
-              type="email"
-              placeholder="请输入邮箱"
-              autocomplete="email"
+              v-model="account"
+              type="text"
+              placeholder="请输入邮箱或手机号"
+              autocomplete="username"
               class="custom-input"
-              @blur="onEmailBlur"
+              @blur="onAccountBlur"
             />
-            <div v-if="emailTouched && !emailValid" class="password-hint password-hint-error">
-              请输入正确邮箱
+            <div v-if="accountTouched && !accountValid" class="password-hint password-hint-error">
+              请输入正确的邮箱或 11 位手机号
             </div>
           </el-form-item>
 
-          <!-- Verification Code -->
           <el-form-item class="form-item-custom">
             <template #label>
-              <label class="custom-label">邮箱验证码</label>
+              <label class="custom-label">验证码</label>
             </template>
             <div class="code-input-wrapper">
               <el-input
@@ -132,20 +171,9 @@ export default {
             </div>
           </el-form-item>
 
-          <!-- Next Step Button -->
-          <el-form-item class="form-item-custom submit-item">
-            <el-button type="primary" class="next-btn" @click="nextStep">
-              下一步
-            </el-button>
-          </el-form-item>
-        </el-form>
-
-        <!-- Step 2: Password -->
-        <el-form v-else class="reset-form">
-          <!-- Password -->
           <el-form-item class="form-item-custom">
             <template #label>
-              <label class="custom-label">输入新密码</label>
+              <label class="custom-label">新密码</label>
             </template>
             <el-input
               v-model="password"
@@ -157,11 +185,10 @@ export default {
               @blur="onPasswordBlur"
             />
             <div class="password-hint" :class="{ 'password-hint-error': passwordTouched && !passwordValid }">
-              8-20位字符，且至少包含一个数字和一个字母
+              8-32 位字符，且至少包含一个数字和一个字母
             </div>
           </el-form-item>
 
-          <!-- Confirm Password -->
           <el-form-item class="form-item-custom">
             <template #label>
               <label class="custom-label">确认新密码</label>
@@ -180,9 +207,8 @@ export default {
             </div>
           </el-form-item>
 
-          <!-- Buttons -->
-          <el-form-item class="form-item-custom submit-item button-group">
-            <el-button type="primary" native-type="submit" class="reset-btn" @click="resetPassword">
+          <el-form-item class="form-item-custom submit-item">
+            <el-button type="primary" class="reset-btn" @click="resetPassword">
               重置密码
             </el-button>
           </el-form-item>
@@ -421,38 +447,8 @@ export default {
   cursor: not-allowed;
 }
 
-/* Button */
-.next-btn {
-  width: 100%;
-  padding: 6px 16px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  line-height: 20px !important;
-  height: 32px !important;
-  --el-button-bg-color: #2da44e !important;
-  --el-button-border-color: rgba(27, 31, 36, 0.15) !important;
-  --el-button-text-color: #ffffff !important;
-  --el-button-hover-bg-color: #2c974b !important;
-  --el-button-hover-border-color: rgba(27, 31, 36, 0.15) !important;
-  background-color: #2da44e !important;
-  border-color: rgba(27, 31, 36, 0.15) !important;
-  border-radius: 6px !important;
-  cursor: pointer;
-  transition: background-color 0.2s !important;
-}
-
-.next-btn:hover {
-  background-color: #2c974b !important;
-  border-color: rgba(27, 31, 36, 0.15) !important;
-}
-
-.button-group {
-  display: flex;
-  gap: 12px;
-}
-
 .reset-btn {
-  flex: 1;
+  width: 100%;
   padding: 6px 16px !important;
   font-size: 14px !important;
   font-weight: 500 !important;

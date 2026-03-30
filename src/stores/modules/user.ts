@@ -5,6 +5,7 @@ import {
   loginByPasswordApi,
   logoutApi,
   registerByCodeApi,
+  resetPasswordApi,
   sendCodeApi
 } from '@/api/auth'
 import { getCurrentUserApi, type CurrentUser } from '@/api/user'
@@ -116,6 +117,9 @@ export const useUserStore = defineStore('user', {
     },
     async registerByCode(account: string, code: string, password: string, username: string) {
       return registerByCodeApi(account, code, password, username)
+    },
+    async resetPassword(account: string, code: string, newPassword: string) {
+      return resetPasswordApi(account, code, newPassword)
     },
     async fetchCurrentUser() {
       const result = await getCurrentUserApi()

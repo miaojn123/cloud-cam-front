@@ -2,6 +2,7 @@
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores'
 import { preserveDesktopClientQuery } from '@/utils/desktopBridge'
+import { isRegisterPasswordValid } from '@/utils/passwordPolicy'
 
 export default {
   name: 'RegisterPage',
@@ -20,7 +21,7 @@ export default {
   computed: {
     passwordValid() {
       if (!this.password) return true
-      return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$/.test(this.password)
+      return isRegisterPasswordValid(this.password)
     },
     emailValid() {
       if (!this.email) return true
@@ -47,6 +48,11 @@ export default {
     async submitRegister() {
       if (!this.email || !this.emailCode || !this.password || !this.username) {
         ElMessage.warning('请完整填写注册信息')
+        return
+      }
+      this.passwordTouched = true
+      if (!this.passwordValid) {
+        ElMessage.warning('密码需为 8-20 位，且至少包含字母与数字')
         return
       }
       try {

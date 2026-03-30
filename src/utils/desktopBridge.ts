@@ -2,10 +2,10 @@ import type { LocationQuery } from 'vue-router'
 
 /**
  * Qt/QCefView 需在页面上下文中注入：
- *   window.__CAMDEMO_QT__ = { onLoginSuccess(payload) { ... } }
+ *   window.__DESKTOP_QT__ = { onLoginSuccess(payload) { ... } }
  * payload.token 与 localStorage(TOKEN_KEY) 一致，便于主窗未共享 storage 时由 Qt 写入主窗。
  */
-export const CAMDEMO_QT_BRIDGE = '__CAMDEMO_QT__' as const
+export const DESKTOP_QT_BRIDGE = '__DESKTOP_QT__' as const
 
 export const DESKTOP_CLIENT_PARAM = 'client'
 export const DESKTOP_CLIENT_VALUE = 'desktop'
@@ -36,7 +36,7 @@ export interface DesktopHostBridge {
 function getQtBridge(): DesktopHostBridge | undefined {
   if (typeof window === 'undefined') return undefined
   const w = window as unknown as Record<string, unknown>
-  const bridge = w[CAMDEMO_QT_BRIDGE]
+  const bridge = w[DESKTOP_QT_BRIDGE]
   if (typeof bridge === 'object' && bridge !== null) {
     return bridge as DesktopHostBridge
   }

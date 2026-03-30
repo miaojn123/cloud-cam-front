@@ -4,7 +4,7 @@ import type { DesktopHostBridge } from '@/utils/desktopBridge'
 
 declare global {
   interface Window {
-    __CAMDEMO_QT__?: DesktopHostBridge
+    __DESKTOP_QT__?: DesktopHostBridge
   }
 }
 

@@ -50,6 +50,19 @@ export function registerByCodeApi(account: string, code: string, password: strin
   })
 }
 
+/** 匿名：忘记密码后设置新密码 */
+export function resetPasswordApi(account: string, code: string, newPassword: string) {
+  return request<unknown>({
+    url: '/api/auth/reset-password',
+    method: 'post',
+    data: {
+      account,
+      code,
+      newPassword
+    }
+  })
+}
+
 export function logoutApi() {
   return request({
     url: '/api/auth/logout',
