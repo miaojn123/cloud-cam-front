@@ -12,7 +12,8 @@ export default {
       password: '',
       username: '',
       emailCode: '',
-      receiveUpdates: false,
+      /** 是否同意服务条款与隐私政策（必选） */
+      agreeTerms: false,
       emailCountdown: 0,
       passwordTouched: false,
       emailTouched: false
@@ -46,6 +47,10 @@ export default {
       }
     },
     async submitRegister() {
+      if (!this.agreeTerms) {
+        ElMessage.warning('请阅读并勾选同意服务条款与隐私政策')
+        return
+      }
       if (!this.email || !this.emailCode || !this.password || !this.username) {
         ElMessage.warning('请完整填写注册信息')
         return
@@ -93,7 +98,8 @@ export default {
       <div class="signup-content">
         <h1 class="title">创建账户</h1>
 
-        <el-form @submit.prevent="submitRegister" class="signup-form">
+        <div class="auth-form-card">
+          <el-form @submit.prevent="submitRegister" class="signup-form">
           <!-- Email -->
           <el-form-item class="form-item-custom">
             <template #label>
@@ -168,30 +174,30 @@ export default {
             />
           </el-form-item>
 
-          <!-- Receive Updates -->
+          <!-- 同意条款（必选，勾选后才可点击创建账户） -->
           <el-form-item class="form-item-custom checkbox-group">
-            <el-checkbox v-model="receiveUpdates" class="custom-checkbox">
+            <el-checkbox v-model="agreeTerms" class="custom-checkbox">
               <span class="checkbox-text">
-                通过邮件接收产品更新和公告。
-                <el-link type="primary" underline="never" class="text-link">您可以随时取消订阅</el-link>。
+                创建账户即表示您同意我们的
+                <el-link type="primary" underline="never" href="#" @click.prevent>服务条款</el-link>
+                和
+                <el-link type="primary" underline="never" href="#" @click.prevent>隐私政策</el-link>。
               </span>
             </el-checkbox>
           </el-form-item>
 
-          <!-- Submit Button -->
           <el-form-item class="form-item-custom submit-item">
-            <el-button type="primary" native-type="submit" class="create-account-btn">
+            <el-button
+              type="primary"
+              native-type="submit"
+              class="create-account-btn"
+              :disabled="!agreeTerms"
+            >
               创建账户
             </el-button>
           </el-form-item>
-
-          <!-- Terms Notice -->
-          <p class="terms-notice">
-            创建账户即表示您同意我们的
-            <el-link type="primary" underline="never">服务条款</el-link> 和
-            <el-link type="primary" underline="never">隐私政策</el-link>。
-          </p>
         </el-form>
+        </div>
 
         <!-- Sign In Link -->
         <div class="signin-link">
@@ -204,12 +210,15 @@ export default {
 
 <style scoped>
 .signup-container {
+  box-sizing: border-box;
+  min-height: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background-color: #ffffff;
+  padding: 12px 16px 16px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
   font-size: 14px;
   overflow: hidden;
@@ -226,7 +235,7 @@ export default {
 
 /* Header */
 .header {
-  padding: 0 0 16px;
+  padding: 0 0 12px;
 }
 
 .app-logo {
@@ -240,16 +249,17 @@ export default {
 
 /* Content */
 .signup-content {
+  width: 100%;
   max-width: 340px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0;
 }
 
 .title {
   font-size: 24px;
   font-weight: 400;
   color: #1f2328;
-  margin: 0 0 24px 0;
+  margin: 0 0 12px 0;
   text-align: center;
 }
 
@@ -259,11 +269,11 @@ export default {
 }
 
 .form-item-custom {
-  margin-bottom: 10px !important;
+  margin-bottom: 12px !important;
 }
 
 .submit-item {
-  margin-top: 16px !important;
+  margin-top: 12px !important;
 }
 
 /* 覆盖 Element Plus Form 样式 */
@@ -428,7 +438,7 @@ export default {
 
 /* Checkbox */
 .checkbox-group {
-  margin-top: 8px !important;
+  margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
 
@@ -481,12 +491,12 @@ export default {
   line-height: 1.5 !important;
 }
 
-.text-link :deep(.el-link__inner) {
+.checkbox-text :deep(.el-link__inner) {
   color: #0969da !important;
   font-size: 12px !important;
 }
 
-.text-link:hover :deep(.el-link__inner) {
+.checkbox-text :deep(.el-link:hover .el-link__inner) {
   text-decoration: underline !important;
 }
 
@@ -510,41 +520,19 @@ export default {
   transition: background-color 0.2s !important;
 }
 
-.create-account-btn:hover {
+.create-account-btn:hover:not(:disabled) {
   background-color: #2c974b !important;
   border-color: rgba(27, 31, 36, 0.15) !important;
 }
 
-/* Terms Notice */
-.terms-notice {
-  font-size: 12px;
-  color: #656d76;
-  text-align: center;
-  margin: 16px 0 0 0;
-  line-height: 1.5;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 0;
-}
-
-.terms-notice :deep(.el-link) {
-  display: inline;
-}
-
-.terms-notice :deep(.el-link__inner) {
-  color: #0969da !important;
-  font-size: 12px !important;
-}
-
-.terms-notice :deep(.el-link:hover .el-link__inner) {
-  text-decoration: underline !important;
+.create-account-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* Sign In Link */
 .signin-link {
-  margin-top: 16px;
+  margin-top: 12px;
   padding: 8px 16px;
   border: 1px solid #d0d7de;
   border-radius: 6px;

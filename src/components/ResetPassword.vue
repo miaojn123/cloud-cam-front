@@ -131,7 +131,8 @@ export default {
       <div class="reset-content">
         <h1 class="title">重置密码</h1>
 
-        <el-form @submit.prevent class="reset-form">
+        <div class="auth-form-card">
+          <el-form @submit.prevent class="reset-form">
           <el-form-item class="form-item-custom">
             <template #label>
               <label class="custom-label">邮箱或手机号</label>
@@ -212,7 +213,8 @@ export default {
               重置密码
             </el-button>
           </el-form-item>
-        </el-form>
+          </el-form>
+        </div>
 
         <!-- Sign In Link -->
         <div class="signin-link">
@@ -225,12 +227,15 @@ export default {
 
 <style scoped>
 .reset-container {
+  box-sizing: border-box;
+  min-height: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background-color: #ffffff;
+  padding: 12px 16px 16px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
   font-size: 14px;
   overflow: hidden;
@@ -247,7 +252,7 @@ export default {
 
 /* Header */
 .header {
-  padding: 0 0 16px;
+  padding: 0 0 12px;
 }
 
 .app-logo {
@@ -261,16 +266,17 @@ export default {
 
 /* Content */
 .reset-content {
+  width: 100%;
   max-width: 340px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0;
 }
 
 .title {
   font-size: 24px;
   font-weight: 400;
   color: #1f2328;
-  margin: 0 0 24px 0;
+  margin: 0 0 12px 0;
   text-align: center;
 }
 
@@ -280,11 +286,11 @@ export default {
 }
 
 .form-item-custom {
-  margin-bottom: 10px !important;
+  margin-bottom: 12px !important;
 }
 
 .submit-item {
-  margin-top: 16px !important;
+  margin-top: 12px !important;
 }
 
 /* 覆盖 Element Plus Form 样式 */
@@ -473,7 +479,7 @@ export default {
 
 /* Sign In Link */
 .signin-link {
-  margin-top: 16px;
+  margin-top: 12px;
   padding: 8px 16px;
   border: 1px solid #d0d7de;
   border-radius: 6px;

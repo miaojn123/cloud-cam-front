@@ -18,7 +18,9 @@ export default {
       isCodeMode: false,
       countdown: 0,
       passwordTouched: false,
-      emailTouched: false
+      emailTouched: false,
+      /** 是否已阅读并同意用户协议与隐私政策（登录前必选） */
+      agreeTerms: false
     }
   },
   computed: {
@@ -59,6 +61,10 @@ export default {
       }
     },
     async submitLogin() {
+      if (!this.agreeTerms) {
+        ElMessage.warning('请阅读并勾选同意用户协议与隐私政策')
+        return
+      }
       const userStore = useUserStore()
       try {
         if (!this.isCodeMode) {
@@ -123,7 +129,7 @@ export default {
       <!-- App Logo -->
       <div class="logo">
         <a href="#" class="app-logo">
-          <img src="/logo.ico" height="48" width="48" alt="Logo" />
+          <img src="/logo.ico" height="32" width="32" alt="Logo" />
         </a>
       </div>
 
@@ -228,8 +234,25 @@ export default {
             </div>
           </el-form-item>
 
+          <!-- 同意协议（必选，勾选后才可登录） -->
+          <el-form-item class="form-item-no-margin terms-checkbox-row">
+            <el-checkbox v-model="agreeTerms" class="terms-checkbox">
+              <span class="terms-checkbox-text">
+                我已阅读并同意
+                <el-link type="primary" underline="never" href="#" @click.prevent>用户协议</el-link>
+                和
+                <el-link type="primary" underline="never" href="#" @click.prevent>隐私政策</el-link>
+              </span>
+            </el-checkbox>
+          </el-form-item>
+
           <el-form-item class="form-item-no-margin submit-item">
-            <el-button type="primary" native-type="submit" class="sign-in-btn">
+            <el-button
+              type="primary"
+              native-type="submit"
+              class="sign-in-btn"
+              :disabled="!agreeTerms"
+            >
               登录
             </el-button>
           </el-form-item>
@@ -249,13 +272,16 @@ export default {
 
 <style scoped>
 .login-container {
+  box-sizing: border-box;
+  min-height: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background-color: #ffffff;
-  padding: 24px;
+  /* 与注册/重置页一致，适配 Qt 固定窗口 */
+  padding: 12px 16px 16px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
   font-size: 14px;
   overflow: hidden;
@@ -272,7 +298,7 @@ export default {
 
 .logo {
   color: #1f2328;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .app-logo {
@@ -284,17 +310,18 @@ export default {
   font-size: 24px;
   font-weight: 400;
   color: #1f2328;
-  margin: 0 0 24px 0;
+  margin: 0 0 12px 0;
   text-align: center;
 }
 
 .login-box {
   width: 100%;
-  max-width: 308px;
+  max-width: 340px;
   background-color: #ffffff;
   border: 1px solid #d0d7de;
   border-radius: 6px;
-  padding: 16px;
+  /* 仅登录页：表单区内边距略大，与注册/重置区分 */
+  padding: 18px 18px 20px;
   margin-top: 16px;
 }
 
@@ -457,6 +484,70 @@ export default {
   color: #cf222e;
 }
 
+/* 用户协议勾选（与注册页风格一致） */
+.terms-checkbox-row {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.terms-checkbox {
+  display: flex;
+  align-items: flex-start;
+}
+
+.login-box :deep(.terms-checkbox .el-checkbox__label) {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px !important;
+  color: #656d76 !important;
+  line-height: 1.5 !important;
+  padding-left: 8px !important;
+}
+
+.login-box :deep(.terms-checkbox .el-checkbox__inner) {
+  width: 16px !important;
+  height: 16px !important;
+  border: 1px solid #d0d7de !important;
+  border-radius: 3px !important;
+  background-color: #ffffff !important;
+}
+
+.login-box :deep(.terms-checkbox .el-checkbox__inner::after) {
+  height: 8px !important;
+  left: 4.5px !important;
+  top: 1px !important;
+  width: 4px !important;
+  border: 1.5px solid #fff !important;
+  border-left: 0 !important;
+  border-top: 0 !important;
+  background: transparent !important;
+  transform: rotate(45deg) translate(1px, 0.5px) !important;
+}
+
+.login-box :deep(.terms-checkbox.is-checked .el-checkbox__inner) {
+  background-color: #0969da !important;
+  border-color: #0969da !important;
+}
+
+.login-box :deep(.terms-checkbox.el-checkbox.is-checked .el-checkbox__label) {
+  color: #656d76 !important;
+}
+
+.terms-checkbox-text {
+  font-size: 12px !important;
+  color: #656d76 !important;
+  line-height: 1.5 !important;
+}
+
+.terms-checkbox-text :deep(.el-link__inner) {
+  color: #0969da !important;
+  font-size: 12px !important;
+}
+
+.terms-checkbox-text :deep(.el-link:hover .el-link__inner) {
+  text-decoration: underline !important;
+}
+
 /* 覆盖 Element Plus Button 样式 */
 .send-code-btn {
   position: absolute;
@@ -515,15 +606,20 @@ export default {
   transition: background-color 0.2s !important;
 }
 
-.sign-in-btn:hover {
+.sign-in-btn:hover:not(:disabled) {
   background-color: #2c974b !important;
   border-color: rgba(27, 31, 36, 0.15) !important;
 }
 
+.sign-in-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .create-account-box {
   width: 100%;
-  max-width: 308px;
-  margin-top: 16px;
+  max-width: 340px;
+  margin-top: 12px;
   padding: 8px 16px;
   border: 1px solid #d0d7de;
   border-radius: 6px;
