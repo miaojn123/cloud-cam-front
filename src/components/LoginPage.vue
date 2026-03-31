@@ -4,23 +4,22 @@ import {
   notifyDesktopLoginSuccess,
 } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
+import type { FormInstance, FormRules } from 'element-plus'
 
 export default {
   name: 'LoginPage',
   data() {
     return {
-      username: '',
-      email: '',
-      password: '',
-      code: '',
+      form: {
+        username: '',
+        email: '',
+        password: '',
+        code: '',
+        /** 是否已阅读并同意用户协议与隐私政策（登录前必选） */
+        agreeTerms: false,
+      },
       isCodeMode: false,
       countdown: 0,
-      /** 用户名失焦或提交后用于显示非空校验 */
-      usernameTouched: false,
-      passwordTouched: false,
-      emailTouched: false,
-      /** 是否已阅读并同意用户协议与隐私政策（登录前必选） */
-      agreeTerms: false
     }
   },
   computed: {
@@ -28,25 +27,83 @@ export default {
     isDesktopEmbedMode() {
       return isDesktopEmbed(this.$route.query)
     },
-    emailValid() {
-      if (!this.email) return true
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
+    rules(): FormRules {
+      const emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      return {
+        username: [
+          {
+            // 中文注释：密码登录模式下必填；验证码模式下跳过。
+            validator: (_rule, value: string, callback) => {
+              if (this.isCodeMode) return callback()
+              if (String(value ?? '').trim()) return callback()
+              callback(new Error('请输入用户名或邮箱'))
+            },
+            trigger: 'blur'
+          }
+        ],
+        password: [
+          {
+            // 中文注释：密码登录模式下必填；验证码模式下跳过。
+            validator: (_rule, value: string, callback) => {
+              if (this.isCodeMode) return callback()
+              if (value) return callback()
+              callback(new Error('请输入密码'))
+            },
+            trigger: 'blur'
+          }
+        ],
+        email: [
+          {
+            // 中文注释：验证码登录模式下必填且需为邮箱；密码登录模式下跳过。
+            validator: (_rule, value: string, callback) => {
+              if (!this.isCodeMode) return callback()
+              const s = String(value ?? '').trim()
+              if (!s) return callback(new Error('请输入邮箱'))
+              if (!emailReg.test(s)) return callback(new Error('请输入正确邮箱'))
+              callback()
+            },
+            trigger: 'blur'
+          }
+        ],
+        code: [
+          {
+            // 中文注释：验证码登录模式下必填；密码登录模式下跳过。
+            validator: (_rule, value: string, callback) => {
+              if (!this.isCodeMode) return callback()
+              if (String(value ?? '').trim()) return callback()
+              callback(new Error('请输入验证码'))
+            },
+            trigger: 'blur'
+          }
+        ]
+      }
     }
   },
   methods: {
+    getFormRef(): FormInstance | null {
+      const ref = this.$refs.formRef
+      return (ref ?? null) as FormInstance | null
+    },
     switchToCodeMode() {
       this.isCodeMode = true
+      // 中文注释：切换模式后清理旧错误提示，避免错误遗留到另一种模式。
+      this.getFormRef()?.clearValidate()
     },
     switchToPasswordMode() {
       this.isCodeMode = false
+      this.getFormRef()?.clearValidate()
     },
     async sendCode() {
-      if (!this.email) {
-        ElMessage.warning('请先输入邮箱')
-        return
+      const formRef = this.getFormRef()
+      if (formRef) {
+        const ok = await formRef
+          .validateField('email')
+          .then(() => true)
+          .catch(() => false)
+        if (!ok) return
       }
       try {
-        await this.$userStore.sendLoginCode(this.email)
+        await this.$userStore.sendLoginCode(this.form.email.trim())
         ElMessage.success('验证码已发送')
         this.countdown = 60
         const timer = setInterval(() => {
@@ -60,25 +117,19 @@ export default {
       }
     },
     async submitLogin() {
-      if (!this.agreeTerms) {
-        ElMessage.warning('请阅读并勾选同意用户协议与隐私政策')
-        return
+      const formRef = this.getFormRef()
+      if (formRef) {
+        const ok = await formRef
+          .validate()
+          .then(() => true)
+          .catch(() => false)
+        if (!ok) return
       }
       try {
         if (!this.isCodeMode) {
-          // 非空校验：错误在输入框下方展示，不使用 Message
-          this.usernameTouched = true
-          this.passwordTouched = true
-          if (!this.username.trim() || !this.password) {
-            return
-          }
-          await this.$userStore.loginByPassword(this.username.trim(), this.password)
+          await this.$userStore.loginByPassword(this.form.username.trim(), this.form.password)
         } else {
-          if (!this.email || !this.code) {
-            ElMessage.warning('请输入账号和验证码')
-            return
-          }
-          await this.$userStore.loginByCode(this.email, this.code)
+          await this.$userStore.loginByCode(this.form.email.trim(), this.form.code.trim())
         }
         await this.$userStore.fetchCurrentUser()
         ElMessage.success('登录成功')
@@ -111,15 +162,6 @@ export default {
     goToReset() {
       pushWithDesktopQuery(this.$router, this.$route.query, '/reset-password')
     },
-    onUsernameBlur() {
-      this.usernameTouched = true
-    },
-    onPasswordBlur() {
-      this.passwordTouched = true
-    },
-    onEmailBlur() {
-      this.emailTouched = true
-    }
   }
 }
 </script>
@@ -149,51 +191,39 @@ export default {
 
       <!-- Login Form -->
       <div class="login-box">
-        <el-form @submit.prevent="submitLogin">
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="rules"
+          @submit.prevent="submitLogin"
+          class="login-form"
+        >
           <!-- 密码模式：用户名或邮箱 -->
-          <el-form-item v-if="!isCodeMode">
+          <el-form-item v-if="!isCodeMode" prop="username">
             <template #label>
               <label class="custom-label">用户名或邮箱地址</label>
             </template>
             <el-input
-              v-model="username"
+              v-model="form.username"
               placeholder="请输入用户名或邮箱"
               autocomplete="username"
-              class="custom-input"
-              @blur="onUsernameBlur"
             />
-            <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
-            <div
-              class="auth-input-hint"
-              :class="{ 'auth-input-hint--error': usernameTouched && !username.trim() }"
-            >
-              {{ usernameTouched && !username.trim() ? '请输入用户名或邮箱' : '\u00A0' }}
-            </div>
           </el-form-item>
 
           <!-- 验证码模式：邮箱 -->
-          <el-form-item v-else>
+          <el-form-item v-else prop="email">
             <template #label>
               <label class="custom-label">邮箱地址</label>
             </template>
             <el-input
-              v-model="email"
+              v-model="form.email"
               placeholder="请输入邮箱"
               type="email"
               autocomplete="email"
-              class="custom-input"
-              @blur="onEmailBlur"
             />
-            <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
-            <div
-              class="auth-input-hint"
-              :class="{ 'auth-input-hint--error': emailTouched && !emailValid }"
-            >
-              {{ emailTouched && !emailValid ? '请输入正确邮箱' : '\u00A0' }}
-            </div>
           </el-form-item>
 
-          <el-form-item v-if="!isCodeMode" >
+          <el-form-item v-if="!isCodeMode" prop="password">
             <template #label>
               <div class="label-row">
                 <label class="custom-label">密码</label>
@@ -213,49 +243,42 @@ export default {
               </div>
             </template>
             <el-input
-              v-model="password"
+              v-model="form.password"
               type="password"
               placeholder="请输入密码"
               autocomplete="current-password"
               show-password
-              class="custom-input"
-              @blur="onPasswordBlur"
             />
-            <!-- 登录仅校验非空；新密码格式规则仅在注册/重置页校验 -->
-            <!-- 预留提示区域：避免错误提示出现/消失导致布局抖动 -->
-            <div
-              class="auth-input-hint"
-              :class="{ 'auth-input-hint--error': passwordTouched && !password }"
-            >
-              {{ passwordTouched && !password ? '请输入密码' : '\u00A0' }}
-            </div>
           </el-form-item>
 
-          <el-form-item v-else>
+          <el-form-item v-else prop="code">
             <template #label>
               <div class="label-row">
                 <label class="custom-label">验证码</label>
-                <el-link
-                  type="primary"
-                  underline="never"
-                  class="forgot-link"
-                  @click="switchToPasswordMode"
-                >
-                  使用密码登录
-                </el-link>
+                <!-- 与密码行右侧 label-links 结构一致，避免行高与对齐差异 -->
+                <div class="label-links">
+                  <el-link
+                    type="primary"
+                    underline="never"
+                    class="forgot-link"
+                    @click="switchToPasswordMode"
+                  >
+                    使用密码登录
+                  </el-link>
+                </div>
               </div>
             </template>
             <div class="code-input-wrapper">
               <el-input
-                v-model="code"
+                v-model="form.code"
                 placeholder="请输入验证码"
                 autocomplete="one-time-code"
-                class="custom-input code-input"
               />
               <el-button
                 type="primary"
                 class="send-code-btn"
                 :disabled="countdown > 0"
+                native-type="button"
                 @click="sendCode"
               >
                 {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
@@ -264,9 +287,9 @@ export default {
           </el-form-item>
 
           <!-- 同意协议（必选，勾选后才可登录） -->
-          <el-form-item class="terms-checkbox-row">
-            <el-checkbox v-model="agreeTerms" class="terms-checkbox">
-              <span class="terms-checkbox-text">
+          <el-form-item class="terms-item">
+            <el-checkbox v-model="form.agreeTerms" class="custom-checkbox">
+              <span class="checkbox-text">
                 我已阅读并同意
                 <el-link type="primary" underline="never" href="#" @click.prevent>用户协议</el-link>
                 和
@@ -275,12 +298,12 @@ export default {
             </el-checkbox>
           </el-form-item>
 
-          <el-form-item class="submit-item">
+          <el-form-item>
             <el-button
               type="primary"
               native-type="submit"
               class="sign-in-btn"
-              :disabled="!agreeTerms"
+              :disabled="!form.agreeTerms"
             >
               登录
             </el-button>
@@ -378,7 +401,8 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  /* 与注册页一致：标题区更紧凑 */
+  margin-bottom: 10px;
   width: 100%;
 }
 
@@ -426,14 +450,26 @@ export default {
   margin-top: 16px;
 }
 
-.submit-item {
-  margin-bottom: 0 !important;
-  margin-top: 20px !important;
+/* 表单：与注册页一致，用 gap 控制纵向间距 */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 同意协议：垂直居中显示（checkbox 与文字对齐更自然） */
+.terms-item :deep(.el-form-item__content) {
+  display: flex;
+  align-items: center;
+}
+
+.terms-item .custom-checkbox {
+  align-items: center;
 }
 
 /* 覆盖 Element Plus Form 样式 */
 .login-box :deep(.el-form-item) {
-  margin-bottom: 0;
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -473,6 +509,8 @@ export default {
 .label-links {
   display: flex;
   gap: 12px;
+  /* 视觉微调：右侧链接组向左挪 4px */
+  margin-right: 8px;
 }
 
 /* 覆盖 Element Plus Link 样式 */
@@ -533,22 +571,6 @@ export default {
   font-size: var(--auth-fs-input) !important;
 }
 
-/* 密码输入框的图标 */
-.login-box :deep(.el-input__suffix) {
-  height: 32px;
-}
-
-.login-box :deep(.el-input__suffix-inner) {
-  height: 32px;
-  display: flex;
-  align-items: center;
-}
-
-.login-box :deep(.el-input__icon) {
-  height: 32px;
-  line-height: 32px;
-}
-
 .code-input-wrapper {
   position: relative;
   display: flex;
@@ -556,26 +578,17 @@ export default {
   width: 100%;
 }
 
-.code-input {
-  width: 100%;
+.code-input-wrapper :deep(.el-input__wrapper) {
+  padding-right: 86px !important;
 }
 
-.code-input :deep(.el-input__wrapper) {
-  padding-right: 100px !important;
-}
-
-/* 用户协议勾选（与注册页风格一致） */
-.terms-checkbox-row {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-}
-
-.terms-checkbox {
+/* 用户协议勾选：仿照注册页 */
+.custom-checkbox {
   display: flex;
   align-items: flex-start;
 }
 
-.login-box :deep(.terms-checkbox .el-checkbox__label) {
+.login-box :deep(.custom-checkbox .el-checkbox__label) {
   display: inline-flex;
   align-items: center;
   font-size: var(--auth-fs-small) !important;
@@ -584,7 +597,7 @@ export default {
   padding-left: 8px !important;
 }
 
-.login-box :deep(.terms-checkbox .el-checkbox__inner) {
+.login-box :deep(.custom-checkbox .el-checkbox__inner) {
   width: 16px !important;
   height: 16px !important;
   border: 1px solid #d0d7de !important;
@@ -592,7 +605,7 @@ export default {
   background-color: #ffffff !important;
 }
 
-.login-box :deep(.terms-checkbox .el-checkbox__inner::after) {
+.login-box :deep(.custom-checkbox .el-checkbox__inner::after) {
   height: 8px !important;
   left: 4.5px !important;
   top: 1px !important;
@@ -604,27 +617,24 @@ export default {
   transform: rotate(45deg) translate(1px, 0.5px) !important;
 }
 
-.login-box :deep(.terms-checkbox.is-checked .el-checkbox__inner) {
+.login-box :deep(.custom-checkbox.is-checked .el-checkbox__inner) {
   background-color: #0969da !important;
   border-color: #0969da !important;
 }
 
-.login-box :deep(.terms-checkbox.el-checkbox.is-checked .el-checkbox__label) {
-  color: var(--auth-text-muted) !important;
-}
-
-.terms-checkbox-text {
+/* 登录页文本与链接：对齐注册页 checkbox-text */
+.checkbox-text {
   font-size: var(--auth-fs-small) !important;
   color: var(--auth-text-muted) !important;
   line-height: 1.5 !important;
 }
 
-.terms-checkbox-text :deep(.el-link__inner) {
+.checkbox-text :deep(.el-link__inner) {
   color: #0969da !important;
   font-size: var(--auth-fs-small) !important;
 }
 
-.terms-checkbox-text :deep(.el-link:hover .el-link__inner) {
+.checkbox-text :deep(.el-link:hover .el-link__inner) {
   text-decoration: underline !important;
 }
 
@@ -634,13 +644,12 @@ export default {
   right: 7px;
   top: 50%;
   transform: translateY(-50%);
-  padding: 4px 10px !important;
-  /* 保持原 12px，与全局 --auth-fs-small(11px) 区分 */
-  font-size: 12px !important;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
   font-weight: 400 !important;
   line-height: 20px !important;
-  height: 26px !important;
-  min-height: 26px !important;
+  height: 22px !important;
+  min-height: 22px !important;
   --el-button-bg-color: #0969da !important;
   --el-button-border-color: #0969da !important;
   --el-button-text-color: #ffffff !important;
@@ -649,7 +658,7 @@ export default {
   --el-button-disabled-bg-color: #8b949e !important;
   --el-button-disabled-border-color: #8b949e !important;
   --el-button-disabled-text-color: #ffffff !important;
-  border-radius: 4px !important;
+  border-radius: 3px !important;
   cursor: pointer;
   transition: all 0.2s !important;
   white-space: nowrap;
@@ -687,7 +696,7 @@ export default {
   max-width: 340px;
   /* 登录按钮与“还没有账户”区间距：避免视觉过挤 */
   margin-top: 20px;
-  padding: 8px 16px;
+  padding: 4px 16px;
   border: 1px solid #d0d7de;
   border-radius: 6px;
   text-align: center;

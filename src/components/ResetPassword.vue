@@ -2,19 +2,19 @@
 import { isDesktopEmbed } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
 import { isResetPasswordValid } from '@/utils/passwordPolicy'
+import type { FormInstance, FormRules } from 'element-plus'
 
 export default {
   name: 'ResetPassword',
   data() {
     return {
-      account: '',
-      code: '',
-      password: '',
-      confirmPassword: '',
+      form: {
+        account: '',
+        code: '',
+        password: '',
+        confirmPassword: '',
+      },
       countdown: 0,
-      passwordTouched: false,
-      confirmPasswordTouched: false,
-      accountTouched: false
     }
   },
   computed: {
@@ -22,35 +22,77 @@ export default {
     isDesktopEmbedMode() {
       return isDesktopEmbed(this.$route.query)
     },
-    passwordValid() {
-      if (!this.password) return true
-      return isResetPasswordValid(this.password)
-    },
-    confirmPasswordValid() {
-      if (!this.confirmPassword) return true
-      return this.password === this.confirmPassword
-    },
-    accountValid() {
-      if (!this.account) return true
-      const s = this.account.trim()
-      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
-      const phoneOk = /^1\d{10}$/.test(s)
-      return emailOk || phoneOk
+    rules(): FormRules {
+      const emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      const phoneReg = /^1\d{10}$/
+      return {
+        account: [
+          { required: true, message: '请输入邮箱或手机号', trigger: 'blur' },
+          {
+            // 中文注释：兼容邮箱/手机号输入；仅校验格式，不做存在性判断。
+            validator: (_rule, value: string, callback) => {
+              const s = String(value ?? '').trim()
+              if (!s) return callback()
+              const ok = emailReg.test(s) || phoneReg.test(s)
+              if (!ok) {
+                callback(new Error('请输入正确的邮箱或手机号'))
+                return
+              }
+              callback()
+            },
+            trigger: 'blur'
+          }
+        ],
+        code: [{ required: true, message: '请输入验证码', trigger: 'blur' }],
+        password: [
+          { required: true, message: '请输入新密码', trigger: 'blur' },
+          {
+            // 中文注释：重置密码规则，与注册/后端保持一致。
+            validator: (_rule, value: string, callback) => {
+              if (!value) return callback()
+              if (!isResetPasswordValid(value)) {
+                callback(new Error('密码需为 8-20 位，且至少包含一个数字和一个字母'))
+                return
+              }
+              callback()
+            },
+            trigger: 'blur'
+          }
+        ],
+        confirmPassword: [
+          { required: true, message: '请再次输入密码', trigger: 'blur' },
+          {
+            // 中文注释：确认密码必须与新密码一致。
+            validator: (_rule, value: string, callback) => {
+              if (!value) return callback()
+              if (value !== this.form.password) {
+                callback(new Error('两次输入的密码不一致'))
+                return
+              }
+              callback()
+            },
+            trigger: 'blur'
+          }
+        ]
+      }
     }
   },
   methods: {
+    getFormRef(): FormInstance | null {
+      const ref = this.$refs.formRef
+      return (ref ?? null) as FormInstance | null
+    },
     async sendCode() {
-      this.accountTouched = true
-      if (!this.account.trim()) {
-        ElMessage.warning('请先输入邮箱')
-        return
-      }
-      if (!this.accountValid) {
-        ElMessage.warning('请输入正确的邮箱')
-        return
+      const formRef = this.getFormRef()
+      if (formRef) {
+        const ok = await formRef
+          .validateField('account')
+          .then(() => true)
+          .catch(() => false)
+        if (!ok) return
       }
       try {
-        await this.$userStore.sendResetCode(this.account.trim())
+        await this.$userStore.sendResetCode(this.form.account.trim())
         ElMessage.success('验证码已发送')
         this.countdown = 60
         const timer = setInterval(() => {
@@ -64,34 +106,19 @@ export default {
       }
     },
     async resetPassword() {
-      this.accountTouched = true
-      this.passwordTouched = true
-      this.confirmPasswordTouched = true
-      if (!this.account.trim()) {
-        ElMessage.warning('请输入邮箱')
-        return
-      }
-      if (!this.accountValid) {
-        ElMessage.warning('请输入正确的邮箱')
-        return
-      }
-      if (!this.code.trim()) {
-        ElMessage.warning('请输入验证码')
-        return
-      }
-      if (!this.password || !this.passwordValid) {
-        ElMessage.warning('密码需为 8-32 位，且至少包含字母与数字')
-        return
-      }
-      if (!this.confirmPasswordValid) {
-        ElMessage.warning('两次输入的密码不一致')
-        return
+      const formRef = this.getFormRef()
+      if (formRef) {
+        const ok = await formRef
+          .validate()
+          .then(() => true)
+          .catch(() => false)
+        if (!ok) return
       }
       try {
         const result = await this.$userStore.resetPassword(
-          this.account.trim(),
-          this.code.trim(),
-          this.password
+          this.form.account.trim(),
+          this.form.code.trim(),
+          this.form.password
         )
         const msg = typeof result?.msg === 'string' ? result.msg : ''
         ElMessage.success(msg || '密码重置成功')
@@ -102,15 +129,6 @@ export default {
     },
     goToLogin() {
       pushWithDesktopQuery(this.$router, this.$route.query, '/login')
-    },
-    onPasswordBlur() {
-      this.passwordTouched = true
-    },
-    onConfirmPasswordBlur() {
-      this.confirmPasswordTouched = true
-    },
-    onAccountBlur() {
-      this.accountTouched = true
     }
   }
 }
@@ -120,8 +138,7 @@ export default {
   <div
     class="reset-container"
     :class="{
-      'reset-container--web-bg': !isDesktopEmbedMode,
-      'reset-container--desktop': isDesktopEmbedMode
+      'reset-container--web-bg': !isDesktopEmbedMode
     }"
   >
     <div
@@ -139,94 +156,75 @@ export default {
         </div>
 
         <div class="auth-form-card">
-          <el-form @submit.prevent class="reset-form">
-            <el-form-item class="form-item-custom">
+          <el-form
+            ref="formRef"
+            :model="form"
+            :rules="rules"
+            @submit.prevent="resetPassword"
+            class="reset-form"
+          >
+            <el-form-item prop="account">
               <template #label>
-                <label class="custom-label">邮箱</label>
+                <label class="custom-label">邮箱或手机号</label>
               </template>
               <el-input
-                v-model="account"
+                v-model="form.account"
                 type="text"
-                placeholder="请输入邮箱"
+                placeholder="请输入邮箱或手机号"
                 autocomplete="username"
-                class="custom-input"
-                @blur="onAccountBlur"
               />
-              <div
-                class="auth-input-hint"
-                :class="{ 'auth-input-hint--error': accountTouched && !accountValid }"
-              >
-                {{ accountTouched && !accountValid ? '请输入正确的邮箱' : '\u00A0' }}
-              </div>
             </el-form-item>
 
-            <el-form-item class="form-item-custom">
+            <el-form-item prop="code">
               <template #label>
                 <label class="custom-label">验证码</label>
               </template>
               <div class="code-input-wrapper">
                 <el-input
-                  v-model="code"
+                  v-model="form.code"
                   placeholder="请输入验证码"
                   autocomplete="one-time-code"
-                  class="custom-input code-input"
                 />
                 <el-button
                   type="primary"
                   class="send-code-btn"
                   :disabled="countdown > 0"
+                  native-type="button"
                   @click="sendCode"
                 >
                   {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
                 </el-button>
               </div>
-              <div class="auth-input-hint">{{ '\u00A0' }}</div>
             </el-form-item>
 
-            <el-form-item class="form-item-custom">
+            <el-form-item prop="password">
               <template #label>
                 <label class="custom-label">新密码</label>
               </template>
               <el-input
-                v-model="password"
+                v-model="form.password"
                 type="password"
-                placeholder="请输入新密码"
+                placeholder="8-20位，至少包含字母和数字"
                 autocomplete="new-password"
                 show-password
-                class="custom-input"
-                @blur="onPasswordBlur"
               />
-              <div
-                class="auth-input-hint auth-input-hint--helper"
-                :class="{ 'auth-input-hint--error': passwordTouched && !passwordValid }"
-              >
-                8-32 位字符，且至少包含一个数字和一个字母
-              </div>
             </el-form-item>
 
-            <el-form-item class="form-item-custom">
+            <el-form-item prop="confirmPassword">
               <template #label>
                 <label class="custom-label">确认新密码</label>
               </template>
               <el-input
-                v-model="confirmPassword"
+                v-model="form.confirmPassword"
                 type="password"
                 placeholder="请再次输入密码"
                 autocomplete="new-password"
                 show-password
-                class="custom-input"
-                @blur="onConfirmPasswordBlur"
               />
-              <div
-                class="auth-input-hint"
-                :class="{ 'auth-input-hint--error': confirmPasswordTouched && !confirmPasswordValid }"
-              >
-                {{ confirmPasswordTouched && !confirmPasswordValid ? '两次输入的密码不一致' : '\u00A0' }}
-              </div>
             </el-form-item>
 
-            <el-form-item class="form-item-custom submit-item">
-              <el-button type="primary" class="reset-btn" @click="resetPassword">
+            <el-form-item>
+              <el-button type="primary" native-type="submit" class="reset-btn">
                 重置密码
               </el-button>
             </el-form-item>
@@ -313,7 +311,8 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  /* 与注册页一致：标题区更紧凑 */
+  margin-bottom: 10px;
   width: 100%;
 }
 
@@ -355,13 +354,12 @@ export default {
   flex-shrink: 0;
 }
 
-/* Form */
+/* Form：与注册页一致，用 gap 控制纵向节奏 */
 .reset-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   border-radius: 6px;
-}
-
-.submit-item {
-  margin-top: 8px !important;
 }
 
 /* 覆盖 Element Plus Form 样式 */
@@ -444,22 +442,6 @@ export default {
   font-size: var(--auth-fs-input) !important;
 }
 
-/* 密码输入框的图标 */
-.reset-form :deep(.el-input__suffix) {
-  height: 32px;
-}
-
-.reset-form :deep(.el-input__suffix-inner) {
-  height: 32px;
-  display: flex;
-  align-items: center;
-}
-
-.reset-form :deep(.el-input__icon) {
-  height: 32px;
-  line-height: 32px;
-}
-
 .code-input-wrapper {
   position: relative;
   display: flex;
@@ -467,12 +449,8 @@ export default {
   width: 100%;
 }
 
-.code-input {
-  width: 100%;
-}
-
-.code-input :deep(.el-input__wrapper) {
-  padding-right: 100px !important;
+.code-input-wrapper :deep(.el-input__wrapper) {
+  padding-right: 86px !important;
 }
 
 /* 覆盖 Element Plus Button 样式 */
@@ -481,12 +459,12 @@ export default {
   right: 7px;
   top: 50%;
   transform: translateY(-50%);
-  padding: 4px 10px !important;
-  font-size: var(--auth-fs-small) !important;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
   font-weight: 400 !important;
   line-height: 20px !important;
-  height: 26px !important;
-  min-height: 26px !important;
+  height: 22px !important;
+  min-height: 22px !important;
   --el-button-bg-color: #0969da !important;
   --el-button-border-color: #0969da !important;
   --el-button-text-color: #ffffff !important;
@@ -495,7 +473,7 @@ export default {
   --el-button-disabled-bg-color: #8b949e !important;
   --el-button-disabled-border-color: #8b949e !important;
   --el-button-disabled-text-color: #ffffff !important;
-  border-radius: 4px !important;
+  border-radius: 3px !important;
   cursor: pointer;
   transition: all 0.2s !important;
   white-space: nowrap;
@@ -516,6 +494,7 @@ export default {
   color: #ffffff !important;
   cursor: pointer;
   transition: filter 0.2s !important;
+  margin-top: 10px;
 }
 
 .reset-btn:hover {
@@ -524,8 +503,9 @@ export default {
 
 /* Sign In Link */
 .signin-link {
-  margin-top: 12px;
-  padding: 8px 16px;
+  /* 与注册页一致：按钮与底部入口间距更紧凑 */
+  margin-top: 14px;
+  padding: 4px 16px;
   border: 1px solid #d0d7de;
   border-radius: 6px;
   text-align: center;
@@ -545,30 +525,5 @@ export default {
 
 .signin-link :deep(.el-link:hover .el-link__inner) {
   text-decoration: underline !important;
-}
-
-/* 重置页：无错误时底部留 4px；错误/说明文案约 24px 行高 */
-.auth-input-hint {
-  display: block;
-  width: 100%;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  margin-top: 4px;
-  font-size: 12px;
-  color: #8b949e;
-  line-height: 4px;
-  min-height: 4px !important;
-  overflow: hidden;
-}
-
-.auth-input-hint--error,
-.auth-input-hint--helper {
-  line-height: 1.5;
-  min-height: auto !important;
-  overflow: visible;
-}
-
-.auth-input-hint--error {
-  color: #cf222e;
 }
 </style>

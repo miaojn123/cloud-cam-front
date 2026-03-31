@@ -2,22 +2,21 @@
 import { isDesktopEmbed } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
 import { isRegisterPasswordValid } from '@/utils/passwordPolicy'
+import type { FormInstance, FormRules } from 'element-plus'
 
 export default {
   name: 'RegisterPage',
   data() {
     return {
-      email: '',
-      password: '',
-      username: '',
-      emailCode: '',
-      /** 是否同意服务条款与隐私政策（必选） */
-      agreeTerms: false,
+      form: {
+        email: '',
+        password: '',
+        username: '',
+        emailCode: '',
+        /** 是否同意服务条款与隐私政策（必选） */
+        agreeTerms: false
+      },
       emailCountdown: 0,
-      passwordTouched: false,
-      emailTouched: false,
-      emailCodeTouched: false,
-      usernameTouched: false
     }
   },
   computed: {
@@ -25,26 +24,74 @@ export default {
     isDesktopEmbedMode() {
       return isDesktopEmbed(this.$route.query)
     },
-    passwordValid() {
-      if (!this.password) return true
-      return isRegisterPasswordValid(this.password)
-    },
-    emailValid() {
-      if (!this.email) return true
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
-    },
-    registerPasswordHintText() {
-      if (this.passwordTouched && !this.password) return '请输入密码'
-      return '8-32位字符，且至少包含一个数字和一个字母'
-    },
-    registerPasswordHasError() {
-      return this.passwordTouched && (!this.password || !this.passwordValid)
+    rules(): FormRules {
+      const emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      return {
+        email: [
+          { required: true, message: '请输入邮箱', trigger: 'blur' },
+          { pattern: emailReg, message: '请输入正确邮箱', trigger: 'blur' }
+        ],
+        emailCode: [{ required: true, message: '请输入验证码', trigger: 'blur' }],
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          {
+            // 中文注释：注册密码规则（与后端一致），避免仅靠提示文案导致提交时才报错。
+            validator: (_rule, value: string, callback) => {
+              if (!value) return callback()
+              if (!isRegisterPasswordValid(value)) {
+                callback(new Error('密码需为 8-20 位，且至少包含一个数字和一个字母'))
+                return
+              }
+              callback()
+            },
+            trigger: 'blur'
+          }
+        ],
+        username: [
+          {
+            // 中文注释：用户名可选；若填写则必须 6-20，英文开头，仅字母数字下划线。
+            validator: (_rule, value: string, callback) => {
+              const v = String(value ?? '').trim()
+              if (!v) return callback()
+              const ok = /^[A-Za-z][A-Za-z0-9_]*$/.test(v) && v.length >= 6 && v.length <= 20
+              if (!ok) {
+                callback(new Error('用户名需 6-20 位，英文开头，仅字母数字下划线'))
+                return
+              }
+              callback()
+            },
+            trigger: 'blur'
+          }
+        ],
+        agreeTerms: [
+          {
+            // 中文注释：勾选条款是强制项，错误提示走表单系统（而不是只弹 Message）。
+            validator: (_rule, value: boolean, callback) => {
+              if (value) return callback()
+              callback(new Error('请勾选同意服务条款与隐私政策'))
+            },
+            trigger: 'change'
+          }
+        ]
+      }
     }
   },
   methods: {
+    getFormRef(): FormInstance | null {
+      const ref = this.$refs.formRef
+      return (ref ?? null) as FormInstance | null
+    },
     async sendEmailCode() {
+      const formRef = this.getFormRef()
+      if (formRef) {
+        const ok = await formRef
+          .validateField('email')
+          .then(() => true)
+          .catch(() => false)
+        if (!ok) return
+      }
       try {
-        await this.$userStore.sendRegisterCode(this.email)
+        await this.$userStore.sendRegisterCode(this.form.email.trim())
         ElMessage.success('验证码已发送')
         this.emailCountdown = 60
         const timer = setInterval(() => {
@@ -58,26 +105,22 @@ export default {
       }
     },
     async submitRegister() {
-      if (!this.agreeTerms) {
-        ElMessage.warning('请阅读并勾选同意服务条款与隐私政策')
-        return
+      const formRef = this.getFormRef()
+      if (formRef) {
+        const ok = await formRef
+          .validate()
+          .then(() => true)
+          .catch(() => false)
+        if (!ok) return
       }
-      // 中文注释：注册页不允许空输入，优先在输入框下方展示提示（避免只弹 Message）。
-      this.emailTouched = true
-      this.emailCodeTouched = true
-      this.passwordTouched = true
-      this.usernameTouched = true
-
-      if (!this.email || !this.emailValid) return
-      if (!this.emailCode.trim()) return
-      if (!this.password || !this.passwordValid) return
-      if (!this.username.trim()) return
       try {
+        // 用户名可选：为空则交由后端使用默认用户名
+        const optionalUsername = this.form.username.trim()
         await this.$userStore.registerByCode(
-          this.email.trim(),
-          this.emailCode.trim(),
-          this.password,
-          this.username.trim()
+          this.form.email.trim(),
+          this.form.emailCode.trim(),
+          this.form.password,
+          optionalUsername || ''
         )
         ElMessage.success('注册成功，请登录')
         pushWithDesktopQuery(this.$router, this.$route.query, '/login')
@@ -87,18 +130,6 @@ export default {
     },
     goToLogin() {
       pushWithDesktopQuery(this.$router, this.$route.query, '/login')
-    },
-    onPasswordBlur() {
-      this.passwordTouched = true
-    },
-    onEmailBlur() {
-      this.emailTouched = true
-    },
-    onEmailCodeBlur() {
-      this.emailCodeTouched = true
-    },
-    onUsernameBlur() {
-      this.usernameTouched = true
     }
   }
 }
@@ -108,8 +139,7 @@ export default {
   <div
     class="signup-container"
     :class="{
-      'signup-container--web-bg': !isDesktopEmbedMode,
-      'signup-container--desktop': isDesktopEmbedMode
+      'signup-container--web-bg': !isDesktopEmbedMode
     }"
   >
     <div
@@ -127,40 +157,36 @@ export default {
         </div>
 
         <div class="auth-form-card">
-          <el-form @submit.prevent="submitRegister" class="signup-form">
+          <el-form
+            ref="formRef"
+            :model="form"
+            :rules="rules"
+            @submit.prevent="submitRegister"
+            class="signup-form"
+          >
             <!-- Email -->
-            <el-form-item class="form-item-custom">
+            <el-form-item prop="email">
               <template #label>
                 <label class="custom-label">邮箱地址</label>
               </template>
               <el-input
-                v-model="email"
+                v-model="form.email"
                 type="email"
                 placeholder="请输入邮箱"
                 autocomplete="email"
-                class="custom-input"
-                @blur="onEmailBlur"
               />
-              <div
-                class="auth-input-hint"
-                :class="{ 'auth-input-hint--error': emailTouched && !emailValid }"
-              >
-                {{ emailTouched && !emailValid ? '请输入正确邮箱' : '\u00A0' }}
-              </div>
             </el-form-item>
 
             <!-- Email Verification Code -->
-            <el-form-item class="form-item-custom">
+            <el-form-item prop="emailCode">
               <template #label>
                 <label class="custom-label">邮箱验证码</label>
               </template>
               <div class="code-input-wrapper">
                 <el-input
-                  v-model="emailCode"
+                  v-model="form.emailCode"
                   placeholder="请输入验证码"
                   autocomplete="one-time-code"
-                  class="custom-input code-input"
-                  @blur="onEmailCodeBlur"
                 />
                 <el-button
                   type="primary"
@@ -171,60 +197,38 @@ export default {
                   {{ emailCountdown > 0 ? `${emailCountdown}s` : '获取验证码' }}
                 </el-button>
               </div>
-              <div
-                class="auth-input-hint"
-                :class="{ 'auth-input-hint--error': emailCodeTouched && !emailCode.trim() }"
-              >
-                {{ emailCodeTouched && !emailCode.trim() ? '请输入验证码' : '\u00A0' }}
-              </div>
+            </el-form-item>
+
+            <!-- Username -->
+            <el-form-item prop="username">
+              <template #label>
+                <label class="custom-label">用户名（可选）</label>
+              </template>
+              <el-input
+                v-model="form.username"
+                type="text"
+                placeholder="不填将使用默认用户名"
+                autocomplete="username"
+              />
             </el-form-item>
 
             <!-- Password -->
-            <el-form-item class="form-item-custom">
+            <el-form-item prop="password">
               <template #label>
                 <label class="custom-label">输入密码</label>
               </template>
               <el-input
-                v-model="password"
+                v-model="form.password"
                 type="password"
-                placeholder="请输入密码"
+                placeholder="8-20位，至少包含字母和数字"
                 autocomplete="new-password"
                 show-password
-                class="custom-input"
-                @blur="onPasswordBlur"
               />
-              <div
-                class="auth-input-hint auth-input-hint--helper"
-                :class="{ 'auth-input-hint--error': registerPasswordHasError }"
-              >
-                {{ registerPasswordHintText }}
-              </div>
-            </el-form-item>
-
-            <!-- Username -->
-            <el-form-item class="form-item-custom">
-              <template #label>
-                <label class="custom-label">输入用户名</label>
-              </template>
-              <el-input
-                v-model="username"
-                type="text"
-                placeholder="用户名"
-                autocomplete="username"
-                class="custom-input"
-                @blur="onUsernameBlur"
-              />
-              <div
-                class="auth-input-hint"
-                :class="{ 'auth-input-hint--error': usernameTouched && !username.trim() }"
-              >
-                {{ usernameTouched && !username.trim() ? '请输入用户名' : '\u00A0' }}
-              </div>
             </el-form-item>
 
             <!-- 同意条款（必选，勾选后才可点击创建账户） -->
-            <el-form-item class="form-item-custom checkbox-group">
-              <el-checkbox v-model="agreeTerms" class="custom-checkbox">
+            <el-form-item prop="agreeTerms">
+              <el-checkbox v-model="form.agreeTerms" class="custom-checkbox">
                 <span class="checkbox-text">
                   创建账户即表示您同意我们的
                   <el-link type="primary" underline="never" href="#" @click.prevent>服务条款</el-link>
@@ -234,12 +238,12 @@ export default {
               </el-checkbox>
             </el-form-item>
 
-            <el-form-item class="form-item-custom submit-item">
+            <el-form-item>
               <el-button
                 type="primary"
                 native-type="submit"
                 class="create-account-btn"
-                :disabled="!agreeTerms"
+                :disabled="!form.agreeTerms"
               >
                 创建账户
               </el-button>
@@ -327,7 +331,8 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  /* 紧凑：标题区与表单卡片间距略小于登录页 login-box 的 16px */
+  margin-bottom: 10px;
   width: 100%;
 }
 
@@ -369,19 +374,12 @@ export default {
   flex-shrink: 0;
 }
 
-/* Form */
+/* Form：纵向节奏由 gap 统一控制，避免各表单项 margin 与 hint 高度叠加导致不协调 */
 .signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   border-radius: 6px;
-}
-
-.form-item-custom {
-  margin-bottom: 0 !important;
-}
-
-/* 创建账户按钮：收紧与勾选区、下方登录入口的间距 */
-.submit-item {
-  margin-top: 4px !important;
-  margin-bottom: 2px !important;
 }
 
 /* 覆盖 Element Plus Form 样式 */
@@ -465,22 +463,6 @@ export default {
   font-size: var(--auth-fs-input) !important;
 }
 
-/* 密码输入框的图标 */
-.signup-form :deep(.el-input__suffix) {
-  height: 32px;
-}
-
-.signup-form :deep(.el-input__suffix-inner) {
-  height: 32px;
-  display: flex;
-  align-items: center;
-}
-
-.signup-form :deep(.el-input__icon) {
-  height: 32px;
-  line-height: 32px;
-}
-
 .code-input-wrapper {
   position: relative;
   display: flex;
@@ -488,12 +470,8 @@ export default {
   width: 100%;
 }
 
-.code-input {
-  width: 100%;
-}
-
-.code-input :deep(.el-input__wrapper) {
-  padding-right: 100px !important;
+.code-input-wrapper :deep(.el-input__wrapper) {
+  padding-right: 86px !important;
 }
 
 /* 覆盖 Element Plus Button 样式 */
@@ -502,12 +480,12 @@ export default {
   right: 7px;
   top: 50%;
   transform: translateY(-50%);
-  padding: 4px 10px !important;
-  font-size: 12px !important;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
   font-weight: 400 !important;
   line-height: 20px !important;
-  height: 26px !important;
-  min-height: 26px !important;
+  height: 22px !important;
+  min-height: 22px !important;
   --el-button-bg-color: #0969da !important;
   --el-button-border-color: #0969da !important;
   --el-button-text-color: #ffffff !important;
@@ -516,21 +494,16 @@ export default {
   --el-button-disabled-bg-color: #8b949e !important;
   --el-button-disabled-border-color: #8b949e !important;
   --el-button-disabled-text-color: #ffffff !important;
-  border-radius: 4px !important;
+  border-radius: 3px !important;
   cursor: pointer;
   transition: all 0.2s !important;
   white-space: nowrap;
 }
 
-/* Checkbox */
-.checkbox-group {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-}
-
 .custom-checkbox {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  margin-top: 0;
 }
 
 .signup-form :deep(.el-checkbox__label) {
@@ -602,6 +575,7 @@ export default {
   color: #ffffff !important;
   cursor: pointer;
   transition: filter 0.2s !important;
+  margin-top: 0;
 }
 
 .create-account-btn:hover:not(:disabled) {
@@ -614,10 +588,10 @@ export default {
   filter: none;
 }
 
-/* Sign In Link */
+/* Sign In Link：主按钮与底部入口之间略留呼吸感（与 gap 体系一致） */
 .signin-link {
-  margin-top: 10px;
-  padding: 8px 16px;
+  margin-top: 14px;
+  padding: 4px 16px;
   border: 1px solid #d0d7de;
   border-radius: 6px;
   text-align: center;
@@ -639,28 +613,5 @@ export default {
   text-decoration: underline !important;
 }
 
-/* 注册页：无错误时底部留 4px；错误/说明文案用 1.5 行高约 24px（12px 字号） */
-.auth-input-hint {
-  display: block;
-  width: 100%;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  margin-top: 4px;
-  font-size: 12px;
-  color: #8b949e;
-  line-height: 4px;
-  min-height: 4px !important;
-  overflow: hidden;
-}
-
-.auth-input-hint--error,
-.auth-input-hint--helper {
-  line-height: 1.5;
-  min-height: auto !important;
-  overflow: visible;
-}
-
-.auth-input-hint--error {
-  color: #cf222e;
-}
+/* 中文注释：说明文案改为 placeholder；错误提示由 Element Plus Form 规则统一渲染。 */
 </style>
