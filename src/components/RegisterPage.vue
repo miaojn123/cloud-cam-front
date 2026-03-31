@@ -1,6 +1,4 @@
 <script lang="ts">
-import { ElMessage } from 'element-plus'
-import { useUserStore } from '@/stores'
 import { isDesktopEmbed } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
 import { isRegisterPasswordValid } from '@/utils/passwordPolicy'
@@ -46,8 +44,7 @@ export default {
   methods: {
     async sendEmailCode() {
       try {
-        const userStore = useUserStore()
-        await userStore.sendRegisterCode(this.email)
+        await this.$userStore.sendRegisterCode(this.email)
         ElMessage.success('验证码已发送')
         this.emailCountdown = 60
         const timer = setInterval(() => {
@@ -76,8 +73,7 @@ export default {
       if (!this.password || !this.passwordValid) return
       if (!this.username.trim()) return
       try {
-        const userStore = useUserStore()
-        await userStore.registerByCode(
+        await this.$userStore.registerByCode(
           this.email.trim(),
           this.emailCode.trim(),
           this.password,

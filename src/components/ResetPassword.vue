@@ -1,6 +1,4 @@
 <script lang="ts">
-import { ElMessage } from 'element-plus'
-import { useUserStore } from '@/stores'
 import { isDesktopEmbed } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
 import { isResetPasswordValid } from '@/utils/passwordPolicy'
@@ -52,8 +50,7 @@ export default {
         return
       }
       try {
-        const userStore = useUserStore()
-        await userStore.sendResetCode(this.account.trim())
+        await this.$userStore.sendResetCode(this.account.trim())
         ElMessage.success('验证码已发送')
         this.countdown = 60
         const timer = setInterval(() => {
@@ -91,8 +88,7 @@ export default {
         return
       }
       try {
-        const userStore = useUserStore()
-        const result = await userStore.resetPassword(
+        const result = await this.$userStore.resetPassword(
           this.account.trim(),
           this.code.trim(),
           this.password

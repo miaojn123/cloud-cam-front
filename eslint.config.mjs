@@ -22,7 +22,9 @@ export default [
         extraFileExtensions: ['.vue']
       },
       globals: {
-        ...globals.browser
+        ...globals.browser,
+        // unplugin-auto-import + ElementPlusResolver 注入的 API
+        ElMessage: 'readonly',
       }
     },
     plugins: {

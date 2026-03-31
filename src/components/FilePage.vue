@@ -1,6 +1,4 @@
 <script lang="ts">
-import { ElMessage } from 'element-plus'
-import { useUserStore } from '@/stores'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
 
 export default {
@@ -11,18 +9,15 @@ export default {
     }
   },
   computed: {
-    appStore() {
-      return useUserStore()
-    },
     user() {
-      return this.appStore.currentUser
+      return this.$userStore.currentUser
     }
   },
   async mounted() {
     if (!this.user) {
       this.loading = true
       try {
-        await this.appStore.fetchCurrentUser()
+        await this.$userStore.fetchCurrentUser()
       } catch {
         ElMessage.error('获取用户信息失败')
       } finally {
@@ -34,7 +29,7 @@ export default {
     async handleLogout() {
       this.loading = true
       try {
-        await this.appStore.logout()
+        await this.$userStore.logout()
         ElMessage.success('退出成功')
       } catch {
         ElMessage.error('退出失败')

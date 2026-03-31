@@ -1,6 +1,4 @@
 <script lang="ts">
-import { ElMessage } from 'element-plus'
-import { useUserStore } from '@/stores'
 import {
   isDesktopEmbed,
   notifyDesktopLoginSuccess,
@@ -48,8 +46,7 @@ export default {
         return
       }
       try {
-        const userStore = useUserStore()
-        await userStore.sendLoginCode(this.email)
+        await this.$userStore.sendLoginCode(this.email)
         ElMessage.success('验证码已发送')
         this.countdown = 60
         const timer = setInterval(() => {
@@ -67,7 +64,6 @@ export default {
         ElMessage.warning('请阅读并勾选同意用户协议与隐私政策')
         return
       }
-      const userStore = useUserStore()
       try {
         if (!this.isCodeMode) {
           // 非空校验：错误在输入框下方展示，不使用 Message
@@ -76,29 +72,29 @@ export default {
           if (!this.username.trim() || !this.password) {
             return
           }
-          await userStore.loginByPassword(this.username.trim(), this.password)
+          await this.$userStore.loginByPassword(this.username.trim(), this.password)
         } else {
           if (!this.email || !this.code) {
             ElMessage.warning('请输入账号和验证码')
             return
           }
-          await userStore.loginByCode(this.email, this.code)
+          await this.$userStore.loginByCode(this.email, this.code)
         }
-        await userStore.fetchCurrentUser()
+        await this.$userStore.fetchCurrentUser()
         ElMessage.success('登录成功')
         if (isDesktopEmbed(this.$route.query)) {
           // 桌面嵌入模式下由 Qt 接管后续流程，这里只回传登录信息，不做前端路由跳转。
           const handedToQt = notifyDesktopLoginSuccess({
-            token: userStore.token,
+            token: this.$userStore.token,
             user: {
-              uuid: userStore.currentUser?.uuid || '',
-              userName: userStore.currentUser?.userName || '',
-              nickName: userStore.currentUser?.nickName || '',
-              email: userStore.currentUser?.email || '',
-              phone: userStore.currentUser?.phone || '',
-              sex: userStore.currentUser?.sex ?? 0,
-              avatar: userStore.currentUser?.avatar || '',
-              role: userStore.currentUser?.role ?? 0
+              uuid: this.$userStore.currentUser?.uuid || '',
+              userName: this.$userStore.currentUser?.userName || '',
+              nickName: this.$userStore.currentUser?.nickName || '',
+              email: this.$userStore.currentUser?.email || '',
+              phone: this.$userStore.currentUser?.phone || '',
+              sex: this.$userStore.currentUser?.sex ?? 0,
+              avatar: this.$userStore.currentUser?.avatar || '',
+              role: this.$userStore.currentUser?.role ?? 0
             }
           })
           if (handedToQt) return
