@@ -2,16 +2,23 @@ import type { LocationQuery, Router } from 'vue-router'
 
 import { preserveDesktopClientQuery } from '@/utils/desktopBridge'
 
+function mergeDesktopQuery(
+  currentQuery: LocationQuery,
+  extra?: Record<string, string>
+): Record<string, string> {
+  return { ...preserveDesktopClientQuery(currentQuery), ...extra }
+}
+
 /**
- * 统一封装：在路由跳转时保留桌面端 query（?client=desktop）。
- * - 中文注释：Qt 内嵌时依赖该 query 识别桌面模式/桥接；Web 端则不需要。
+ * 登录/注册/重置密码页：在路由跳转时保留桌面端 query（?client=desktop）。
  */
 export function pushWithDesktopQuery(
   router: Router,
   currentQuery: LocationQuery,
-  path: string
+  path: string,
+  extraQuery?: Record<string, string>
 ): Promise<void | unknown> {
-  const q = preserveDesktopClientQuery(currentQuery)
+  const q = mergeDesktopQuery(currentQuery, extraQuery)
   return router.push(Object.keys(q).length ? { path, query: q } : path)
 }
 

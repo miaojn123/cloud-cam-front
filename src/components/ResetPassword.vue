@@ -83,6 +83,7 @@ export default {
       return (ref ?? null) as FormInstance | null
     },
     async sendCode() {
+      if (this.countdown > 0) return
       const formRef = this.getFormRef()
       if (formRef) {
         const ok = await formRef
@@ -185,15 +186,16 @@ export default {
                   placeholder="请输入验证码"
                   autocomplete="one-time-code"
                 />
-                <el-button
-                  type="primary"
-                  class="send-code-btn"
-                  :disabled="countdown > 0"
-                  native-type="button"
+                <span
+                  class="send-code-text"
+                  :class="{ 'send-code-text--counting': countdown > 0 }"
+                  role="button"
+                  tabindex="0"
                   @click="sendCode"
+                  @keydown.enter.prevent="sendCode"
                 >
                   {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
-                </el-button>
+                </span>
               </div>
             </el-form-item>
 
@@ -450,33 +452,34 @@ export default {
 }
 
 .code-input-wrapper :deep(.el-input__wrapper) {
-  padding-right: 86px !important;
+  padding-right: 100px !important;
 }
 
-/* 覆盖 Element Plus Button 样式 */
-.send-code-btn {
+/* 获取验证码：文字链，倒计时期间为灰色不可点 */
+.send-code-text {
   position: absolute;
   right: 7px;
   top: 50%;
   transform: translateY(-50%);
-  padding: 2px 8px !important;
-  font-size: 11px !important;
-  font-weight: 400 !important;
-  line-height: 20px !important;
-  height: 22px !important;
-  min-height: 22px !important;
-  --el-button-bg-color: #0969da !important;
-  --el-button-border-color: #0969da !important;
-  --el-button-text-color: #ffffff !important;
-  --el-button-hover-bg-color: #0866c8 !important;
-  --el-button-hover-border-color: #0866c8 !important;
-  --el-button-disabled-bg-color: #8b949e !important;
-  --el-button-disabled-border-color: #8b949e !important;
-  --el-button-disabled-text-color: #ffffff !important;
-  border-radius: 3px !important;
-  cursor: pointer;
-  transition: all 0.2s !important;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 22px;
   white-space: nowrap;
+  color: #7ea3d4;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+.send-code-text:hover:not(.send-code-text--counting) {
+  color: #6b93c9;
+  text-decoration: none;
+}
+
+.send-code-text--counting {
+  color: #8b949e;
+  cursor: default;
 }
 
 .reset-btn {

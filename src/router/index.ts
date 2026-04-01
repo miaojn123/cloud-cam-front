@@ -3,6 +3,9 @@ import LoginPage from '@/components/LoginPage.vue'
 import RegisterPage from '@/components/RegisterPage.vue'
 import ResetPassword from '@/components/ResetPassword.vue'
 import FilePage from '@/components/FilePage.vue'
+import PersonalProfileLayout from '@/components/personal/PersonalProfileLayout.vue'
+import ProfilePersonalPanel from '@/components/personal/ProfilePersonalPanel.vue'
+import ProfileSecurityPanel from '@/components/personal/ProfileSecurityPanel.vue'
 import { TOKEN_KEY } from '@/api'
 import { isDesktopEmbed, preserveDesktopClientQuery } from '@/utils/desktopBridge'
 
@@ -13,7 +16,29 @@ export const router = createRouter({
     { path: '/login', name: 'login', component: LoginPage },
     { path: '/register', name: 'register', component: RegisterPage },
     { path: '/reset-password', name: 'reset-password', component: ResetPassword },
-    { path: '/files', name: 'files', component: FilePage, meta: { requiresAuth: true } }
+    { path: '/files', name: 'files', component: FilePage, meta: { requiresAuth: true } },
+    {
+      path: '/personalProfile',
+      component: PersonalProfileLayout,
+      meta: { requiresAuth: true },
+      redirect: { name: 'personal-profile-personal' },
+      children: [
+        {
+          path: 'personal',
+          name: 'personal-profile-personal',
+          component: ProfilePersonalPanel,
+        },
+        {
+          path: 'security',
+          name: 'personal-profile-security',
+          component: ProfileSecurityPanel,
+        },
+        {
+          path: 'settings',
+          redirect: { name: 'personal-profile-personal' },
+        },
+      ],
+    },
   ]
 })
 
