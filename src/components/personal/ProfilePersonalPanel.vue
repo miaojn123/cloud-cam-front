@@ -1,5 +1,6 @@
 <script lang="ts">
-import type { UploadFile, UploadInstance } from 'element-plus'
+import type { FormInstance, FormRules, UploadFile, UploadInstance } from 'element-plus'
+import { updateCurrentUserIndustryApi, updateCurrentUserOrganizationApi } from '@/api/user'
 
 type ProfileLayoutInject = {
   displayAvatarSrc: string
@@ -16,7 +17,7 @@ export default {
       return this.profileLayout as ProfileLayoutInject
     },
     user() {
-      return this.$userStore.currentUser
+      return this.$userStore.user
     },
     profileEmailDisplay(): string {
       const e = this.user?.email
@@ -28,6 +29,18 @@ export default {
     },
   },
   data() {
+    const rules: FormRules = {
+      userName: [
+        { required: true, message: '用户名不能为空', trigger: 'blur' },
+        { min: 6, max: 20, message: '用户名长度应为 6-20 个字符', trigger: 'blur' },
+      ],
+      nickName: [
+        { required: true, message: '昵称不能为空', trigger: 'blur' },
+        { min: 6, max: 20, message: '昵称长度应为 6-20 个字符', trigger: 'blur' },
+      ],
+      companyOrSchool: [{ max: 50, message: '组织长度不能超过 50 个字符', trigger: 'blur' }],
+      industry: [{ max: 50, message: '专业长度不能超过 50 个字符', trigger: 'blur' }],
+    }
     return {
       /** 本地编辑态（保存接口待对接） */
       profileForm: {
@@ -36,15 +49,33 @@ export default {
         companyOrSchool: '',
         industry: '',
       },
+      saving: {
+        organization: false,
+        industry: false,
+      },
+      lastSaved: {
+        organization: '',
+        industry: '',
+      },
+      profileRules: rules,
     }
   },
   watch: {
     user: {
       immediate: true,
-      handler(u: { userName?: string; nickName?: string } | null) {
+      handler(
+        u: { userName?: string; nickName?: string; organization?: string | null; industry?: string | null } | null
+      ) {
         if (!u) return
         this.profileForm.userName = String(u.userName ?? '').trim()
         this.profileForm.nickName = String(u.nickName ?? '').trim()
+        const org = String(u.organization ?? '').trim()
+        const ind = String(u.industry ?? '').trim()
+        this.profileForm.companyOrSchool = org
+        this.profileForm.industry = ind
+        // 中文注释：刷新/重进页面时用后端已保存值作为“脏检查”基准，避免默认值不显示或误发请求
+        this.lastSaved.organization = org
+        this.lastSaved.industry = ind
       },
     },
     'profileLayout.cropDialogVisible'(val: boolean) {
@@ -57,8 +88,56 @@ export default {
     },
   },
   methods: {
+    normalizeText(value: unknown): string {
+      return typeof value === 'string' ? value.trim() : String(value ?? '').trim()
+    },
+    getFormRef(): FormInstance | undefined {
+      return this.$refs.profileFormRef as FormInstance | undefined
+    },
     handleAvatarFileChange(uploadFile: UploadFile) {
       this.layout.handleAvatarFileChange(uploadFile)
+    },
+    async onOrganizationBlur() {
+      const next = this.normalizeText(this.profileForm.companyOrSchool)
+      this.profileForm.companyOrSchool = next
+      if (next === this.lastSaved.organization) return
+      if (this.saving.organization) return
+      // 中文注释：组织允许为空（0-50）；为空时不做校验提示，但若发生变化仍要提交清空请求
+      if (next) {
+        const ok = await this.getFormRef()?.validateField('companyOrSchool').catch(() => false)
+        if (!ok) return
+      }
+      this.saving.organization = true
+      try {
+        await updateCurrentUserOrganizationApi(next)
+        this.lastSaved.organization = next
+        ElMessage.success('修改成功')
+      } catch {
+        this.profileForm.companyOrSchool = this.lastSaved.organization
+      } finally {
+        this.saving.organization = false
+      }
+    },
+    async onIndustryBlur() {
+      const next = this.normalizeText(this.profileForm.industry)
+      this.profileForm.industry = next
+      if (next === this.lastSaved.industry) return
+      if (this.saving.industry) return
+      // 中文注释：专业允许为空（0-50）；为空时不做校验提示，但若发生变化仍要提交清空请求
+      if (next) {
+        const ok = await this.getFormRef()?.validateField('industry').catch(() => false)
+        if (!ok) return
+      }
+      this.saving.industry = true
+      try {
+        await updateCurrentUserIndustryApi(next)
+        this.lastSaved.industry = next
+        ElMessage.success('修改成功')
+      } catch {
+        this.profileForm.industry = this.lastSaved.industry
+      } finally {
+        this.saving.industry = false
+      }
     },
     goBindPhone() {
       this.$router.push({ path: '/personalProfile/security', query: { bind: 'phone' } })
@@ -109,69 +188,77 @@ export default {
       </section>
 
       <div class="profile-card-body">
-        <form class="profile-form" aria-labelledby="profile-form-heading" @submit.prevent>
+        <el-form
+          ref="profileFormRef"
+          class="profile-form"
+          aria-labelledby="profile-form-heading"
+          :model="profileForm"
+          :rules="profileRules"
+          @submit.prevent
+        >
           <div class="profile-form-head">
             <h2 id="profile-form-heading" class="profile-form-heading">详细信息</h2>
             <div class="profile-form-head-rule" role="presentation" />
           </div>
-          <div class="profile-form-field">
+          <el-form-item class="profile-form-field" prop="userName">
             <label class="profile-form-label" for="profile-user-name">用户名</label>
-            <input
+            <el-input
               id="profile-user-name"
               v-model.trim="profileForm.userName"
-              type="text"
               class="profile-form-control"
               autocomplete="username"
+              maxlength="20"
+              show-word-limit
             />
-          </div>
-          <div class="profile-form-field">
+          </el-form-item>
+          <el-form-item class="profile-form-field" prop="nickName">
             <label class="profile-form-label" for="profile-nick-name">昵称</label>
-            <input
+            <el-input
               id="profile-nick-name"
               v-model.trim="profileForm.nickName"
-              type="text"
               class="profile-form-control"
               autocomplete="nickname"
+              maxlength="20"
+              show-word-limit
             />
-          </div>
-          <div class="profile-form-field">
+          </el-form-item>
+          <el-form-item class="profile-form-field" prop="companyOrSchool">
             <label class="profile-form-label" for="profile-company-school">所属公司/机构/学校</label>
-            <input
+            <el-input
               id="profile-company-school"
               v-model.trim="profileForm.companyOrSchool"
-              type="text"
               class="profile-form-control"
               autocomplete="organization"
+              maxlength="50"
+              show-word-limit
+              :disabled="saving.organization"
+              @blur="onOrganizationBlur"
             />
-          </div>
-          <div class="profile-form-field">
+          </el-form-item>
+          <el-form-item class="profile-form-field" prop="industry">
             <label class="profile-form-label" for="profile-industry">所属行业</label>
-            <input
+            <el-input
               id="profile-industry"
               v-model.trim="profileForm.industry"
-              type="text"
               class="profile-form-control"
+              maxlength="50"
+              show-word-limit
+              :disabled="saving.industry"
+              @blur="onIndustryBlur"
             />
-          </div>
-          <div class="profile-form-field profile-form-field--contact">
-            <span class="profile-form-label">手机号</span>
-            <div class="profile-form-contact-row">
-              <span class="profile-form-readonly">{{ profilePhoneDisplay }}</span>
-              <button type="button" class="profile-form-link" @click="goBindPhone">
-                前往修改
-              </button>
+          </el-form-item>
+          <div class="profile-form-field">
+            <div class="profile-storage-title">存储空间</div>
+            <div class="profile-storage-title-rule" role="presentation" />
+            <div class="profile-storage-row" role="group" aria-label="存储空间使用情况">
+              <div class="profile-storage-bar" aria-hidden="true">
+                <div class="profile-storage-bar__fill" />
+              </div>
+              <div class="profile-storage-percent">15.71%</div>
+              <div class="profile-storage-usage">1.57G / 10G</div>
             </div>
           </div>
-          <div class="profile-form-field profile-form-field--contact">
-            <span class="profile-form-label">邮箱</span>
-            <div class="profile-form-contact-row">
-              <span class="profile-form-readonly">{{ profileEmailDisplay }}</span>
-              <button type="button" class="profile-form-link" @click="goBindEmail">
-                前往修改
-              </button>
-            </div>
-          </div>
-        </form>
+        </el-form>
       </div>
     </div>
   </div>
@@ -346,7 +433,58 @@ export default {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.profile-storage-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+.profile-storage-title-rule {
+  width: 100%;
+  height: 0;
+  border: 0;
+  border-top: 1px solid gray;
+  margin: 0 0 14px;
+}
+
+.profile-storage-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.profile-storage-bar {
+  width: 66.6667%;
+  height: 24px;
+  border: 1px solid #3b82f6;
+  border-radius: 999px;
+  background: #ffffff;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.profile-storage-bar__fill {
+  height: 100%;
+  width: 15.71%;
+  background: lightgray;
+  border-radius: 999px;
+}
+
+.profile-storage-percent {
+  min-width: 78px;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.profile-storage-usage {
+  margin-left: auto;
+  font-size: 14px;
+  color: #4b5563;
+  white-space: nowrap;
 }
 
 .profile-form-field:last-child {
@@ -355,38 +493,47 @@ export default {
 
 .profile-form-label {
   display: block;
-  margin-bottom: 5px;
-  font-size: 13px;
+  margin-bottom: 8px;
+  font-size: 14px;
   line-height: 1.35;
   font-weight: 400;
   color: #4b5563;
 }
 
 .profile-form-control {
-  display: block;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 7px 10px;
-  font-size: 13px;
-  line-height: 1.45;
-  color: #111827;
+}
+
+/* 中文注释：el-input 自带 wrapper，这里只改 wrapper/inner，避免出现“双边框” */
+.profile-form-control :deep(.el-input__wrapper) {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 12px;
+  min-height: 42px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 4px;
-  outline: none;
+  box-shadow: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.profile-form-control::placeholder {
+.profile-form-control :deep(.el-input__inner) {
+  font-size: 14px;
+  line-height: 1.45;
+  color: #111827;
+}
+
+.profile-form-control :deep(.el-input__inner::placeholder) {
   color: #9ca3af;
 }
 
-.profile-form-control:hover {
+.profile-form-control :deep(.el-input__wrapper:hover) {
   border-color: #d1d5db;
 }
 
-.profile-form-control:focus {
+.profile-form-control :deep(.el-input__wrapper.is-focus) {
   border-color: #0d476b;
   box-shadow: 0 0 0 1px rgba(13, 71, 107, 0.15);
 }
@@ -396,8 +543,8 @@ export default {
   align-items: center;
   flex-wrap: wrap;
   gap: 6px 10px;
-  min-height: 34px;
-  padding: 7px 10px;
+  min-height: 42px;
+  padding: 9px 12px;
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
@@ -409,7 +556,7 @@ export default {
 .profile-form-readonly {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 13px;
+  font-size: 14px;
   color: #111827;
 }
 
@@ -420,7 +567,7 @@ export default {
   border: none;
   background: none;
   color: #0d476b;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;

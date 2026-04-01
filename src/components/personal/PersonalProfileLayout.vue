@@ -4,6 +4,12 @@ import { buildDefaultAvatarSvgDataUrl, getNicknameInitialLetter } from '@/utils/
 import AppMainNav from '@/components/layout/AppMainNav.vue'
 import AvatarCropDialog from '@/components/profile/AvatarCropDialog.vue'
 import type { UserSummary } from '@/types/user'
+import { uploadCurrentUserAvatarApi } from '@/api/user'
+
+type AvatarCropConfirmPayload = {
+  dataUrl: string
+  blob: Blob
+}
 
 export default {
   name: 'PersonalProfileLayout',
@@ -23,7 +29,7 @@ export default {
   },
   computed: {
     user() {
-      return this.$userStore.currentUser
+      return this.$userStore.user
     },
     profileDisplayName(): string {
       const u = this.user
@@ -108,9 +114,30 @@ export default {
       this.pendingCropFile = raw
       this.cropDialogVisible = true
     },
-    onAvatarCropConfirm(payload: { dataUrl: string }) {
+    async onAvatarCropConfirm(payload: AvatarCropConfirmPayload) {
+      // 中文注释：先展示本地预览，上传成功后再用后端返回的 OSS URL 覆盖
       this.avatarPreviewDataUrl = payload.dataUrl
-      ElMessage.success('头像已更新（本地预览，保存接口待接入）')
+      this.loading = true
+      try {
+        const file = new File([payload.blob], `avatar_${Date.now()}.jpg`, {
+          type: payload.blob.type || 'image/jpeg',
+        })
+        const result = await uploadCurrentUserAvatarApi(file)
+        const avatar = result.data?.avatar ? String(result.data.avatar).trim() : ''
+        if (!this.$userStore.user) {
+          await this.$userStore.fetchCurrentUser()
+        }
+        this.$userStore.updateAvatar(avatar)
+        // 真实头像已更新：清理预览态，避免“预览图”与 OSS 真实图不一致
+        this.avatarPreviewDataUrl = null
+        ElMessage.success('头像上传成功')
+      } catch {
+        // 上传失败：回滚预览，避免用户误以为已保存
+        this.avatarPreviewDataUrl = null
+        ElMessage.error('头像上传失败')
+      } finally {
+        this.loading = false
+      }
     },
   },
 }
@@ -144,7 +171,7 @@ export default {
               <el-icon class="personal-profile-page__menu-icon" :size="18">
                 <EpLock />
               </el-icon>
-              <span>安全性</span>
+              <span>账户安全</span>
             </router-link>
           </li>
         </ul>

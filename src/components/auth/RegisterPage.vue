@@ -62,16 +62,6 @@ export default {
             },
             trigger: 'blur'
           }
-        ],
-        agreeTerms: [
-          {
-            // 中文注释：勾选条款是强制项，错误提示走表单系统（而不是只弹 Message）。
-            validator: (_rule, value: boolean, callback) => {
-              if (value) return callback()
-              callback(new Error('请勾选同意服务条款与隐私政策'))
-            },
-            trigger: 'change'
-          }
         ]
       }
     }
@@ -230,7 +220,7 @@ export default {
             </el-form-item>
 
             <!-- 同意条款（必选，勾选后才可点击创建账户） -->
-            <el-form-item prop="agreeTerms">
+            <el-form-item>
               <el-checkbox v-model="form.agreeTerms" class="custom-checkbox">
                 <span class="checkbox-text">
                   创建账户即表示您同意我们的
@@ -256,7 +246,7 @@ export default {
 
         <!-- Sign In Link -->
         <div class="signin-link">
-          已有账户？ <el-link type="primary" underline="never" @click="goToLogin">登录</el-link>
+          已有账户？ <el-link type="primary" underline="never" @click="goToLogin">前往登录</el-link>
         </div>
       </div>
     </div>
@@ -387,7 +377,7 @@ export default {
 
 /* 覆盖 Element Plus Form 样式 */
 .signup-form :deep(.el-form-item) {
-  margin-bottom: 0;
+  margin-bottom: 4px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;

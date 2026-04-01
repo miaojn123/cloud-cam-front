@@ -28,7 +28,7 @@ export default {
   },
   computed: {
     user() {
-      return this.$userStore.currentUser
+      return this.$userStore.user
     },
     filteredFiles(): FileItem[] {
       return filterFilesByQuery(this.files, this.search)

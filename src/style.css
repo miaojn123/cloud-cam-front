@@ -41,7 +41,7 @@ body {
 }
 
 /**
- * Qt 嵌入 CEF 时登录/注册/重置三页共用：与 LoginPage.login-box 同宽同边框，避免切换路由时视觉跳变。
+ * Qt 嵌入 CEF 时登录/注册/重置三页共用：与 auth 登录页 .login-box 同宽同边框，避免切换路由时视觉跳变。
  */
 .auth-form-card {
   width: 100%;

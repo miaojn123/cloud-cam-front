@@ -235,7 +235,7 @@ export default {
 
         <!-- Sign In Link -->
         <div class="signin-link">
-          已有账户？ <el-link type="primary" underline="never" @click="goToLogin">登录</el-link>
+          已有账户？ <el-link type="primary" underline="never" @click="goToLogin">前往登录</el-link>
         </div>
       </div>
     </div>
@@ -366,7 +366,7 @@ export default {
 
 /* 覆盖 Element Plus Form 样式 */
 .reset-form :deep(.el-form-item) {
-  margin-bottom: 0;
+  margin-bottom: 4px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;

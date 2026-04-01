@@ -139,14 +139,14 @@ export default {
           const handedToQt = notifyDesktopLoginSuccess({
             token: this.$userStore.token,
             user: {
-              uuid: this.$userStore.currentUser?.uuid || '',
-              userName: this.$userStore.currentUser?.userName || '',
-              nickName: this.$userStore.currentUser?.nickName || '',
-              email: this.$userStore.currentUser?.email || '',
-              phone: this.$userStore.currentUser?.phone || '',
-              sex: this.$userStore.currentUser?.sex ?? 0,
-              avatar: this.$userStore.currentUser?.avatar || '',
-              role: this.$userStore.currentUser?.role ?? 0
+              uuid: this.$userStore.user?.uuid || '',
+              userName: this.$userStore.user?.userName || '',
+              nickName: this.$userStore.user?.nickName || '',
+              email: this.$userStore.user?.email || '',
+              phone: this.$userStore.user?.phone || '',
+              sex: this.$userStore.user?.sex ?? 0,
+              avatar: this.$userStore.user?.avatar || '',
+              role: this.$userStore.user?.role ?? 0
             }
           })
           if (handedToQt) return

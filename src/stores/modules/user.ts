@@ -50,14 +50,14 @@ function clearCurrentUserCache() {
 interface UserState {
   loading: boolean
   token: string
-  currentUser: CurrentUser | null
+  user: CurrentUser | null
 }
 
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
     loading: false,
     token: localStorage.getItem(TOKEN_KEY) || '',
-    currentUser: null
+    user: null
   }),
   getters: {
     isLoading(state): boolean {
@@ -82,7 +82,7 @@ export const useUserStore = defineStore('user', {
     },
     clearAuth() {
       this.token = ''
-      this.currentUser = null
+      this.user = null
       localStorage.removeItem(TOKEN_KEY)
       clearCurrentUserCache()
     },
@@ -123,10 +123,16 @@ export const useUserStore = defineStore('user', {
     },
     async fetchCurrentUser() {
       const result = await getCurrentUserApi()
-      this.currentUser = result.data?.user || null
+      this.user = result.data?.user || null
       // 仅缓存展示字段，降低耦合与敏感数据落盘风险
-      setCurrentUserCache(this.currentUser)
-      return this.currentUser
+      setCurrentUserCache(this.user)
+      return this.user
+    },
+    updateAvatar(avatar: string) {
+      // 中文注释：头像上传后只更新必要字段，同时同步 current_user_cache，供桌面端启动探测复用
+      if (!this.user) return
+      this.user = { ...this.user, avatar }
+      setCurrentUserCache(this.user)
     },
     async logout() {
       try {

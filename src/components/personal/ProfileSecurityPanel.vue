@@ -1,6 +1,4 @@
 <script lang="ts">
-import { ElMessageBox } from 'element-plus'
-
 export default {
   name: 'ProfileSecurityPanel',
   data() {
@@ -23,7 +21,7 @@ export default {
       }
     },
     user() {
-      return this.$userStore.currentUser
+      return this.$userStore.user
     },
     profilePhoneDisplay(): string {
       const p = this.user?.phone
@@ -47,37 +45,18 @@ export default {
       const raw = this.$route.query.bind
       const b = Array.isArray(raw) ? raw[0] : raw
       if (b === 'phone' || b === 'email') {
-        this.openSecurityDialog(b)
+        ElMessage.info('功能开发中')
         this.$nextTick(() => {
           this.$router.replace({ path: '/personalProfile/security' })
         })
       }
     },
-    openSecurityDialog(kind: 'phone' | 'email' | 'password') {
-      this.securityDialogKind = kind
-      this.securityDialogVisible = true
-    },
-    onSecurityDialogConfirm() {
+    onClickModify() {
       ElMessage.info('功能开发中')
-      this.securityDialogVisible = false
     },
     /** 注销账户：确认后对接后端；当前仅占位 */
     async onDeactivateAccount() {
-      try {
-        await ElMessageBox.confirm(
-          '注销后账号及相关数据将按平台规则处理，且通常不可恢复。确定继续吗？',
-          '注销账户',
-          {
-            confirmButtonText: '确定注销',
-            cancelButtonText: '取消',
-            type: 'warning',
-            confirmButtonClass: 'el-button--danger',
-          }
-        )
-        ElMessage.info('注销流程待接入')
-      } catch {
-        /* 用户取消 */
-      }
+      ElMessage.info('功能开发中')
     },
   },
 }
@@ -97,7 +76,7 @@ export default {
             <span class="profile-form-label">手机号</span>
             <div class="profile-form-contact-row">
               <span class="profile-form-readonly">{{ profilePhoneDisplay }}</span>
-              <button type="button" class="profile-form-link" @click="openSecurityDialog('phone')">
+              <button type="button" class="profile-form-link" @click="onClickModify">
                 前往修改
               </button>
             </div>
@@ -106,7 +85,7 @@ export default {
             <span class="profile-form-label">邮箱</span>
             <div class="profile-form-contact-row">
               <span class="profile-form-readonly">{{ profileEmailDisplay }}</span>
-              <button type="button" class="profile-form-link" @click="openSecurityDialog('email')">
+              <button type="button" class="profile-form-link" @click="onClickModify">
                 前往修改
               </button>
             </div>
@@ -117,7 +96,7 @@ export default {
               <span class="profile-form-readonly profile-form-readonly--muted">
                 通过已绑定手机或邮箱验证后设置新登录密码
               </span>
-              <button type="button" class="profile-form-link" @click="openSecurityDialog('password')">
+              <button type="button" class="profile-form-link" @click="onClickModify">
                 前往修改
               </button>
             </div>
@@ -136,21 +115,6 @@ export default {
         </section>
       </div>
     </div>
-
-    <el-dialog
-      v-model="securityDialogVisible"
-      :title="securityDialogTitle"
-      width="420px"
-      align-center
-      destroy-on-close
-      @closed="securityDialogKind = null"
-    >
-      <p class="security-dialog-placeholder">流程待接入，确定后将以消息提示占位。</p>
-      <template #footer>
-        <el-button @click="securityDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="onSecurityDialogConfirm">确定</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -218,7 +182,7 @@ export default {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .profile-form-field:last-child {
@@ -227,8 +191,8 @@ export default {
 
 .profile-form-label {
   display: block;
-  margin-bottom: 5px;
-  font-size: 13px;
+  margin-bottom: 8px;
+  font-size: 14px;
   line-height: 1.35;
   font-weight: 400;
   color: #4b5563;
@@ -239,8 +203,8 @@ export default {
   align-items: center;
   flex-wrap: wrap;
   gap: 6px 10px;
-  min-height: 34px;
-  padding: 7px 10px;
+  min-height: 42px;
+  padding: 9px 12px;
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
@@ -252,7 +216,7 @@ export default {
 .profile-form-readonly {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 13px;
+  font-size: 14px;
   color: #111827;
 }
 
@@ -267,7 +231,7 @@ export default {
   border: none;
   background: none;
   color: #0d476b;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;

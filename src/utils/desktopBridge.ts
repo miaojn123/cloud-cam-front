@@ -10,6 +10,24 @@ export const DESKTOP_QT_BRIDGE = '__DESKTOP_QT__' as const
 export const DESKTOP_CLIENT_PARAM = 'client'
 export const DESKTOP_CLIENT_VALUE = 'desktop'
 
+/** 外置浏览器首跳注入登录态时与 CamDemo 约定的 query 键（与 localStorage 写入后须从地址栏移除） */
+export const EXTERNAL_AUTH_TOKEN_QUERY_PARAM = 'token'
+
+/** 从路由 query 解析外跳传入的 token，空则视为未携带 */
+export function pickExternalAuthTokenFromQuery(query: LocationQuery): string {
+  const raw = query[EXTERNAL_AUTH_TOKEN_QUERY_PARAM]
+  const v = Array.isArray(raw) ? raw[0] : raw
+  if (typeof v !== 'string') return ''
+  return v.trim()
+}
+
+/** 生成不含 token 的 query，供 replace 后避免敏感信息留在历史记录 */
+export function omitExternalAuthTokenFromQuery(query: LocationQuery): LocationQuery {
+  const next: LocationQuery = { ...query }
+  delete next[EXTERNAL_AUTH_TOKEN_QUERY_PARAM]
+  return next
+}
+
 /**
  * 桌面端桥接用户对象（字段与后端 Java 实体一致，便于跨端对齐）
  */

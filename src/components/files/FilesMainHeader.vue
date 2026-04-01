@@ -12,15 +12,13 @@ export default {
     onSearchInput(v: string) {
       this.$emit('update:search', v)
     },
-    openFilePicker() {
-      const el = this.$refs.fileInput as HTMLInputElement | undefined
-      el?.click()
-    },
-    onFilesPicked(e: Event) {
-      const input = e.target as HTMLInputElement | null
-      const files = input?.files ? Array.from(input.files) : []
+    onImportFilesChange(_uploadFile: unknown, uploadFiles: Array<{ raw?: File }>) {
+      const files = uploadFiles.map((x) => x.raw).filter((x): x is File => x instanceof File)
       this.$emit('import-files', files)
-      if (input) input.value = ''
+    },
+    openFilePicker() {
+      const ref = this.$refs.importUploadRef as { handleClick?: () => void } | undefined
+      ref?.handleClick?.()
     },
   },
 }
@@ -61,12 +59,13 @@ export default {
       </span>
     </el-button>
 
-    <input
-      ref="fileInput"
-      type="file"
+    <el-upload
+      ref="importUploadRef"
+      class="main__header-import-upload"
+      :show-file-list="false"
+      :auto-upload="false"
       multiple
-      style="display: none"
-      @change="onFilesPicked"
+      :on-change="onImportFilesChange"
     />
 
     <el-input

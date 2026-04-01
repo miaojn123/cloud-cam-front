@@ -8,7 +8,10 @@ export default {
     modelValue: { type: Boolean, default: false },
     file: { type: Object as () => File | null, default: null },
   },
-  emits: ['update:modelValue', 'confirm'],
+  emits: {
+    'update:modelValue': (_v: boolean) => true,
+    confirm: (_payload: { dataUrl: string; blob: Blob }) => true,
+  },
   data() {
     return {
       imageUrl: '',
@@ -92,8 +95,19 @@ export default {
         return
       }
       const dataUrl = canvas.toDataURL('image/jpeg', 0.9)
-      this.$emit('confirm', { dataUrl })
-      this.dialogVisible = false
+      // 中文注释：toBlob 是异步的；必须等拿到二进制后才能上传
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            ElMessage.error('裁剪失败')
+            return
+          }
+          this.$emit('confirm', { dataUrl, blob })
+          this.dialogVisible = false
+        },
+        'image/jpeg',
+        0.9
+      )
     },
   },
   beforeUnmount() {
