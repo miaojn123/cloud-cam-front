@@ -49,7 +49,7 @@ export default {
 <template>
   <nav class="nav" id="app-main-nav">
     <div class="nav__left">
-      <a href="/file" class="router-link-active el-tooltip__trigger">
+      <a href="/files" class="router-link-active el-tooltip__trigger">
         <img :src="logoSrc" style="cursor: pointer" alt="QJCAM" />
       </a>
     </div>

@@ -10,37 +10,15 @@ import {
 } from '@/api/auth'
 import { getCurrentUserApi, type CurrentUser } from '@/api/user'
 
-// 缓存当前用户“展示所需”的最小字段（供桌面端/启动探测使用）
-// 说明：桌面端启动探测应尽量不依赖网络请求（CEF 环境下 fetch/代理可能不稳定）。
+// 缓存完整 CurrentUser JSON（供桌面端 CEF 启动探测整对象回传，避免与 Qt 侧逐字段对齐）
 const CURRENT_USER_CACHE_KEY = 'current_user_cache' as const
-
-type CurrentUserCache = {
-  uuid: string
-  nickName: string
-  userName: string
-  email: string
-  phone: string
-  sex: number
-  avatar: string
-  role: number
-}
 
 function setCurrentUserCache(user: CurrentUser | null) {
   if (!user) {
     localStorage.removeItem(CURRENT_USER_CACHE_KEY)
     return
   }
-  const cache: CurrentUserCache = {
-    uuid: user.uuid || '',
-    nickName: user.nickName || '',
-    userName: user.userName || '',
-    email: user.email || '',
-    phone: user.phone || '',
-    sex: typeof user.sex === 'number' ? user.sex : 0,
-    avatar: user.avatar || '',
-    role: typeof user.role === 'number' ? user.role : 0
-  }
-  localStorage.setItem(CURRENT_USER_CACHE_KEY, JSON.stringify(cache))
+  localStorage.setItem(CURRENT_USER_CACHE_KEY, JSON.stringify(user))
 }
 
 function clearCurrentUserCache() {
@@ -51,6 +29,10 @@ interface UserState {
   loading: boolean
   token: string
   user: CurrentUser | null
+}
+
+type FetchCurrentUserOptions = {
+  skipAuthRedirect?: boolean
 }
 
 export const useUserStore = defineStore('user', {
@@ -121,8 +103,10 @@ export const useUserStore = defineStore('user', {
     async resetPassword(account: string, code: string, newPassword: string) {
       return resetPasswordApi(account, code, newPassword)
     },
-    async fetchCurrentUser() {
-      const result = await getCurrentUserApi()
+    async fetchCurrentUser(options?: FetchCurrentUserOptions) {
+      const result = await getCurrentUserApi({
+        _skipAuthRedirect: options?.skipAuthRedirect
+      })
       this.user = result.data?.user || null
       // 仅缓存展示字段，降低耦合与敏感数据落盘风险
       setCurrentUserCache(this.user)

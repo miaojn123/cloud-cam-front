@@ -569,8 +569,7 @@ export default {
   color: #0d476b;
   font-size: 14px;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
 }
 
 .profile-form-link:hover {

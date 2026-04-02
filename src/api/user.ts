@@ -1,4 +1,9 @@
 import { request } from './request'
+import type { AxiosRequestConfig } from 'axios'
+
+type UserRequestConfig = AxiosRequestConfig & {
+  _skipAuthRedirect?: boolean
+}
 
 export interface CurrentUser {
   uuid: string
@@ -8,7 +13,6 @@ export interface CurrentUser {
   phone: string | null
   sex: number
   avatar: string
-  // 中文注释：个人资料扩展字段（允许为空字符串）
   organization?: string | null
   industry?: string | null
   role: number
@@ -26,10 +30,11 @@ export type UploadAvatarResponse = {
   avatar: string
 }
 
-export function getCurrentUserApi() {
+export function getCurrentUserApi(config?: UserRequestConfig) {
   return request<CurrentUserResponse>({
     url: '/api/user/current',
-    method: 'post'
+    method: 'post',
+    ...config
   })
 }
 

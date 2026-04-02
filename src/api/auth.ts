@@ -4,6 +4,11 @@ export interface LoginResponse {
   token: string
 }
 
+export interface RefreshSessionResponse {
+  token: string
+  expireTime: number
+}
+
 export function sendCodeApi(account: string, scene: string) {
   return request({
     url: '/api/auth/send-code',
@@ -66,6 +71,13 @@ export function resetPasswordApi(account: string, code: string, newPassword: str
 export function logoutApi() {
   return request({
     url: '/api/auth/logout',
+    method: 'post'
+  })
+}
+
+export function refreshSessionApi() {
+  return request<RefreshSessionResponse>({
+    url: '/api/auth/refresh',
     method: 'post'
   })
 }

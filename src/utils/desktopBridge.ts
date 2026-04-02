@@ -1,4 +1,5 @@
 import type { LocationQuery } from 'vue-router'
+import type { CurrentUser } from '@/api/user'
 
 /**
  * Qt/QCefView 需在页面上下文中注入：
@@ -28,23 +29,15 @@ export function omitExternalAuthTokenFromQuery(query: LocationQuery): LocationQu
   return next
 }
 
-/**
- * 桌面端桥接用户对象（字段与后端 Java 实体一致，便于跨端对齐）
- */
-export interface DesktopUser {
-  uuid: string
-  userName: string
-  nickName: string
-  email: string
-  phone: string
-  sex: number
-  avatar: string
-  role: number
-}
-
 export interface DesktopLoginPayload {
   token: string
-  user: DesktopUser
+  /** 与 /api/user/current 的 user 一致，随后端扩展字段自动携带 */
+  user: CurrentUser
+}
+
+/** 深拷贝为纯 JSON 对象，避免响应式代理在 Qt 桥接下序列化异常 */
+export function cloneUserForDesktopBridge(user: CurrentUser): CurrentUser {
+  return JSON.parse(JSON.stringify(user)) as CurrentUser
 }
 
 export interface DesktopHostBridge {

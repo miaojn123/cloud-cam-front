@@ -57,7 +57,7 @@ router.beforeEach(async (to) => {
     // 注意：外置浏览器场景下，后端接口可能暂不可用（未启动/代理失败），此处不应强制回登录页
     userStore.setToken(urlToken)
     try {
-      await userStore.fetchCurrentUser()
+      await userStore.fetchCurrentUser({ skipAuthRedirect: true })
     } catch {
       // 保持 token 以便后续页面自行重试；若 token 无效，接口层会提示并可由用户重新登录
     }

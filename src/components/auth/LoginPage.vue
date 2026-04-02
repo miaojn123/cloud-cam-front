@@ -2,6 +2,7 @@
 import {
   isDesktopEmbed,
   notifyDesktopLoginSuccess,
+  cloneUserForDesktopBridge,
 } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -136,18 +137,14 @@ export default {
         ElMessage.success('登录成功')
         if (isDesktopEmbed(this.$route.query)) {
           // 桌面嵌入模式下由 Qt 接管后续流程，这里只回传登录信息，不做前端路由跳转。
+          const u = this.$userStore.user
+          if (!u) {
+            ElMessage.error('未能获取用户信息')
+            return
+          }
           const handedToQt = notifyDesktopLoginSuccess({
             token: this.$userStore.token,
-            user: {
-              uuid: this.$userStore.user?.uuid || '',
-              userName: this.$userStore.user?.userName || '',
-              nickName: this.$userStore.user?.nickName || '',
-              email: this.$userStore.user?.email || '',
-              phone: this.$userStore.user?.phone || '',
-              sex: this.$userStore.user?.sex ?? 0,
-              avatar: this.$userStore.user?.avatar || '',
-              role: this.$userStore.user?.role ?? 0
-            }
+            user: cloneUserForDesktopBridge(u)
           })
           if (handedToQt) return
         }

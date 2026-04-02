@@ -230,11 +230,10 @@ export default {
   padding: 0;
   border: none;
   background: none;
-  color: #0d476b;
+  color: gray;
   font-size: 14px;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
 }
 
 .profile-form-link:hover {
