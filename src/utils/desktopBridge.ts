@@ -4,7 +4,7 @@ import type { CurrentUser } from '@/api/user'
 /**
  * Qt/QCefView 需在页面上下文中注入：
  *   window.__DESKTOP_QT__ = { onLoginSuccess(payload) { ... } }
- * payload.token 与 localStorage(TOKEN_KEY) 一致，便于主窗未共享 storage 时由 Qt 写入主窗。
+ * payload.token 由前端登录态提供，供 Qt 在登录成功后更新桌面端会话。
  */
 export const DESKTOP_QT_BRIDGE = '__DESKTOP_QT__' as const
 
