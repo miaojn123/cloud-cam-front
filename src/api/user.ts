@@ -74,3 +74,56 @@ export function updateCurrentUserIndustryApi(industry: string) {
     data: payload
   })
 }
+
+export type UpdateNickNameRequest = {
+  nickName: string
+}
+
+export function updateCurrentUserNickNameApi(nickName: string) {
+  const payload: UpdateNickNameRequest = { nickName }
+  return request<unknown>({
+    url: '/api/user/current/nickname',
+    method: 'post',
+    data: payload
+  })
+}
+
+export type UpdateUserNameRequest = {
+  username: string
+}
+
+export function updateCurrentUserUserNameApi(username: string) {
+  const payload: UpdateUserNameRequest = { username }
+  return request<unknown>({
+    url: '/api/user/current/username',
+    method: 'post',
+    data: payload
+  })
+}
+
+export type BindCurrentUserEmailRequest = {
+  email: string
+  code: string
+}
+
+export function bindCurrentUserEmailApi(email: string, code: string) {
+  const payload: BindCurrentUserEmailRequest = { email, code }
+  return request<unknown>({
+    url: '/api/user/current/email/bind',
+    method: 'post',
+    data: payload
+  })
+}
+
+export type UnbindCurrentUserEmailRequest = {
+  code: string
+}
+
+export function unbindCurrentUserEmailApi(code: string) {
+  const payload: UnbindCurrentUserEmailRequest = { code }
+  return request<unknown>({
+    url: '/api/user/current/email/unbind',
+    method: 'post',
+    data: payload
+  })
+}

@@ -1,25 +1,20 @@
 <script lang="ts">
+import { openBindEmailBox, openUnbindEmailBox } from './security/emailBindFlow'
+
+function maskEmailForDisplay(email: string): string {
+  const s = String(email ?? '').trim()
+  const at = s.indexOf('@')
+  if (at <= 0) return '***'
+  const local = s.slice(0, at)
+  const domain = s.slice(at + 1)
+  if (!domain) return '***'
+  const visible = local.slice(0, 3)
+  return `${visible || '*'}***@${domain}`
+}
+
 export default {
   name: 'ProfileSecurityPanel',
-  data() {
-    return {
-      securityDialogVisible: false,
-      securityDialogKind: null as 'phone' | 'email' | 'password' | null,
-    }
-  },
   computed: {
-    securityDialogTitle(): string {
-      switch (this.securityDialogKind) {
-        case 'phone':
-          return '修改手机号'
-        case 'email':
-          return '修改邮箱'
-        case 'password':
-          return '修改密码'
-        default:
-          return ''
-      }
-    },
     user() {
       return this.$userStore.user
     },
@@ -29,7 +24,11 @@ export default {
     },
     profileEmailDisplay(): string {
       const e = this.user?.email
-      return e && String(e).trim() ? String(e).trim() : '未绑定邮箱'
+      return e && String(e).trim() ? maskEmailForDisplay(String(e)) : '未绑定邮箱'
+    },
+    emailActionText(): string {
+      const e = this.user?.email
+      return e && String(e).trim() ? '更改绑定' : '前往绑定'
     },
   },
   watch: {
@@ -44,15 +43,32 @@ export default {
     syncBindFromQuery() {
       const raw = this.$route.query.bind
       const b = Array.isArray(raw) ? raw[0] : raw
-      if (b === 'phone' || b === 'email') {
+      if (b === 'phone') {
         ElMessage.info('功能开发中')
+      }
+      if (b === 'email') {
+        this.onClickEmail()
+      }
+      if (b === 'phone' || b === 'email') {
         this.$nextTick(() => {
           this.$router.replace({ path: '/personalProfile/security' })
         })
       }
     },
-    onClickModify() {
+    onClickPhone() {
       ElMessage.info('功能开发中')
+    },
+    async onClickEmail() {
+      const currentEmail = String(this.user?.email ?? '').trim()
+      const deps = {
+        refreshUser: async () => this.$userStore.fetchCurrentUser(),
+      }
+      if (!currentEmail) {
+        await openBindEmailBox({ deps })
+        return
+      }
+      await openUnbindEmailBox({ currentEmail, deps })
+      await openBindEmailBox({ deps })
     },
     /** 注销账户：确认后对接后端；当前仅占位 */
     async onDeactivateAccount() {
@@ -76,7 +92,7 @@ export default {
             <span class="profile-form-label">手机号</span>
             <div class="profile-form-contact-row">
               <span class="profile-form-readonly">{{ profilePhoneDisplay }}</span>
-              <button type="button" class="profile-form-link" @click="onClickModify">
+              <button type="button" class="profile-form-link" @click="onClickPhone">
                 前往修改
               </button>
             </div>
@@ -85,8 +101,8 @@ export default {
             <span class="profile-form-label">邮箱</span>
             <div class="profile-form-contact-row">
               <span class="profile-form-readonly">{{ profileEmailDisplay }}</span>
-              <button type="button" class="profile-form-link" @click="onClickModify">
-                前往修改
+              <button type="button" class="profile-form-link" @click="onClickEmail">
+                {{ emailActionText }}
               </button>
             </div>
           </div>
@@ -96,7 +112,7 @@ export default {
               <span class="profile-form-readonly profile-form-readonly--muted">
                 通过已绑定手机或邮箱验证后设置新登录密码
               </span>
-              <button type="button" class="profile-form-link" @click="onClickModify">
+              <button type="button" class="profile-form-link" @click="onClickPhone">
                 前往修改
               </button>
             </div>

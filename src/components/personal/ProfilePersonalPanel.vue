@@ -1,6 +1,11 @@
 <script lang="ts">
 import type { FormInstance, FormRules, UploadFile, UploadInstance } from 'element-plus'
-import { updateCurrentUserIndustryApi, updateCurrentUserOrganizationApi } from '@/api/user'
+import {
+  updateCurrentUserIndustryApi,
+  updateCurrentUserNickNameApi,
+  updateCurrentUserOrganizationApi,
+  updateCurrentUserUserNameApi,
+} from '@/api/user'
 
 type ProfileLayoutInject = {
   displayAvatarSrc: string
@@ -33,6 +38,11 @@ export default {
       userName: [
         { required: true, message: '用户名不能为空', trigger: 'blur' },
         { min: 6, max: 20, message: '用户名长度应为 6-20 个字符', trigger: 'blur' },
+        {
+          pattern: /^[A-Za-z][A-Za-z0-9_]*$/,
+          message: '用户名需英文开头，仅支持字母/数字/下划线',
+          trigger: 'blur',
+        },
       ],
       nickName: [
         { required: true, message: '昵称不能为空', trigger: 'blur' },
@@ -50,10 +60,14 @@ export default {
         industry: '',
       },
       saving: {
+        userName: false,
+        nickName: false,
         organization: false,
         industry: false,
       },
       lastSaved: {
+        userName: '',
+        nickName: '',
         organization: '',
         industry: '',
       },
@@ -74,6 +88,8 @@ export default {
         this.profileForm.companyOrSchool = org
         this.profileForm.industry = ind
         // 中文注释：刷新/重进页面时用后端已保存值作为“脏检查”基准，避免默认值不显示或误发请求
+        this.lastSaved.userName = this.profileForm.userName
+        this.lastSaved.nickName = this.profileForm.nickName
         this.lastSaved.organization = org
         this.lastSaved.industry = ind
       },
@@ -94,8 +110,62 @@ export default {
     getFormRef(): FormInstance | undefined {
       return this.$refs.profileFormRef as FormInstance | undefined
     },
+    async validateFieldOk(prop: string): Promise<boolean> {
+      const form = this.getFormRef()
+      if (!form) return false
+      try {
+        // 中文注释：validateField 在不同版本返回值不同（void/boolean）；只要不抛错就视为校验通过
+        await form.validateField(prop as any)
+        return true
+      } catch {
+        return false
+      }
+    },
+    syncStoreProfile(patch: Partial<{ userName: string; nickName: string }>) {
+      const current = this.$userStore?.user
+      if (!current) return
+      this.$userStore.user = { ...current, ...patch }
+    },
     handleAvatarFileChange(uploadFile: UploadFile) {
       this.layout.handleAvatarFileChange(uploadFile)
+    },
+    async onUserNameBlur() {
+      const next = this.normalizeText(this.profileForm.userName)
+      this.profileForm.userName = next
+      if (next === this.lastSaved.userName) return
+      if (this.saving.userName) return
+      const ok = await this.validateFieldOk('userName')
+      if (!ok) return
+      this.saving.userName = true
+      try {
+        await updateCurrentUserUserNameApi(next)
+        this.lastSaved.userName = next
+        this.syncStoreProfile({ userName: next })
+        ElMessage.success('修改成功')
+      } catch {
+        this.profileForm.userName = this.lastSaved.userName
+      } finally {
+        this.saving.userName = false
+      }
+    },
+    async onNickNameBlur() {
+      const next = this.normalizeText(this.profileForm.nickName)
+      this.profileForm.nickName = next
+      if (next === this.lastSaved.nickName) return
+      if (this.saving.nickName) return
+      const ok = await this.validateFieldOk('nickName')
+      if (!ok) return
+      this.saving.nickName = true
+      try {
+        await updateCurrentUserNickNameApi(next)
+        this.lastSaved.nickName = next
+        this.syncStoreProfile({ nickName: next })
+        ElMessage.success('修改成功')
+      } catch {
+        this.profileForm.nickName = this.lastSaved.nickName
+      } finally {
+        this.saving.nickName = false
+      }
     },
     async onOrganizationBlur() {
       const next = this.normalizeText(this.profileForm.companyOrSchool)
@@ -104,7 +174,7 @@ export default {
       if (this.saving.organization) return
       // 中文注释：组织允许为空（0-50）；为空时不做校验提示，但若发生变化仍要提交清空请求
       if (next) {
-        const ok = await this.getFormRef()?.validateField('companyOrSchool').catch(() => false)
+        const ok = await this.validateFieldOk('companyOrSchool')
         if (!ok) return
       }
       this.saving.organization = true
@@ -125,7 +195,7 @@ export default {
       if (this.saving.industry) return
       // 中文注释：专业允许为空（0-50）；为空时不做校验提示，但若发生变化仍要提交清空请求
       if (next) {
-        const ok = await this.getFormRef()?.validateField('industry').catch(() => false)
+        const ok = await this.validateFieldOk('industry')
         if (!ok) return
       }
       this.saving.industry = true
@@ -209,6 +279,8 @@ export default {
               autocomplete="username"
               maxlength="20"
               show-word-limit
+              :disabled="saving.userName"
+              @blur="onUserNameBlur"
             />
           </el-form-item>
           <el-form-item class="profile-form-field" prop="nickName">
@@ -220,6 +292,8 @@ export default {
               autocomplete="nickname"
               maxlength="20"
               show-word-limit
+              :disabled="saving.nickName"
+              @blur="onNickNameBlur"
             />
           </el-form-item>
           <el-form-item class="profile-form-field" prop="companyOrSchool">

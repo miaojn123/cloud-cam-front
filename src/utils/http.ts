@@ -9,7 +9,6 @@ export interface AjaxResult<T = unknown> {
 const SUCCESS_CODE = 200
 const UNAUTHORIZED_CODE = 401
 export const TOKEN_KEY = 'auth_token'
-const CURRENT_USER_CACHE_KEY = 'current_user_cache'
 
 type RetryableRequestConfig = {
   url?: string
@@ -27,7 +26,6 @@ let refreshPromise: Promise<boolean> | null = null
 
 function clearAuthStorage() {
   localStorage.removeItem(TOKEN_KEY)
-  localStorage.removeItem(CURRENT_USER_CACHE_KEY)
 }
 
 function isAuthEndpoint(url?: string) {

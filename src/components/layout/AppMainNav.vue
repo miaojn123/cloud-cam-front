@@ -15,9 +15,8 @@ export default {
     },
     // 默认先用项目已有资源；若有完整静态资源目录可替换为 /assets/images/... 路径。
     logoSrc: { type: String, default: '/assets/images/logos/qjcam-logo-white.svg' },
-    settingIconSrc: { type: String, default: '/assets/images/nav/setting.svg' },
   },
-  emits: ['open-setting', 'command'],
+  emits: ['command'],
   computed: {
     displayName(): string {
       const u = this.user
@@ -55,21 +54,6 @@ export default {
     </div>
 
     <div class="nav__right">
-      <el-button
-        class="el-button base-btn--ghost base-btn--ghost--hover"
-        :style="{ width: '40px', height: '40px' }"
-        aria-label="设置"
-        @click="$emit('open-setting')"
-      >
-        <span>
-          <el-image
-            class="el-tooltip__trigger"
-            :style="{ width: '24px', height: '24px' }"
-            :src="settingIconSrc"
-          />
-        </span>
-      </el-button>
-
       <el-dropdown @command="handleCommand">
         <el-button
           class="el-button el-tooltip__trigger base-btn--ghost base-btn--ghost--no-frame"
