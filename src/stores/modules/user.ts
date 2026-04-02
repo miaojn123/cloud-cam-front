@@ -10,20 +10,8 @@ import {
 } from '@/api/auth'
 import { getCurrentUserApi, type CurrentUser } from '@/api/user'
 
-// 缓存完整 CurrentUser JSON（供桌面端 CEF 启动探测整对象回传，避免与 Qt 侧逐字段对齐）
-const CURRENT_USER_CACHE_KEY = 'current_user_cache' as const
-
-function setCurrentUserCache(user: CurrentUser | null) {
-  if (!user) {
-    localStorage.removeItem(CURRENT_USER_CACHE_KEY)
-    return
-  }
-  localStorage.setItem(CURRENT_USER_CACHE_KEY, JSON.stringify(user))
-}
-
-function clearCurrentUserCache() {
-  localStorage.removeItem(CURRENT_USER_CACHE_KEY)
-}
+// 用户信息仅存内存，不再缓存到 localStorage。
+// 启动恢复时若有 token，直接从后端拉最新用户数据，确保头像等字段始终最新。
 
 interface UserState {
   loading: boolean
@@ -66,7 +54,6 @@ export const useUserStore = defineStore('user', {
       this.token = ''
       this.user = null
       localStorage.removeItem(TOKEN_KEY)
-      clearCurrentUserCache()
     },
     async sendLoginCode(account: string) {
       return sendCodeApi(account, 'LOGIN')
@@ -108,15 +95,11 @@ export const useUserStore = defineStore('user', {
         _skipAuthRedirect: options?.skipAuthRedirect
       })
       this.user = result.data?.user || null
-      // 仅缓存展示字段，降低耦合与敏感数据落盘风险
-      setCurrentUserCache(this.user)
       return this.user
     },
     updateAvatar(avatar: string) {
-      // 中文注释：头像上传后只更新必要字段，同时同步 current_user_cache，供桌面端启动探测复用
       if (!this.user) return
       this.user = { ...this.user, avatar }
-      setCurrentUserCache(this.user)
     },
     async logout() {
       try {
