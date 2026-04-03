@@ -5,6 +5,7 @@ import {
   loginByPasswordApi,
   logoutApi,
   registerByCodeApi,
+  registerByUsernameApi,
   resetPasswordApi,
   sendCodeApi
 } from '@/api/auth'
@@ -69,6 +70,9 @@ export const useUserStore = defineStore('user', {
     },
     async registerByCode(account: string, code: string, password: string, username: string) {
       return registerByCodeApi(account, code, password, username)
+    },
+    async registerByUsername(username: string, password: string) {
+      return registerByUsernameApi(username, password)
     },
     async resetPassword(account: string, code: string, newPassword: string) {
       return resetPasswordApi(account, code, newPassword)

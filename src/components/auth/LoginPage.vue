@@ -208,13 +208,26 @@ export default {
           ref="formRef"
           :model="form"
           :rules="rules"
+          :validate-on-rule-change="false"
           @submit.prevent="submitLogin"
           class="login-form"
         >
           <!-- 密码模式：用户名或邮箱 -->
           <el-form-item v-if="!isCodeMode" prop="username">
             <template #label>
-              <label class="custom-label">用户名或邮箱地址</label>
+              <div class="label-row">
+                <label class="custom-label">用户名或邮箱地址</label>
+                <div class="label-links">
+                  <el-link
+                    type="primary"
+                    underline="never"
+                    class="forgot-link"
+                    @click="switchToCodeMode"
+                  >
+                    使用验证码登录
+                  </el-link>
+                </div>
+              </div>
             </template>
             <el-input
               v-model="form.username"
@@ -226,7 +239,19 @@ export default {
           <!-- 验证码模式：邮箱 -->
           <el-form-item v-else prop="email">
             <template #label>
-              <label class="custom-label">邮箱地址</label>
+              <div class="label-row">
+                <label class="custom-label">邮箱地址</label>
+                <div class="label-links">
+                  <el-link
+                    type="primary"
+                    underline="never"
+                    class="forgot-link"
+                    @click="switchToPasswordMode"
+                  >
+                    使用密码登录
+                  </el-link>
+                </div>
+              </div>
             </template>
             <el-input
               v-model="form.email"
@@ -241,14 +266,6 @@ export default {
               <div class="label-row">
                 <label class="custom-label">密码</label>
                 <div class="label-links">
-                  <el-link
-                    type="primary"
-                    underline="never"
-                    class="forgot-link"
-                    @click="switchToCodeMode"
-                  >
-                    使用验证码登录
-                  </el-link>
                   <el-link type="primary" underline="never" class="forgot-link" @click.stop.prevent="goToReset">
                     忘记密码？
                   </el-link>
@@ -266,20 +283,7 @@ export default {
 
           <el-form-item v-else prop="code">
             <template #label>
-              <div class="label-row">
-                <label class="custom-label">验证码</label>
-                <!-- 与密码行右侧 label-links 结构一致，避免行高与对齐差异 -->
-                <div class="label-links">
-                  <el-link
-                    type="primary"
-                    underline="never"
-                    class="forgot-link"
-                    @click="switchToPasswordMode"
-                  >
-                    使用密码登录
-                  </el-link>
-                </div>
-              </div>
+              <label class="custom-label">验证码</label>
             </template>
             <VerifyCodeBox
               account-label="邮箱"

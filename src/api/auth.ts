@@ -61,6 +61,21 @@ export function registerByCodeApi(account: string, code: string, password: strin
   })
 }
 
+export type RegisterByUsernameRequest = {
+  username: string
+  password: string
+}
+
+/** POST /api/auth/register/username，与 AccountRegisterRequest 一致 */
+export function registerByUsernameApi(username: string, password: string) {
+  const payload: RegisterByUsernameRequest = { username, password }
+  return request<unknown>({
+    url: '/api/auth/register/username',
+    method: 'post',
+    data: payload
+  })
+}
+
 /** 匿名：忘记密码后设置新密码 */
 export function resetPasswordApi(account: string, code: string, newPassword: string) {
   return request<unknown>({

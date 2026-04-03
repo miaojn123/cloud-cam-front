@@ -2,8 +2,10 @@
 import { isDesktopEmbed } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
 import {
+  isNewPasswordForLoggedInChange,
   isRegisterOptionalUserNameValid,
   isRegisterPasswordValid,
+  isUserNameFormat,
   Msg,
   PATTERN_EMAIL_LOOSE,
 } from '@/utils/validators'
@@ -27,6 +29,8 @@ export default {
         agreeTerms: false
       },
       emailCountdown: 0,
+      /** true：仅用户名+密码，走 POST /api/auth/register/username */
+      isUsernamePasswordMode: false,
     }
   },
   computed: {
@@ -35,6 +39,39 @@ export default {
       return isDesktopEmbed(this.$route.query)
     },
     rules(): FormRules {
+      if (this.isUsernamePasswordMode) {
+        return {
+          username: [
+            { required: true, message: Msg.usernameRequired, trigger: 'blur' },
+            {
+              validator: (_rule, value: string, callback) => {
+                const v = String(value ?? '').trim()
+                if (!v) return callback()
+                if (!isUserNameFormat(v)) {
+                  callback(new Error(Msg.userName))
+                  return
+                }
+                callback()
+              },
+              trigger: 'blur',
+            },
+          ],
+          password: [
+            { required: true, message: '请输入密码', trigger: 'blur' },
+            {
+              validator: (_rule, value: string, callback) => {
+                if (!value) return callback()
+                if (!isNewPasswordForLoggedInChange(String(value))) {
+                  callback(new Error(Msg.passwordUsernameRegister))
+                  return
+                }
+                callback()
+              },
+              trigger: 'blur',
+            },
+          ],
+        }
+      }
       return {
         email: [
           { required: true, message: '请输入邮箱', trigger: 'blur' },
@@ -44,7 +81,6 @@ export default {
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' },
           {
-            // 注册密码规则（与后端一致），避免仅靠提示文案导致提交时才报错。
             validator: (_rule, value: string, callback) => {
               if (!value) return callback()
               if (!isRegisterPasswordValid(value)) {
@@ -53,12 +89,11 @@ export default {
               }
               callback()
             },
-            trigger: 'blur'
-          }
+            trigger: 'blur',
+          },
         ],
         username: [
           {
-            // 用户名可选；若填写则必须 6-20，英文开头，仅字母数字下划线。
             validator: (_rule, value: string, callback) => {
               const v = String(value ?? '').trim()
               if (!v) return callback()
@@ -68,11 +103,11 @@ export default {
               }
               callback()
             },
-            trigger: 'blur'
-          }
-        ]
+            trigger: 'blur',
+          },
+        ],
       }
-    }
+    },
   },
   created() {
     this.sendEmailCode = requestButtonThrottle(this.sendEmailCodeCore.bind(this))
@@ -82,6 +117,14 @@ export default {
     getFormRef(): FormInstance | null {
       const ref = this.$refs.formRef
       return (ref ?? null) as FormInstance | null
+    },
+    switchToUsernamePasswordMode() {
+      this.isUsernamePasswordMode = true
+      this.$nextTick(() => this.getFormRef()?.clearValidate())
+    },
+    switchToEmailCodeMode() {
+      this.isUsernamePasswordMode = false
+      this.$nextTick(() => this.getFormRef()?.clearValidate())
     },
     sendEmailCode(): void {
       /* created 中替换为节流包装 */
@@ -123,14 +166,17 @@ export default {
         if (!ok) return
       }
       try {
-        // 用户名可选：为空则交由后端使用默认用户名
-        const optionalUsername = this.form.username.trim()
-        await this.$userStore.registerByCode(
-          this.form.email.trim(),
-          this.form.emailCode.trim(),
-          this.form.password,
-          optionalUsername || ''
-        )
+        if (this.isUsernamePasswordMode) {
+          await this.$userStore.registerByUsername(this.form.username.trim(), this.form.password)
+        } else {
+          const optionalUsername = this.form.username.trim()
+          await this.$userStore.registerByCode(
+            this.form.email.trim(),
+            this.form.emailCode.trim(),
+            this.form.password,
+            optionalUsername || ''
+          )
+        }
         ElMessage.success('注册成功，请登录')
         pushWithDesktopQuery(this.$router, this.$route.query, '/login')
       } catch {
@@ -170,51 +216,89 @@ export default {
             ref="formRef"
             :model="form"
             :rules="rules"
+            :validate-on-rule-change="false"
             @submit.prevent="submitRegister"
             class="signup-form"
           >
-            <!-- Email -->
-            <el-form-item prop="email">
-              <template #label>
-                <label class="custom-label">邮箱地址</label>
-              </template>
-              <el-input
-                v-model="form.email"
-                type="email"
-                placeholder="请输入邮箱"
-                autocomplete="email"
-              />
-            </el-form-item>
+            <!-- 邮箱注册 -->
+            <template v-if="!isUsernamePasswordMode">
+              <el-form-item prop="email">
+                <template #label>
+                  <div class="label-row">
+                    <label class="custom-label">邮箱地址</label>
+                    <div class="label-links">
+                      <el-link
+                        type="primary"
+                        underline="never"
+                        class="mode-switch-link"
+                        @click="switchToUsernamePasswordMode"
+                      >
+                        用户名密码注册
+                      </el-link>
+                    </div>
+                  </div>
+                </template>
+                <el-input
+                  v-model="form.email"
+                  type="email"
+                  placeholder="请输入邮箱"
+                  autocomplete="email"
+                />
+              </el-form-item>
 
-            <!-- Email Verification Code -->
-            <el-form-item prop="emailCode">
-              <template #label>
-                <label class="custom-label">邮箱验证码</label>
-              </template>
-              <VerifyCodeBox
-                account-label="邮箱"
-                :account="form.email"
-                :show-account="false"
-                :show-code-label="false"
-                :code="form.emailCode"
-                code-placeholder="请输入验证码"
-                :countdown="emailCountdown"
-                send-text="获取验证码"
-                :help-link="null"
-                @update:code="form.emailCode = $event"
-                @send-code="sendEmailCode"
-              />
-            </el-form-item>
+              <el-form-item prop="emailCode">
+                <template #label>
+                  <label class="custom-label">邮箱验证码</label>
+                </template>
+                <VerifyCodeBox
+                  account-label="邮箱"
+                  :account="form.email"
+                  :show-account="false"
+                  :show-code-label="false"
+                  :code="form.emailCode"
+                  code-placeholder="请输入验证码"
+                  :countdown="emailCountdown"
+                  send-text="获取验证码"
+                  :help-link="null"
+                  @update:code="form.emailCode = $event"
+                  @send-code="sendEmailCode"
+                />
+              </el-form-item>
 
-            <!-- Username -->
-            <el-form-item prop="username">
+              <el-form-item prop="username">
+                <template #label>
+                  <label class="custom-label">用户名（可选）</label>
+                </template>
+                <el-input
+                  v-model="form.username"
+                  type="text"
+                  placeholder="未填时将使用默认用户名"
+                  autocomplete="username"
+                />
+              </el-form-item>
+            </template>
+
+            <!-- 用户名密码注册：POST /api/auth/register/username -->
+            <el-form-item v-else prop="username">
               <template #label>
-                <label class="custom-label">用户名（可选）</label>
+                <div class="label-row">
+                  <label class="custom-label">用户名</label>
+                  <div class="label-links">
+                    <el-link
+                      type="primary"
+                      underline="never"
+                      class="mode-switch-link"
+                      @click="switchToEmailCodeMode"
+                    >
+                      邮箱验证码注册
+                    </el-link>
+                  </div>
+                </div>
               </template>
               <el-input
                 v-model="form.username"
                 type="text"
-                placeholder="未填时将使用默认用户名"
+                placeholder="6-20 位，英文开头"
                 autocomplete="username"
               />
             </el-form-item>
@@ -424,6 +508,31 @@ export default {
   margin-bottom: 4px;
   text-align: left;
   line-height: 1.5 !important;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.label-links {
+  display: flex;
+  gap: 12px;
+  margin-right: 4px;
+}
+
+.mode-switch-link {
+  font-size: var(--auth-fs-small) !important;
+}
+
+.mode-switch-link :deep(.el-link__inner) {
+  color: #0969da !important;
+}
+
+.mode-switch-link:hover :deep(.el-link__inner) {
+  text-decoration: underline !important;
 }
 
 /* 覆盖 Element Plus Input 样式 */

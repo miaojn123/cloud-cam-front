@@ -73,6 +73,9 @@ export const Msg = {
   userNameLength: '用户名长度应为 6-20 个字符',
   userNamePattern: '用户名需英文开头，仅支持字母/数字/下划线',
   passwordRegister: '密码需为 8-20 位，且至少包含一个数字和一个字母',
+  /** 与 AccountRegisterRequest.password 一致（可含字母数字以外字符） */
+  passwordUsernameRegister: '密码需为 8-20 位，且至少包含字母和数字',
+  usernameRequired: '请输入用户名',
   oldPasswordRequired: '请输入原密码',
   oldPasswordLength: '原密码长度需在 8～20 位',
   newPasswordRequired: '请输入新密码',
