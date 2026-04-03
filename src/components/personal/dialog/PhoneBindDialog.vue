@@ -62,7 +62,7 @@ export default {
     },
     async sendBindCodeCore() {
       const phone = this.phone.trim()
-      if (!isPhoneValid(phone)) {
+      if (!isCnMobilePhone(phone)) {
         ElMessage.error('请输入正确手机号')
         return
       }

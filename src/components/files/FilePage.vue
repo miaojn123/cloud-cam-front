@@ -1,6 +1,6 @@
 <script lang="ts">
 import FilesLayout from '@/components/files/FilesLayout.vue'
-import AppMainNav from '@/components/layout/AppMainNav.vue'
+import FilesNav from '@/components/nav/FilesNav.vue'
 import FilesSidebar from '@/components/files/FilesSidebar.vue'
 import FilesListHeader from '@/components/files/FilesListHeader.vue'
 import FilesTable from '@/components/files/FilesTable.vue'
@@ -11,7 +11,7 @@ export default {
   name: 'FilePage',
   components: {
     FilesLayout,
-    AppMainNav,
+    FilesNav,
     FilesSidebar,
     FilesListHeader,
     FilesTable,
@@ -114,7 +114,7 @@ export default {
   <div class="file-page">
     <FilesLayout :show-detail="showDetail">
       <template #nav>
-        <AppMainNav :user="getUserSummary()" @command="handleNavCommand" />
+        <FilesNav :user="getUserSummary()" @command="handleNavCommand" />
         <div class="file-toolbar" role="toolbar" aria-label="文件工具栏">
           <div class="file-toolbar__left">
             <el-button class="file-toolbar__btn" @click="handleCreateFile">新建文档</el-button>
@@ -189,8 +189,8 @@ export default {
 }
 
 .file-toolbar__btn {
-  background: #0d476b !important;
-  border-color: #0d476b !important;
+  background: var(--app-brand-primary) !important;
+  border-color: var(--app-brand-primary) !important;
   color: #ffffff !important;
   height: 32px;
   padding: 0 14px;
@@ -200,8 +200,8 @@ export default {
 
 .file-toolbar__btn:hover,
 .file-toolbar__btn:focus {
-  background: #0b3e5e !important;
-  border-color: #0b3e5e !important;
+  background: var(--app-brand-primary-hover) !important;
+  border-color: var(--app-brand-primary-hover) !important;
 }
 
 .file-toolbar__search {

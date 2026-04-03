@@ -1,10 +1,10 @@
 <script lang="ts">
-import AccountDeactivateDialog from './security/AccountDeactivateDialog.vue'
-import EmailBindDialog from './security/EmailBindDialog.vue'
-import EmailUnbindDialog from './security/EmailUnbindDialog.vue'
-import PhoneBindDialog from './security/PhoneBindDialog.vue'
-import PhoneUnbindDialog from './security/PhoneUnbindDialog.vue'
-import ChangePasswordDialog from './security/ChangePasswordDialog.vue'
+import AccountDeactivateDialog from './dialog/AccountDeactivateDialog.vue'
+import EmailBindDialog from './dialog/EmailBindDialog.vue'
+import EmailUnbindDialog from './dialog/EmailUnbindDialog.vue'
+import PhoneBindDialog from './dialog/PhoneBindDialog.vue'
+import PhoneUnbindDialog from './dialog/PhoneUnbindDialog.vue'
+import ChangePasswordDialog from './dialog/ChangePasswordDialog.vue'
 
 function maskEmailForDisplay(email: string): string {
   const s = String(email ?? '').trim()
@@ -314,7 +314,7 @@ export default {
 .profile-form-link.el-button.is-text:hover,
 .profile-form-link.el-button.is-text:focus-visible {
   background-color: transparent;
-  color: #0b3e5e;
+  color: var(--app-brand-primary-hover);
 }
 
 .profile-form-link--danger.el-button.is-text {

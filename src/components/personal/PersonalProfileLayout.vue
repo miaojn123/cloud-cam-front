@@ -1,8 +1,8 @@
 <script lang="ts">
 import type { UploadFile } from 'element-plus'
 import { buildDefaultAvatarSvgDataUrl, getNicknameInitialLetter } from '@/utils/defaultAvatar'
-import AppMainNav from '@/components/layout/AppMainNav.vue'
-import AvatarCropDialog from '@/components/profile/AvatarCropDialog.vue'
+import PersonalProfileNav from '@/components/nav/PersonalProfileNav.vue'
+import AvatarCropDialog from '@/components/personal/dialog/AvatarCropDialog.vue'
 import type { UserSummary } from '@/types/user'
 import { uploadCurrentUserAvatarApi } from '@/api/user'
 
@@ -13,7 +13,7 @@ type AvatarCropConfirmPayload = {
 
 export default {
   name: 'PersonalProfileLayout',
-  components: { AppMainNav, AvatarCropDialog },
+  components: { PersonalProfileNav, AvatarCropDialog },
   provide() {
     return {
       profileLayout: this,
@@ -145,7 +145,7 @@ export default {
 
 <template>
   <div class="personal-profile-page" v-loading="loading">
-    <AppMainNav :user="getUserSummary()" @command="handleNavCommand" />
+    <PersonalProfileNav :user="getUserSummary()" @command="handleNavCommand" />
 
     <div class="personal-profile-page__shell">
       <nav class="personal-profile-page__aside" aria-label="个人设置子导航">
@@ -244,10 +244,10 @@ export default {
 }
 
 .personal-profile-page__menu-item.is-active {
-  color: #0d476b;
+  color: var(--app-brand-primary);
   font-weight: 600;
   background: rgba(13, 71, 107, 0.06);
-  box-shadow: inset 4px 0 0 #0d476b;
+  box-shadow: inset 4px 0 0 var(--app-brand-primary);
 }
 
 .personal-profile-page__menu-icon {

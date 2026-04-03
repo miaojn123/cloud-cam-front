@@ -107,7 +107,7 @@ export default {
       const form = this.getFormRef()
       if (!form) return false
       try {
-        // validateField 在不同版本返回值不同（void/boolean）；只要不抛错就视为校验通过
+        // validateField 失败会抛错，通过则继续
         await form.validateField(prop as any)
         return true
       } catch {
@@ -385,7 +385,7 @@ export default {
 }
 
 .profile-avatar-btn:focus-visible {
-  outline: 2px solid #0d476b;
+  outline: 2px solid var(--app-brand-primary);
   outline-offset: 3px;
 }
 
@@ -601,7 +601,7 @@ export default {
 }
 
 .profile-form-control :deep(.el-input__wrapper.is-focus) {
-  border-color: #0d476b;
+  border-color: var(--app-brand-primary);
   box-shadow: 0 0 0 1px rgba(13, 71, 107, 0.15);
 }
 
@@ -633,13 +633,13 @@ export default {
   padding: 0;
   border: none;
   background: none;
-  color: #0d476b;
+  color: var(--app-brand-primary);
   font-size: 14px;
   cursor: pointer;
   text-decoration: none;
 }
 
 .profile-form-link:hover {
-  color: #0b3e5e;
+  color: var(--app-brand-primary-hover);
 }
 </style>

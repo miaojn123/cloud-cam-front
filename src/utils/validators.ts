@@ -10,7 +10,7 @@ export const PATTERN_EMAIL_LOOSE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export const PATTERN_USER_NAME = /^[A-Za-z][A-Za-z0-9_]*$/
 
 /**
- * 注册/匿名重置密码：8～20 位，至少字母与数字，且仅字母数字（与既有 passwordPolicy 行为一致）。
+ * 注册/匿名重置密码：8～20 位，至少字母与数字，且仅字母数字。
  */
 const PATTERN_PASSWORD_REGISTER_OR_RESET = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$/
 

@@ -7,14 +7,12 @@ import type { UserSummary } from '@/types/user'
 const NAV_AVATAR_SVG_SIZE = 48
 
 export default {
-  name: 'AppMainNav',
+  name: 'UserNavMenu',
   props: {
     user: {
       type: Object as PropType<UserSummary | null>,
       default: null,
     },
-    // 默认先用项目已有资源；若有完整静态资源目录可替换为 /assets/images/... 路径。
-    logoSrc: { type: String, default: '/assets/images/logos/qjcam-logo-white.svg' },
   },
   emits: ['command'],
   computed: {
@@ -46,67 +44,38 @@ export default {
 </script>
 
 <template>
-  <nav class="nav" id="app-main-nav">
-    <div class="nav__left">
-      <a href="/files" class="router-link-active el-tooltip__trigger">
-        <img :src="logoSrc" style="cursor: pointer" alt="QJCAM" />
-      </a>
-    </div>
-
-    <div class="nav__right">
-      <el-dropdown @command="handleCommand">
-        <el-button
-          class="el-button el-tooltip__trigger base-btn--ghost base-btn--ghost--no-frame"
-          :style="{ height: '40px', color: 'white' }"
-        >
-          <span>
-            <div class="user-trigger">
-              <span
-                class="el-avatar el-avatar--circle user-trigger__avatar"
-              >
-                <img :src="resolvedAvatarSrc" alt="" style="object-fit: cover" />
-              </span>
-              <span class="user-trigger__name">{{ displayName }}</span>
-              <i class="el-icon user-trigger__chevron" style="font-size: 16px; color: white">
-                <el-icon :size="16"><EpArrowDownBold /></el-icon>
-              </i>
-            </div>
-          </span>
-        </el-button>
-        <template #dropdown>
-          <el-dropdown-menu style="width: 160px">
-            <el-dropdown-item command="userInfo">用户信息</el-dropdown-item>
-            <el-dropdown-item command="feedback">问题反馈</el-dropdown-item>
-            <el-dropdown-item command="help">帮助文档</el-dropdown-item>
-            <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
-    </div>
-  </nav>
+  <div class="user-nav-menu">
+    <el-dropdown @command="handleCommand">
+      <el-button
+        class="el-button el-tooltip__trigger base-btn--ghost base-btn--ghost--no-frame"
+        :style="{ height: '40px', color: 'white' }"
+      >
+        <span>
+          <div class="user-trigger">
+            <span class="el-avatar el-avatar--circle user-trigger__avatar">
+              <img :src="resolvedAvatarSrc" alt="" style="object-fit: cover" />
+            </span>
+            <span class="user-trigger__name">{{ displayName }}</span>
+            <i class="el-icon user-trigger__chevron" style="font-size: 16px; color: white">
+              <el-icon :size="16"><EpArrowDownBold /></el-icon>
+            </i>
+          </div>
+        </span>
+      </el-button>
+      <template #dropdown>
+        <el-dropdown-menu style="width: 160px">
+          <el-dropdown-item command="userInfo">用户信息</el-dropdown-item>
+          <el-dropdown-item command="feedback">问题反馈</el-dropdown-item>
+          <el-dropdown-item command="help">帮助文档</el-dropdown-item>
+          <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
+  </div>
 </template>
 
 <style scoped>
-.nav {
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  background: #0d476b;
-  color: #ffffff;
-}
-
-.nav__left img {
-  width: 128px;
-  height: 56px;
-  width: auto;
-  cursor: pointer;
-  margin-top:-4px;
-  margin-left:-16px;
-}
-
-.nav__right {
+.user-nav-menu {
   display: flex;
   align-items: center;
   gap: 8px;

@@ -22,6 +22,10 @@ body {
  * 登录/注册/重置：表单字色偏深灰、字号略小于正文，三页共用 var 便于一致维护。
  */
 :root {
+  /* 顶栏、主操作按钮等主色（与历史硬编码 #0d476b 一致） */
+  --app-nav-bg: #0d476b;
+  --app-brand-primary: #0d476b;
+  --app-brand-primary-hover: #0b3e5e;
   --auth-text: #444c56;
   --auth-text-title: #3d444d;
   --auth-text-muted: #6e7781;
