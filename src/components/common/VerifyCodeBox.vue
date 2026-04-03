@@ -165,7 +165,7 @@ export default {
   padding: 0 12px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  background: #f9fafb;
+  background: #ffffff;
   font-size: 14px;
   color: #111827;
 }

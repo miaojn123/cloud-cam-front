@@ -1,5 +1,10 @@
 <script lang="ts">
-import { openBindEmailBox, openUnbindEmailBox } from './security/emailBindFlow'
+import AccountDeactivateDialog from './security/AccountDeactivateDialog.vue'
+import EmailBindDialog from './security/EmailBindDialog.vue'
+import EmailUnbindDialog from './security/EmailUnbindDialog.vue'
+import PhoneBindDialog from './security/PhoneBindDialog.vue'
+import PhoneUnbindDialog from './security/PhoneUnbindDialog.vue'
+import ChangePasswordDialog from './security/ChangePasswordDialog.vue'
 
 function maskEmailForDisplay(email: string): string {
   const s = String(email ?? '').trim()
@@ -14,6 +19,24 @@ function maskEmailForDisplay(email: string): string {
 
 export default {
   name: 'ProfileSecurityPanel',
+  components: {
+    AccountDeactivateDialog,
+    EmailBindDialog,
+    EmailUnbindDialog,
+    PhoneBindDialog,
+    PhoneUnbindDialog,
+    ChangePasswordDialog,
+  },
+  data() {
+    return {
+      deactivateVisible: false,
+      bindEmailVisible: false,
+      unbindEmailVisible: false,
+      bindPhoneVisible: false,
+      unbindPhoneVisible: false,
+      changePasswordVisible: false,
+    }
+  },
   computed: {
     user() {
       return this.$userStore.user
@@ -30,6 +53,10 @@ export default {
       const e = this.user?.email
       return e && String(e).trim() ? '更改绑定' : '前往绑定'
     },
+    phoneActionText(): string {
+      const p = this.user?.phone
+      return p && String(p).trim() ? '更改绑定' : '前往绑定'
+    },
   },
   watch: {
     '$route.query': {
@@ -44,7 +71,7 @@ export default {
       const raw = this.$route.query.bind
       const b = Array.isArray(raw) ? raw[0] : raw
       if (b === 'phone') {
-        ElMessage.info('功能开发中')
+        this.onClickPhoneRow()
       }
       if (b === 'email') {
         this.onClickEmail()
@@ -55,24 +82,37 @@ export default {
         })
       }
     },
-    onClickPhone() {
-      ElMessage.info('功能开发中')
-    },
-    async onClickEmail() {
-      const currentEmail = String(this.user?.email ?? '').trim()
-      const deps = {
-        refreshUser: async () => this.$userStore.fetchCurrentUser(),
-      }
-      if (!currentEmail) {
-        await openBindEmailBox({ deps })
+    onClickPhoneRow() {
+      const currentPhone = String(this.user?.phone ?? '').trim()
+      if (!currentPhone) {
+        this.bindPhoneVisible = true
         return
       }
-      await openUnbindEmailBox({ currentEmail, deps })
-      await openBindEmailBox({ deps })
+      this.unbindPhoneVisible = true
     },
-    /** 注销账户：确认后对接后端；当前仅占位 */
-    async onDeactivateAccount() {
-      ElMessage.info('功能开发中')
+    onUnbindPhoneSuccess() {
+      this.bindPhoneVisible = true
+    },
+    onClickChangePassword() {
+      this.changePasswordVisible = true
+    },
+    onClickEmail() {
+      const currentEmail = String(this.user?.email ?? '').trim()
+      if (!currentEmail) {
+        this.bindEmailVisible = true
+        return
+      }
+      this.unbindEmailVisible = true
+    },
+    onUnbindEmailSuccess() {
+      this.bindEmailVisible = true
+    },
+    onDeactivateAccount() {
+      if (!this.user) {
+        ElMessage.warning('未能获取用户信息')
+        return
+      }
+      this.deactivateVisible = true
     },
   },
 }
@@ -92,8 +132,8 @@ export default {
             <span class="profile-form-label">手机号</span>
             <div class="profile-form-contact-row">
               <span class="profile-form-readonly">{{ profilePhoneDisplay }}</span>
-              <el-button text class="profile-form-link" @click="onClickPhone">
-                前往修改
+              <el-button text class="profile-form-link" @click="onClickPhoneRow">
+                {{ phoneActionText }}
               </el-button>
             </div>
           </div>
@@ -110,9 +150,9 @@ export default {
             <span class="profile-form-label">修改密码</span>
             <div class="profile-form-contact-row">
               <span class="profile-form-readonly profile-form-readonly--muted">
-                通过已绑定手机或邮箱验证后设置新登录密码
+                输入原密码后即可设置新登录密码
               </span>
-              <el-button text class="profile-form-link" @click="onClickPhone">
+              <el-button text class="profile-form-link" @click="onClickChangePassword">
                 前往修改
               </el-button>
             </div>
@@ -131,6 +171,25 @@ export default {
         </section>
       </div>
     </div>
+
+    <EmailBindDialog v-model="bindEmailVisible" />
+    <PhoneBindDialog v-model="bindPhoneVisible" />
+    <ChangePasswordDialog v-model="changePasswordVisible" />
+    <EmailUnbindDialog
+      v-model="unbindEmailVisible"
+      :current-email="String(user?.email ?? '').trim()"
+      @success="onUnbindEmailSuccess"
+    />
+    <PhoneUnbindDialog
+      v-model="unbindPhoneVisible"
+      :current-phone="String(user?.phone ?? '').trim()"
+      @success="onUnbindPhoneSuccess"
+    />
+    <AccountDeactivateDialog
+      v-model="deactivateVisible"
+      :user="user"
+      :router="$router"
+    />
   </div>
 </template>
 

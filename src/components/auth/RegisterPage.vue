@@ -1,7 +1,12 @@
 <script lang="ts">
 import { isDesktopEmbed } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
-import { isRegisterPasswordValid } from '@/utils/passwordPolicy'
+import {
+  isRegisterOptionalUserNameValid,
+  isRegisterPasswordValid,
+  Msg,
+  PATTERN_EMAIL_LOOSE,
+} from '@/utils/validators'
 import VerifyCodeBox from '@/components/common/VerifyCodeBox.vue'
 import { requestButtonThrottle } from '@/utils/requestThrottle'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -30,11 +35,10 @@ export default {
       return isDesktopEmbed(this.$route.query)
     },
     rules(): FormRules {
-      const emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       return {
         email: [
           { required: true, message: '请输入邮箱', trigger: 'blur' },
-          { pattern: emailReg, message: '请输入正确邮箱', trigger: 'blur' }
+          { pattern: PATTERN_EMAIL_LOOSE, message: Msg.email, trigger: 'blur' },
         ],
         emailCode: [{ required: true, message: '请输入验证码', trigger: 'blur' }],
         password: [
@@ -44,7 +48,7 @@ export default {
             validator: (_rule, value: string, callback) => {
               if (!value) return callback()
               if (!isRegisterPasswordValid(value)) {
-                callback(new Error('密码需为 8-20 位，且至少包含一个数字和一个字母'))
+                callback(new Error(Msg.passwordRegister))
                 return
               }
               callback()
@@ -58,9 +62,8 @@ export default {
             validator: (_rule, value: string, callback) => {
               const v = String(value ?? '').trim()
               if (!v) return callback()
-              const ok = /^[A-Za-z][A-Za-z0-9_]*$/.test(v) && v.length >= 6 && v.length <= 20
-              if (!ok) {
-                callback(new Error('用户名需 6-20 位，英文开头，仅字母数字下划线'))
+              if (!isRegisterOptionalUserNameValid(v)) {
+                callback(new Error(Msg.userName))
                 return
               }
               callback()

@@ -1,7 +1,7 @@
 <script lang="ts">
 import { isDesktopEmbed } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
-import { isResetPasswordValid } from '@/utils/passwordPolicy'
+import { isEmailOrCnPhoneAccount, isResetPasswordValid, Msg } from '@/utils/validators'
 import VerifyCodeBox from '@/components/common/VerifyCodeBox.vue'
 import { requestButtonThrottle } from '@/utils/requestThrottle'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -28,25 +28,21 @@ export default {
       return isDesktopEmbed(this.$route.query)
     },
     rules(): FormRules {
-      const emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      const phoneReg = /^1\d{10}$/
       return {
         account: [
           { required: true, message: '请输入邮箱或手机号', trigger: 'blur' },
           {
-            // 兼容邮箱/手机号输入；仅校验格式，不做存在性判断。
             validator: (_rule, value: string, callback) => {
               const s = String(value ?? '').trim()
               if (!s) return callback()
-              const ok = emailReg.test(s) || phoneReg.test(s)
-              if (!ok) {
-                callback(new Error('请输入正确的邮箱或手机号'))
+              if (!isEmailOrCnPhoneAccount(s)) {
+                callback(new Error(Msg.emailOrPhone))
                 return
               }
               callback()
             },
-            trigger: 'blur'
-          }
+            trigger: 'blur',
+          },
         ],
         code: [{ required: true, message: '请输入验证码', trigger: 'blur' }],
         password: [
@@ -56,7 +52,7 @@ export default {
             validator: (_rule, value: string, callback) => {
               if (!value) return callback()
               if (!isResetPasswordValid(value)) {
-                callback(new Error('密码需为 8-20 位，且至少包含一个数字和一个字母'))
+                callback(new Error(Msg.passwordRegister))
                 return
               }
               callback()

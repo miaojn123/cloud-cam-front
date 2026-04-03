@@ -6,6 +6,7 @@ import {
   updateCurrentUserOrganizationApi,
   updateCurrentUserUserNameApi,
 } from '@/api/user'
+import { userNameFormRules } from '@/utils/validators'
 
 type ProfileLayoutInject = {
   displayAvatarSrc: string
@@ -35,15 +36,7 @@ export default {
   },
   data() {
     const rules: FormRules = {
-      userName: [
-        { required: true, message: '用户名不能为空', trigger: 'blur' },
-        { min: 6, max: 20, message: '用户名长度应为 6-20 个字符', trigger: 'blur' },
-        {
-          pattern: /^[A-Za-z][A-Za-z0-9_]*$/,
-          message: '用户名需英文开头，仅支持字母/数字/下划线',
-          trigger: 'blur',
-        },
-      ],
+      userName: userNameFormRules,
       nickName: [
         { required: true, message: '昵称不能为空', trigger: 'blur' },
         { min: 6, max: 20, message: '昵称长度应为 6-20 个字符', trigger: 'blur' },

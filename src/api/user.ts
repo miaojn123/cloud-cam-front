@@ -127,3 +127,72 @@ export function unbindCurrentUserEmailApi(code: string) {
     data: payload
   })
 }
+
+export type BindCurrentUserPhoneRequest = {
+  phone: string
+  code: string
+}
+
+export function bindCurrentUserPhoneApi(phone: string, code: string) {
+  const payload: BindCurrentUserPhoneRequest = { phone, code }
+  return request<unknown>({
+    url: '/api/user/current/phone/bind',
+    method: 'post',
+    data: payload
+  })
+}
+
+export type UnbindCurrentUserPhoneRequest = {
+  code: string
+}
+
+export function unbindCurrentUserPhoneApi(code: string) {
+  const payload: UnbindCurrentUserPhoneRequest = { code }
+  return request<unknown>({
+    url: '/api/user/current/phone/unbind',
+    method: 'post',
+    data: payload
+  })
+}
+
+export type UpdateCurrentUserPasswordRequest = {
+  oldPassword: string
+  newPassword: string
+}
+
+/** 已登录：凭原密码修改登录密码 */
+export function updateCurrentUserPasswordApi(oldPassword: string, newPassword: string) {
+  const payload: UpdateCurrentUserPasswordRequest = { oldPassword, newPassword }
+  return request<unknown>({
+    url: '/api/user/current/password',
+    method: 'post',
+    data: payload
+  })
+}
+
+export type CancelCurrentAccountByPasswordRequest = {
+  password: string
+}
+
+export function cancelCurrentAccountByPasswordApi(password: string) {
+  const payload: CancelCurrentAccountByPasswordRequest = { password }
+  return request<unknown>({
+    url: '/api/user/current/cancel/password',
+    method: 'post',
+    data: payload
+  })
+}
+
+export type CancelCurrentAccountByCodeRequest = {
+  account: string
+  code: string
+}
+
+export function cancelCurrentAccountByCodeApi(account: string, code: string) {
+  const payload: CancelCurrentAccountByCodeRequest = { account, code }
+  return request<unknown>({
+    url: '/api/user/current/cancel/code',
+    method: 'post',
+    data: payload
+  })
+}

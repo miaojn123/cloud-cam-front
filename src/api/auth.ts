@@ -4,7 +4,18 @@ export interface LoginResponse {
   token: string
 }
 
-export function sendCodeApi(account: string, scene: string) {
+/** 与后端 send-code scene 枚举一致 */
+export type SendCodeScene =
+  | 'LOGIN'
+  | 'REGISTER'
+  | 'RESET_PASSWORD'
+  | 'ACCOUNT_CANCEL'
+  | 'BIND_EMAIL'
+  | 'UNBIND_EMAIL'
+  | 'BIND_PHONE'
+  | 'UNBIND_PHONE'
+
+export function sendCodeApi(account: string, scene: SendCodeScene) {
   return request({
     url: '/api/auth/send-code',
     method: 'post',
