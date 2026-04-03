@@ -87,7 +87,7 @@ export default {
         const ind = String(u.industry ?? '').trim()
         this.profileForm.companyOrSchool = org
         this.profileForm.industry = ind
-        // 中文注释：刷新/重进页面时用后端已保存值作为“脏检查”基准，避免默认值不显示或误发请求
+        // 刷新/重进页面时用后端已保存值作为“脏检查”基准，避免默认值不显示或误发请求
         this.lastSaved.userName = this.profileForm.userName
         this.lastSaved.nickName = this.profileForm.nickName
         this.lastSaved.organization = org
@@ -114,7 +114,7 @@ export default {
       const form = this.getFormRef()
       if (!form) return false
       try {
-        // 中文注释：validateField 在不同版本返回值不同（void/boolean）；只要不抛错就视为校验通过
+        // validateField 在不同版本返回值不同（void/boolean）；只要不抛错就视为校验通过
         await form.validateField(prop as any)
         return true
       } catch {
@@ -172,7 +172,7 @@ export default {
       this.profileForm.companyOrSchool = next
       if (next === this.lastSaved.organization) return
       if (this.saving.organization) return
-      // 中文注释：组织允许为空（0-50）；为空时不做校验提示，但若发生变化仍要提交清空请求
+      // 组织允许为空（0-50）；为空时不做校验提示，但若发生变化仍要提交清空请求
       if (next) {
         const ok = await this.validateFieldOk('companyOrSchool')
         if (!ok) return
@@ -193,7 +193,7 @@ export default {
       this.profileForm.industry = next
       if (next === this.lastSaved.industry) return
       if (this.saving.industry) return
-      // 中文注释：专业允许为空（0-50）；为空时不做校验提示，但若发生变化仍要提交清空请求
+      // 专业允许为空（0-50）；为空时不做校验提示，但若发生变化仍要提交清空请求
       if (next) {
         const ok = await this.validateFieldOk('industry')
         if (!ok) return
@@ -580,7 +580,7 @@ export default {
   box-sizing: border-box;
 }
 
-/* 中文注释：el-input 自带 wrapper，这里只改 wrapper/inner，避免出现“双边框” */
+/* el-input 自带 wrapper，这里只改 wrapper/inner，避免出现“双边框” */
 .profile-form-control :deep(.el-input__wrapper) {
   width: 100%;
   box-sizing: border-box;

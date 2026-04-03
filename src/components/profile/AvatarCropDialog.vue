@@ -95,7 +95,7 @@ export default {
         return
       }
       const dataUrl = canvas.toDataURL('image/jpeg', 0.9)
-      // 中文注释：toBlob 是异步的；必须等拿到二进制后才能上传
+      // toBlob 是异步的；必须等拿到二进制后才能上传
       canvas.toBlob(
         (blob) => {
           if (!blob) {

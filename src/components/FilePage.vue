@@ -49,7 +49,7 @@ export default {
     sidebarKey: {
       immediate: true,
       handler() {
-        // 中文：后端文件接口未接入前，这里先根据菜单返回 mock；接入后替换为 service 调用即可。
+        // 后端文件接口未接入前，这里先根据菜单返回 mock；接入后替换为 service 调用即可。
         // 当前截图为空态，因此 mock 默认返回空数组。
         this.files = mockFilesForSidebar(this.sidebarKey)
       }

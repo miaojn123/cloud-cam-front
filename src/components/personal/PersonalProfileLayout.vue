@@ -115,7 +115,7 @@ export default {
       this.cropDialogVisible = true
     },
     async onAvatarCropConfirm(payload: AvatarCropConfirmPayload) {
-      // 中文注释：先展示本地预览，上传成功后再用后端返回的 OSS URL 覆盖
+      // 先展示本地预览，上传成功后再用后端返回的 OSS URL 覆盖
       this.avatarPreviewDataUrl = payload.dataUrl
       this.loading = true
       try {

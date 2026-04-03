@@ -2,10 +2,15 @@
 import { isDesktopEmbed } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
 import { isRegisterPasswordValid } from '@/utils/passwordPolicy'
+import VerifyCodeBox from '@/components/common/VerifyCodeBox.vue'
+import { requestButtonThrottle } from '@/utils/requestThrottle'
 import type { FormInstance, FormRules } from 'element-plus'
 
 export default {
   name: 'RegisterPage',
+  components: {
+    VerifyCodeBox,
+  },
   data() {
     return {
       form: {
@@ -35,7 +40,7 @@ export default {
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' },
           {
-            // 中文注释：注册密码规则（与后端一致），避免仅靠提示文案导致提交时才报错。
+            // 注册密码规则（与后端一致），避免仅靠提示文案导致提交时才报错。
             validator: (_rule, value: string, callback) => {
               if (!value) return callback()
               if (!isRegisterPasswordValid(value)) {
@@ -49,7 +54,7 @@ export default {
         ],
         username: [
           {
-            // 中文注释：用户名可选；若填写则必须 6-20，英文开头，仅字母数字下划线。
+            // 用户名可选；若填写则必须 6-20，英文开头，仅字母数字下划线。
             validator: (_rule, value: string, callback) => {
               const v = String(value ?? '').trim()
               if (!v) return callback()
@@ -66,12 +71,19 @@ export default {
       }
     }
   },
+  created() {
+    this.sendEmailCode = requestButtonThrottle(this.sendEmailCodeCore.bind(this))
+    this.submitRegister = requestButtonThrottle(this.submitRegisterCore.bind(this))
+  },
   methods: {
     getFormRef(): FormInstance | null {
       const ref = this.$refs.formRef
       return (ref ?? null) as FormInstance | null
     },
-    async sendEmailCode() {
+    sendEmailCode(): void {
+      /* created 中替换为节流包装 */
+    },
+    async sendEmailCodeCore() {
       if (this.emailCountdown > 0) return
       const formRef = this.getFormRef()
       if (formRef) {
@@ -95,7 +107,10 @@ export default {
         ElMessage.error('发送验证码失败')
       }
     },
-    async submitRegister() {
+    submitRegister(): void {
+      /* created 中替换为节流包装 */
+    },
+    async submitRegisterCore() {
       const formRef = this.getFormRef()
       if (formRef) {
         const ok = await formRef
@@ -173,23 +188,19 @@ export default {
               <template #label>
                 <label class="custom-label">邮箱验证码</label>
               </template>
-              <div class="code-input-wrapper">
-                <el-input
-                  v-model="form.emailCode"
-                  placeholder="请输入验证码"
-                  autocomplete="one-time-code"
-                />
-                <span
-                  class="send-code-text"
-                  :class="{ 'send-code-text--counting': emailCountdown > 0 }"
-                  role="button"
-                  tabindex="0"
-                  @click="sendEmailCode"
-                  @keydown.enter.prevent="sendEmailCode"
-                >
-                  {{ emailCountdown > 0 ? `${emailCountdown}s` : '获取验证码' }}
-                </span>
-              </div>
+              <VerifyCodeBox
+                account-label="邮箱"
+                :account="form.email"
+                :show-account="false"
+                :show-code-label="false"
+                :code="form.emailCode"
+                code-placeholder="请输入验证码"
+                :countdown="emailCountdown"
+                send-text="获取验证码"
+                :help-link="null"
+                @update:code="form.emailCode = $event"
+                @send-code="sendEmailCode"
+              />
             </el-form-item>
 
             <!-- Username -->
@@ -200,7 +211,7 @@ export default {
               <el-input
                 v-model="form.username"
                 type="text"
-                placeholder="不填将使用默认用户名"
+                placeholder="未填时将使用默认用户名"
                 autocomplete="username"
               />
             </el-form-item>
@@ -456,44 +467,6 @@ export default {
   font-size: var(--auth-fs-input) !important;
 }
 
-.code-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.code-input-wrapper :deep(.el-input__wrapper) {
-  padding-right: 100px !important;
-}
-
-/* 获取验证码：文字链，倒计时期间为灰色不可点 */
-.send-code-text {
-  position: absolute;
-  right: 7px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 22px;
-  white-space: nowrap;
-  color: #7ea3d4;
-  text-decoration: none;
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.2s;
-}
-
-.send-code-text:hover:not(.send-code-text--counting) {
-  color: #6b93c9;
-  text-decoration: none;
-}
-
-.send-code-text--counting {
-  color: #8b949e;
-  cursor: default;
-}
-
 .custom-checkbox {
   display: flex;
   align-items: center;
@@ -607,5 +580,5 @@ export default {
   text-decoration: underline !important;
 }
 
-/* 中文注释：说明文案改为 placeholder；错误提示由 Element Plus Form 规则统一渲染。 */
+/* 说明文案改为 placeholder；错误提示由 Element Plus Form 规则统一渲染。 */
 </style>

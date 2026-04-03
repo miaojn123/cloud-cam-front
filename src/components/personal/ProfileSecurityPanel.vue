@@ -92,18 +92,18 @@ export default {
             <span class="profile-form-label">手机号</span>
             <div class="profile-form-contact-row">
               <span class="profile-form-readonly">{{ profilePhoneDisplay }}</span>
-              <button type="button" class="profile-form-link" @click="onClickPhone">
+              <el-button text class="profile-form-link" @click="onClickPhone">
                 前往修改
-              </button>
+              </el-button>
             </div>
           </div>
           <div class="profile-form-field profile-form-field--contact">
             <span class="profile-form-label">邮箱</span>
             <div class="profile-form-contact-row">
               <span class="profile-form-readonly">{{ profileEmailDisplay }}</span>
-              <button type="button" class="profile-form-link" @click="onClickEmail">
+              <el-button text class="profile-form-link" @click="onClickEmail">
                 {{ emailActionText }}
-              </button>
+              </el-button>
             </div>
           </div>
           <div class="profile-form-field profile-form-field--contact">
@@ -112,9 +112,9 @@ export default {
               <span class="profile-form-readonly profile-form-readonly--muted">
                 通过已绑定手机或邮箱验证后设置新登录密码
               </span>
-              <button type="button" class="profile-form-link" @click="onClickPhone">
+              <el-button text class="profile-form-link" @click="onClickPhone">
                 前往修改
-              </button>
+              </el-button>
             </div>
           </div>
           <div class="profile-form-field profile-form-field--contact">
@@ -123,9 +123,9 @@ export default {
               <span class="profile-form-readonly profile-form-readonly--muted">
                 永久删除账号及关联数据（以平台规则为准）
               </span>
-              <button type="button" class="profile-form-link profile-form-link--danger" @click="onDeactivateAccount">
+              <el-button text class="profile-form-link profile-form-link--danger" @click="onDeactivateAccount">
                 注销账户
-              </button>
+              </el-button>
             </div>
           </div>
         </section>
@@ -240,27 +240,31 @@ export default {
   color: #6b7280;
 }
 
-.profile-form-link {
+.profile-form-link.el-button.is-text {
   flex-shrink: 0;
   margin-left: auto;
+  height: auto;
+  min-height: 0;
   padding: 0;
-  border: none;
-  background: none;
-  color: gray;
+  background-color: transparent;
   font-size: 14px;
-  cursor: pointer;
-  text-decoration: none;
+  font-weight: 400;
+  color: gray;
 }
 
-.profile-form-link:hover {
+.profile-form-link.el-button.is-text:hover,
+.profile-form-link.el-button.is-text:focus-visible {
+  background-color: transparent;
   color: #0b3e5e;
 }
 
-.profile-form-link--danger {
+.profile-form-link--danger.el-button.is-text {
   color: #b91c1c;
 }
 
-.profile-form-link--danger:hover {
+.profile-form-link--danger.el-button.is-text:hover,
+.profile-form-link--danger.el-button.is-text:focus-visible {
+  background-color: transparent;
   color: #991b1b;
 }
 

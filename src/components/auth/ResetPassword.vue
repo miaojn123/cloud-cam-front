@@ -2,10 +2,15 @@
 import { isDesktopEmbed } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
 import { isResetPasswordValid } from '@/utils/passwordPolicy'
+import VerifyCodeBox from '@/components/common/VerifyCodeBox.vue'
+import { requestButtonThrottle } from '@/utils/requestThrottle'
 import type { FormInstance, FormRules } from 'element-plus'
 
 export default {
   name: 'ResetPassword',
+  components: {
+    VerifyCodeBox,
+  },
   data() {
     return {
       form: {
@@ -29,7 +34,7 @@ export default {
         account: [
           { required: true, message: '请输入邮箱或手机号', trigger: 'blur' },
           {
-            // 中文注释：兼容邮箱/手机号输入；仅校验格式，不做存在性判断。
+            // 兼容邮箱/手机号输入；仅校验格式，不做存在性判断。
             validator: (_rule, value: string, callback) => {
               const s = String(value ?? '').trim()
               if (!s) return callback()
@@ -47,7 +52,7 @@ export default {
         password: [
           { required: true, message: '请输入新密码', trigger: 'blur' },
           {
-            // 中文注释：重置密码规则，与注册/后端保持一致。
+            // 重置密码规则，与注册/后端保持一致。
             validator: (_rule, value: string, callback) => {
               if (!value) return callback()
               if (!isResetPasswordValid(value)) {
@@ -62,7 +67,7 @@ export default {
         confirmPassword: [
           { required: true, message: '请再次输入密码', trigger: 'blur' },
           {
-            // 中文注释：确认密码必须与新密码一致。
+            // 确认密码必须与新密码一致。
             validator: (_rule, value: string, callback) => {
               if (!value) return callback()
               if (value !== this.form.password) {
@@ -77,12 +82,19 @@ export default {
       }
     }
   },
+  created() {
+    this.sendCode = requestButtonThrottle(this.sendCodeCore.bind(this))
+    this.resetPassword = requestButtonThrottle(this.resetPasswordCore.bind(this))
+  },
   methods: {
     getFormRef(): FormInstance | null {
       const ref = this.$refs.formRef
       return (ref ?? null) as FormInstance | null
     },
-    async sendCode() {
+    sendCode(): void {
+      /* created 中替换为节流包装 */
+    },
+    async sendCodeCore() {
       if (this.countdown > 0) return
       const formRef = this.getFormRef()
       if (formRef) {
@@ -106,7 +118,10 @@ export default {
         ElMessage.error('发送验证码失败')
       }
     },
-    async resetPassword() {
+    resetPassword(): void {
+      /* created 中替换为节流包装 */
+    },
+    async resetPasswordCore() {
       const formRef = this.getFormRef()
       if (formRef) {
         const ok = await formRef
@@ -180,23 +195,19 @@ export default {
               <template #label>
                 <label class="custom-label">验证码</label>
               </template>
-              <div class="code-input-wrapper">
-                <el-input
-                  v-model="form.code"
-                  placeholder="请输入验证码"
-                  autocomplete="one-time-code"
-                />
-                <span
-                  class="send-code-text"
-                  :class="{ 'send-code-text--counting': countdown > 0 }"
-                  role="button"
-                  tabindex="0"
-                  @click="sendCode"
-                  @keydown.enter.prevent="sendCode"
-                >
-                  {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
-                </span>
-              </div>
+              <VerifyCodeBox
+                account-label="邮箱"
+                :account="form.account"
+                :show-account="false"
+                :show-code-label="false"
+                :code="form.code"
+                code-placeholder="请输入验证码"
+                :countdown="countdown"
+                send-text="获取验证码"
+                :help-link="null"
+                @update:code="form.code = $event"
+                @send-code="sendCode"
+              />
             </el-form-item>
 
             <el-form-item prop="password">
@@ -442,44 +453,6 @@ export default {
   line-height: 19px !important;
   color: var(--auth-text) !important;
   font-size: var(--auth-fs-input) !important;
-}
-
-.code-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.code-input-wrapper :deep(.el-input__wrapper) {
-  padding-right: 100px !important;
-}
-
-/* 获取验证码：文字链，倒计时期间为灰色不可点 */
-.send-code-text {
-  position: absolute;
-  right: 7px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 22px;
-  white-space: nowrap;
-  color: #7ea3d4;
-  text-decoration: none;
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.2s;
-}
-
-.send-code-text:hover:not(.send-code-text--counting) {
-  color: #6b93c9;
-  text-decoration: none;
-}
-
-.send-code-text--counting {
-  color: #8b949e;
-  cursor: default;
 }
 
 .reset-btn {

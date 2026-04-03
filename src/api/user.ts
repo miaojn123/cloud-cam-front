@@ -40,7 +40,7 @@ export function getCurrentUserApi(config?: UserRequestConfig) {
 
 export function uploadCurrentUserAvatarApi(file: File) {
   const form = new FormData()
-  // 中文注释：后端约定字段名为 file（multipart/form-data）
+  // 后端约定字段名为 file（multipart/form-data）
   form.append('file', file)
   return request<UploadAvatarResponse>({
     url: '/api/user/current/avatar',

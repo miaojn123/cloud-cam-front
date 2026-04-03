@@ -5,10 +5,15 @@ import {
   cloneUserForDesktopBridge,
 } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
+import VerifyCodeBox from '@/components/common/VerifyCodeBox.vue'
+import { requestButtonThrottle } from '@/utils/requestThrottle'
 import type { FormInstance, FormRules } from 'element-plus'
 
 export default {
   name: 'LoginPage',
+  components: {
+    VerifyCodeBox,
+  },
   data() {
     return {
       form: {
@@ -33,7 +38,7 @@ export default {
       return {
         username: [
           {
-            // 中文注释：密码登录模式下必填；验证码模式下跳过。
+            // 密码登录模式下必填；验证码模式下跳过。
             validator: (_rule, value: string, callback) => {
               if (this.isCodeMode) return callback()
               if (String(value ?? '').trim()) return callback()
@@ -44,7 +49,7 @@ export default {
         ],
         password: [
           {
-            // 中文注释：密码登录模式下必填；验证码模式下跳过。
+            // 密码登录模式下必填；验证码模式下跳过。
             validator: (_rule, value: string, callback) => {
               if (this.isCodeMode) return callback()
               if (value) return callback()
@@ -55,7 +60,7 @@ export default {
         ],
         email: [
           {
-            // 中文注释：验证码登录模式下必填且需为邮箱；密码登录模式下跳过。
+            // 验证码登录模式下必填且需为邮箱；密码登录模式下跳过。
             validator: (_rule, value: string, callback) => {
               if (!this.isCodeMode) return callback()
               const s = String(value ?? '').trim()
@@ -68,7 +73,7 @@ export default {
         ],
         code: [
           {
-            // 中文注释：验证码登录模式下必填；密码登录模式下跳过。
+            // 验证码登录模式下必填；密码登录模式下跳过。
             validator: (_rule, value: string, callback) => {
               if (!this.isCodeMode) return callback()
               if (String(value ?? '').trim()) return callback()
@@ -80,6 +85,10 @@ export default {
       }
     }
   },
+  created() {
+    this.sendCode = requestButtonThrottle(this.sendCodeCore.bind(this))
+    this.submitLogin = requestButtonThrottle(this.submitLoginCore.bind(this))
+  },
   methods: {
     getFormRef(): FormInstance | null {
       const ref = this.$refs.formRef
@@ -87,14 +96,17 @@ export default {
     },
     switchToCodeMode() {
       this.isCodeMode = true
-      // 中文注释：切换模式后清理旧错误提示，避免错误遗留到另一种模式。
+      // 切换模式后清理旧错误提示，避免错误遗留到另一种模式。
       this.getFormRef()?.clearValidate()
     },
     switchToPasswordMode() {
       this.isCodeMode = false
       this.getFormRef()?.clearValidate()
     },
-    async sendCode() {
+    sendCode(): void {
+      /* created 中替换为节流包装 */
+    },
+    async sendCodeCore() {
       if (this.countdown > 0) return
       const formRef = this.getFormRef()
       if (formRef) {
@@ -118,7 +130,10 @@ export default {
         ElMessage.error('发送验证码失败')
       }
     },
-    async submitLogin() {
+    submitLogin(): void {
+      /* created 中替换为节流包装 */
+    },
+    async submitLoginCore() {
       const formRef = this.getFormRef()
       if (formRef) {
         const ok = await formRef
@@ -266,23 +281,19 @@ export default {
                 </div>
               </div>
             </template>
-            <div class="code-input-wrapper">
-              <el-input
-                v-model="form.code"
-                placeholder="请输入验证码"
-                autocomplete="one-time-code"
-              />
-              <span
-                class="send-code-text"
-                :class="{ 'send-code-text--counting': countdown > 0 }"
-                role="button"
-                tabindex="0"
-                @click="sendCode"
-                @keydown.enter.prevent="sendCode"
-              >
-                {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
-              </span>
-            </div>
+            <VerifyCodeBox
+              account-label="邮箱"
+              :account="form.email"
+              :show-account="false"
+              :show-code-label="false"
+              :code="form.code"
+              code-placeholder="请输入验证码"
+              :countdown="countdown"
+              send-text="获取验证码"
+              :help-link="null"
+              @update:code="form.code = $event"
+              @send-code="sendCode"
+            />
           </el-form-item>
 
           <!-- 同意协议（必选，勾选后才可登录） -->
@@ -570,17 +581,6 @@ export default {
   font-size: var(--auth-fs-input) !important;
 }
 
-.code-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.code-input-wrapper :deep(.el-input__wrapper) {
-  padding-right: 100px !important;
-}
-
 /* 用户协议勾选：仿照注册页 */
 .custom-checkbox {
   display: flex;
@@ -635,33 +635,6 @@ export default {
 
 .checkbox-text :deep(.el-link:hover .el-link__inner) {
   text-decoration: underline !important;
-}
-
-/* 获取验证码：文字链，倒计时期间为灰色不可点 */
-.send-code-text {
-  position: absolute;
-  right: 7px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 22px;
-  white-space: nowrap;
-  color: #7ea3d4;
-  text-decoration: none;
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.2s;
-}
-
-.send-code-text:hover:not(.send-code-text--counting) {
-  color: #6b93c9;
-  text-decoration: none;
-}
-
-.send-code-text--counting {
-  color: #8b949e;
-  cursor: default;
 }
 
 .sign-in-btn {

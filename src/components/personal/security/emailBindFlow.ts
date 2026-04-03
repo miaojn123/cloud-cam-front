@@ -1,8 +1,9 @@
 import { h, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { sendCodeApi } from '@/api/auth'
+import { requestButtonThrottle } from '@/utils/requestThrottle'
 import { bindCurrentUserEmailApi, unbindCurrentUserEmailApi } from '@/api/user'
-import VerifyCodeBox from './VerifyCodeBox.vue'
+import VerifyCodeBox from '@/components/common/VerifyCodeBox.vue'
 
 type EmailFlowDeps = {
   refreshUser: () => Promise<unknown>
@@ -84,6 +85,21 @@ export async function openBindEmailBox(options: OpenBindEmailBoxOptions) {
 
   const cleanup = () => countdown.stop()
 
+  const throttledSendBindCode = requestButtonThrottle(async () => {
+    const email = state.email.trim()
+    if (!isEmailValid(email)) {
+      ElMessage.error('请输入正确邮箱')
+      return
+    }
+    try {
+      await sendCodeApi(email, 'BIND_EMAIL')
+      ElMessage.success('验证码已发送')
+      countdown.start(60)
+    } catch {
+      ElMessage.error('发送验证码失败')
+    }
+  })
+
   try {
     await ElMessageBox({
       title: '绑定邮箱',
@@ -134,15 +150,8 @@ export async function openBindEmailBox(options: OpenBindEmailBoxOptions) {
           countdown: state.countdown,
           sendText: '发送验证码',
           helpLink: null,
-          'onSend-code': async () => {
-            const email = state.email.trim()
-            if (!isEmailValid(email)) {
-              ElMessage.error('请输入正确邮箱')
-              return
-            }
-            await sendCodeApi(email, 'BIND_EMAIL')
-            ElMessage.success('验证码已发送')
-            countdown.start(60)
+          'onSend-code': () => {
+            void throttledSendBindCode()
           },
         }),
     })
@@ -169,6 +178,21 @@ export async function openUnbindEmailBox(options: OpenUnbindEmailBoxOptions) {
 
   const cleanup = () => countdown.stop()
   const displayEmail = maskEmail(options.currentEmail)
+
+  const throttledSendUnbindCode = requestButtonThrottle(async () => {
+    const email = String(options.currentEmail ?? '').trim()
+    if (!email) {
+      ElMessage.error('未获取到已绑定邮箱')
+      return
+    }
+    try {
+      await sendCodeApi(email, 'UNBIND_EMAIL')
+      ElMessage.success('验证码已发送')
+      countdown.start(60)
+    } catch {
+      ElMessage.error('发送验证码失败')
+    }
+  })
 
   try {
     await ElMessageBox({
@@ -214,15 +238,8 @@ export async function openUnbindEmailBox(options: OpenUnbindEmailBoxOptions) {
           countdown: state.countdown,
           sendText: '发送验证码',
           helpLink: null,
-          'onSend-code': async () => {
-            const email = String(options.currentEmail ?? '').trim()
-            if (!email) {
-              ElMessage.error('未获取到已绑定邮箱')
-              return
-            }
-            await sendCodeApi(email, 'UNBIND_EMAIL')
-            ElMessage.success('验证码已发送')
-            countdown.start(60)
+          'onSend-code': () => {
+            void throttledSendUnbindCode()
           },
         }),
     })

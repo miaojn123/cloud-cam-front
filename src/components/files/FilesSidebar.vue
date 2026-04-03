@@ -5,7 +5,7 @@ import type { SidebarKey } from './types'
 type MenuItem = {
   key: SidebarKey
   label: string
-  // 中文：这里使用全局注册的组件名字符串，避免本地 import 解耦并减少保留字冲突。
+  // 这里使用全局注册的组件名字符串，避免本地 import 解耦并减少保留字冲突。
   icon: string
 }
 

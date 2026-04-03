@@ -15,6 +15,8 @@ export default {
     accountReadonly: { type: Boolean, default: false },
     showAccount: { type: Boolean, default: true },
     code: { type: String, required: true },
+    showCodeLabel: { type: Boolean, default: true },
+    codeLabel: { type: String, default: '验证码' },
     codePlaceholder: { type: String, default: '请输入验证码' },
     countdown: { type: Number, required: true },
     sendText: { type: String, default: '发送验证码' },
@@ -33,11 +35,6 @@ export default {
     onSendCode() {
       if (this.sendDisabled) return
       this.$emit('send-code')
-    },
-    onSendKeydown(e: KeyboardEvent) {
-      if (e.key !== 'Enter') return
-      e.preventDefault()
-      this.onSendCode()
     },
     onHelpClick() {
       this.helpLink?.onClick?.()
@@ -61,8 +58,8 @@ export default {
       <div v-else class="verify-readonly">{{ account }}</div>
     </div>
 
-    <div class="verify-row">
-      <div class="verify-label">验证码</div>
+    <div class="verify-row" :class="{ 'verify-row--code-only': !showCodeLabel }">
+      <div v-if="showCodeLabel" class="verify-label">{{ codeLabel }}</div>
       <div class="verify-code">
         <el-input
           :model-value="code"
@@ -72,25 +69,24 @@ export default {
           @update:model-value="$emit('update:code', $event)"
         >
           <template #suffix>
-            <button
-              type="button"
+            <el-button
+              text
+              type="primary"
               class="verify-send"
-              :class="{ 'verify-send--disabled': sendDisabled }"
               :disabled="sendDisabled"
               @click="onSendCode"
-              @keydown="onSendKeydown"
             >
               {{ sendButtonText }}
-            </button>
+            </el-button>
           </template>
         </el-input>
       </div>
     </div>
 
     <div v-if="helpLink" class="verify-help">
-      <button type="button" class="verify-help__link" @click="onHelpClick">
+      <el-button text type="primary" class="verify-help__link" @click="onHelpClick">
         {{ helpLink.text }}
-      </button>
+      </el-button>
     </div>
   </div>
 </template>
@@ -112,6 +108,10 @@ export default {
   margin-top: 0;
 }
 
+.verify-row--code-only {
+  gap: 0;
+}
+
 .verify-label {
   width: 86px;
   flex: 0 0 86px;
@@ -129,29 +129,31 @@ export default {
   min-width: 0;
 }
 
-.verify-send {
+/* 覆盖 el-button，保持与原先 suffix 内文字按钮一致 */
+.verify-send.el-button.is-text {
   flex: 0 0 auto;
   height: 24px;
+  min-height: 24px;
   padding: 0;
+  margin: 0;
   border: none;
-  background: transparent;
+  background-color: transparent;
   color: #2f7cff;
   font-size: 12px;
-  cursor: pointer;
+  font-weight: 400;
   user-select: none;
   white-space: nowrap;
-  text-decoration: none;
 }
 
-.verify-send:hover:not(.verify-send--disabled) {
+.verify-send.el-button.is-text:hover:not(.is-disabled),
+.verify-send.el-button.is-text:focus-visible {
+  background-color: transparent;
   color: #1d5ed8;
-  text-decoration: none;
 }
 
-.verify-send--disabled {
+.verify-send.el-button.is-text.is-disabled {
   color: #9ca3af;
   cursor: default;
-  text-decoration: none;
 }
 
 .verify-readonly {
@@ -172,20 +174,25 @@ export default {
   margin-top: 12px;
 }
 
-.verify-help__link {
+.verify-help__link.el-button.is-text {
+  height: auto;
+  min-height: 0;
   padding: 0;
-  border: none;
-  background: none;
-  color: #2f7cff;
+  margin: 0;
+  background-color: transparent;
   font-size: 14px;
-  cursor: pointer;
+  font-weight: 400;
+  color: #2f7cff;
 }
 
-.verify-help__link:hover {
+.verify-help__link.el-button.is-text:hover,
+.verify-help__link.el-button.is-text:focus-visible {
+  background-color: transparent;
+  color: #1d5ed8;
   text-decoration: underline;
 }
 
-/* 中文注释：覆盖 el-input 默认圆角与高度，贴近弹窗统一风格 */
+/* 覆盖 el-input 默认圆角与高度，贴近弹窗统一风格 */
 .verify-input :deep(.el-input__wrapper) {
   height: 32px;
   border-radius: 8px;
