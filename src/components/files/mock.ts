@@ -1,4 +1,5 @@
 import type { FileItem, SidebarKey } from './types'
+import { TEST_DATA_BY_SIDEBAR_KEY } from './test-data'
 
 export function formatBytes(sizeBytes: number | null): string {
   if (sizeBytes == null) return '-'
@@ -17,7 +18,6 @@ export function filterFilesByQuery(files: FileItem[], query: string): FileItem[]
 }
 
 export function mockFilesForSidebar(key: SidebarKey): FileItem[] {
-  void key
-  return []
+  return TEST_DATA_BY_SIDEBAR_KEY[key] ?? []
 }
 

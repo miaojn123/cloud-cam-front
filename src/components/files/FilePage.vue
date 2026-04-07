@@ -1,5 +1,5 @@
 <template>
-  <div class="file-page">
+  <div class="file-page" :class="{ 'file-page--team': sidebarKey === 'team' }">
     <FilesLayout :show-detail="showDetail">
       <template #nav>
         <FilesNav :user="getUserSummary()" @command="handleNavCommand" />
@@ -59,6 +59,7 @@
           <FilesTable
             :items="filteredFiles"
             :loading="loading"
+            @row-contextmenu="onRowContextMenu"
           />
         </div>
       </template>
@@ -70,6 +71,15 @@
         </div>
       </template>
     </FilesLayout>
+
+    <ContextMenu
+      :visible="contextMenuVisible"
+      :x="contextMenuPos.x"
+      :y="contextMenuPos.y"
+      :items="contextMenuItems"
+      @close="onContextMenuClose"
+      @select="onContextMenuSelect"
+    />
   </div>
 </template>
 
@@ -79,8 +89,11 @@ import FilesNav from '@/components/files/FilesNav.vue'
 import FilesSidebar from '@/components/files/FilesSidebar.vue'
 import FilesListHeader from '@/components/files/FilesListHeader.vue'
 import FilesTable from '@/components/files/FilesTable.vue'
+import ContextMenu from '@/components/files/ContextMenu.vue'
 import type { FileItem, SidebarKey, UserSummary, ViewMode } from '@/components/files/types'
 import { filterFilesByQuery, mockFilesForSidebar } from '@/components/files/mock'
+import { getContextMenuItems } from '@/components/files/contextMenu/getItems'
+import type { ContextMenuItem, ContextMenuPos } from '@/components/files/contextMenu/types'
 
 const ROUTE_TO_SIDEBAR_KEY: Readonly<Record<string, SidebarKey>> = {
   '/recent-files': 'recent',
@@ -109,6 +122,7 @@ export default {
     FilesSidebar,
     FilesListHeader,
     FilesTable,
+    ContextMenu,
   },
   data() {
     return {
@@ -118,6 +132,10 @@ export default {
       viewMode: 'table' as ViewMode,
       showDetail: false,
       files: [] as FileItem[],
+      contextMenuVisible: false,
+      contextMenuPos: { x: 0, y: 0 } as ContextMenuPos,
+      contextMenuItems: [] as ContextMenuItem[],
+      contextMenuRow: null as FileItem | null,
     }
   },
   computed: {
@@ -216,6 +234,21 @@ export default {
     },
     handleImportFile() {
       ElMessage.info('导入文件：待接入接口')
+    },
+    onRowContextMenu(payload: { row: FileItem; event: MouseEvent }) {
+      const { row, event } = payload
+      this.contextMenuRow = row
+      this.contextMenuItems = getContextMenuItems(this.sidebarKey, row)
+      this.contextMenuPos = { x: event.clientX, y: event.clientY }
+      this.contextMenuVisible = true
+    },
+    onContextMenuClose() {
+      this.contextMenuVisible = false
+    },
+    onContextMenuSelect(id: string) {
+      // 这里先用消息占位：接入不同菜单的真实行为（打开工作台/分享弹窗等）时替换
+      if (!this.contextMenuRow) return
+      ElMessage.info(`${this.pageTitle}：${id}`)
     },
   }
 }
@@ -329,5 +362,13 @@ export default {
 .file-detail__hint {
   font-size: 12px;
   color: #6b7280;
+}
+
+.file-page--team :deep(.files-list-header__breadcrumb-title) {
+  font-size: 17px;
+}
+
+.file-page--team :deep(.files-table__table .el-table__body td) {
+  font-size: 12px;
 }
 </style>

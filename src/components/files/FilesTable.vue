@@ -8,8 +8,19 @@
       height="100%"
       v-loading="loading"
       class="files-table__table"
+      @row-contextmenu="onRowContextMenu"
     >
-      <el-table-column prop="name" label="文件名" sortable min-width="160" show-overflow-tooltip />
+      <el-table-column prop="name" label="文件名" sortable min-width="160" show-overflow-tooltip>
+        <template #default="{ row }">
+          <span class="files-table__name">
+            <el-icon :size="16" class="files-table__name-icon">
+              <EpFolder v-if="row.kind === 'folder'" />
+              <EpDocument v-else />
+            </el-icon>
+            <span class="files-table__name-text">{{ row.name }}</span>
+          </span>
+        </template>
+      </el-table-column>
       <el-table-column prop="updatedAt" label="最近编辑时间" sortable min-width="160" show-overflow-tooltip />
       <el-table-column prop="owner" label="所有者" min-width="160" show-overflow-tooltip />
       <el-table-column label="类型" sortable min-width="160" show-overflow-tooltip :formatter="typeFormatter" />
@@ -25,6 +36,7 @@ import { formatBytes } from './mock'
 
 export default {
   name: 'FilesTable',
+  emits: ['row-contextmenu'],
   props: {
     items: {
       type: Array as PropType<FileItem[]>,
@@ -41,6 +53,10 @@ export default {
     },
     typeFormatter(row: FileItem) {
       return row.kind === 'folder' ? '文件夹' : '文件'
+    },
+    onRowContextMenu(row: FileItem, column: unknown, e: MouseEvent) {
+      e.preventDefault()
+      this.$emit('row-contextmenu', { row, column, event: e })
     },
   },
 }
@@ -67,9 +83,8 @@ export default {
 
 .files-table :deep(.el-table__header th) {
   background: #ffffff !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   height: 48px !important;
-  padding-left: 16px !important;
   border-right: 2px solid rgb(240, 240, 240) !important;
 }
 
@@ -77,10 +92,37 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding: 0 16px;
+  text-align: left;
 }
 
 .files-table :deep(.el-table__body td) {
   font-size: 13px;
-  color: #111827;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.files-table :deep(.el-table__body td .cell) {
+  padding: 0 16px;
+  text-align: left;
+}
+
+.files-table__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.files-table__name-icon {
+  color: #6b7280;
+  flex: 0 0 auto;
+}
+
+.files-table__name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
