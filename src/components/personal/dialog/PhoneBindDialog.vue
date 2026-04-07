@@ -1,3 +1,41 @@
+<template>
+  <el-dialog
+    class="profile-security-dialog phone-bind-dialog"
+    :model-value="modelValue"
+    title="绑定手机号"
+    width="480px"
+    append-to-body
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
+    destroy-on-close
+    @update:model-value="$emit('update:modelValue', $event)"
+  >
+    <p class="security-dialog-desc">
+      绑定后可使用该手机号登录、找回密码及接收安全验证短信。
+    </p>
+    <div class="security-dialog-panel">
+      <VerifyCodeBox
+        account-label="手机号"
+        :account="phone"
+        account-placeholder="请输入手机号"
+        :code="code"
+        :countdown="countdown"
+        @update:account="phone = $event"
+        @update:code="code = $event"
+        @send-code="sendBindCode"
+      />
+    </div>
+    <template #footer>
+      <el-button @click="close">
+        取消
+      </el-button>
+      <el-button type="primary" :loading="submitting" @click="onConfirm">
+        确定
+      </el-button>
+    </template>
+  </el-dialog>
+</template>
+
 <script lang="ts">
 import VerifyCodeBox from '@/components/common/VerifyCodeBox.vue'
 import { sendCodeApi } from '@/api/auth'
@@ -103,43 +141,5 @@ export default {
   },
 }
 </script>
-
-<template>
-  <el-dialog
-    class="profile-security-dialog phone-bind-dialog"
-    :model-value="modelValue"
-    title="绑定手机号"
-    width="480px"
-    append-to-body
-    :close-on-click-modal="false"
-    :close-on-press-escape="false"
-    destroy-on-close
-    @update:model-value="$emit('update:modelValue', $event)"
-  >
-    <p class="security-dialog-desc">
-      绑定后可使用该手机号登录、找回密码及接收安全验证短信。
-    </p>
-    <div class="security-dialog-panel">
-      <VerifyCodeBox
-        account-label="手机号"
-        :account="phone"
-        account-placeholder="请输入手机号"
-        :code="code"
-        :countdown="countdown"
-        @update:account="phone = $event"
-        @update:code="code = $event"
-        @send-code="sendBindCode"
-      />
-    </div>
-    <template #footer>
-      <el-button @click="close">
-        取消
-      </el-button>
-      <el-button type="primary" :loading="submitting" @click="onConfirm">
-        确定
-      </el-button>
-    </template>
-  </el-dialog>
-</template>
 
 <style src="./security-dialog.css"></style>

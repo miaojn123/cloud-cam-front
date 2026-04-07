@@ -1,35 +1,3 @@
-<script lang="ts">
-import type { PropType } from 'vue'
-import type { ViewMode } from './types'
-
-export default {
-  name: 'FilesListHeader',
-  props: {
-    title: {
-      type: String,
-      required: true,
-    },
-    showDetail: {
-      type: Boolean,
-      required: true,
-    },
-    viewMode: {
-      type: String as PropType<ViewMode>,
-      required: true,
-    },
-  },
-  emits: ['toggle-detail', 'update:viewMode'],
-  methods: {
-    onToggleDetail() {
-      this.$emit('toggle-detail')
-    },
-    setView(mode: ViewMode) {
-      this.$emit('update:viewMode', mode)
-    },
-  },
-}
-</script>
-
 <template>
   <div class="files-list-header">
     <div class="files-list-header__breadcrumb">
@@ -71,6 +39,38 @@ export default {
     </div>
   </div>
 </template>
+
+<script lang="ts">
+import type { PropType } from 'vue'
+import type { ViewMode } from './types'
+
+export default {
+  name: 'FilesListHeader',
+  props: {
+    title: {
+      type: String,
+      required: true,
+    },
+    showDetail: {
+      type: Boolean,
+      required: true,
+    },
+    viewMode: {
+      type: String as PropType<ViewMode>,
+      required: true,
+    },
+  },
+  emits: ['toggle-detail', 'update:viewMode'],
+  methods: {
+    onToggleDetail() {
+      this.$emit('toggle-detail')
+    },
+    setView(mode: ViewMode) {
+      this.$emit('update:viewMode', mode)
+    },
+  },
+}
+</script>
 
 <style scoped>
 .files-list-header {
@@ -134,4 +134,3 @@ export default {
   background: #eef2f7 !important;
 }
 </style>
-

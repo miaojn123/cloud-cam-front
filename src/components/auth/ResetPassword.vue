@@ -1,3 +1,106 @@
+<template>
+  <div
+    class="reset-container"
+    :class="{
+      'reset-container--web-bg': !isDesktopEmbedMode
+    }"
+  >
+    <div
+      class="reset-main"
+      :class="{ 'reset-main--web-frame': !isDesktopEmbedMode }"
+    >
+      <!-- Reset Form -->
+      <div class="reset-content">
+        <!-- 图标与标题同一行居中 -->
+        <div class="page-heading">
+          <a href="#" class="app-logo">
+            <img src="/qjcam-logo.png" alt="QJCAM" class="app-logo-img" />
+          </a>
+          <h1 class="title">重置密码</h1>
+        </div>
+
+        <div class="auth-form-card">
+          <el-form
+            ref="formRef"
+            :model="form"
+            :rules="rules"
+            @submit.prevent="resetPassword"
+            class="reset-form"
+          >
+            <el-form-item prop="account">
+              <template #label>
+                <label class="custom-label">邮箱或手机号</label>
+              </template>
+              <el-input
+                v-model="form.account"
+                type="text"
+                placeholder="请输入邮箱或手机号"
+                autocomplete="username"
+              />
+            </el-form-item>
+
+            <el-form-item prop="code">
+              <template #label>
+                <label class="custom-label">验证码</label>
+              </template>
+              <VerifyCodeBox
+                account-label="邮箱"
+                :account="form.account"
+                :show-account="false"
+                :show-code-label="false"
+                :code="form.code"
+                code-placeholder="请输入验证码"
+                :countdown="countdown"
+                send-text="获取验证码"
+                :help-link="null"
+                @update:code="form.code = $event"
+                @send-code="sendCode"
+              />
+            </el-form-item>
+
+            <el-form-item prop="password">
+              <template #label>
+                <label class="custom-label">新密码</label>
+              </template>
+              <el-input
+                v-model="form.password"
+                type="password"
+                placeholder="8-20位，至少包含字母和数字"
+                autocomplete="new-password"
+                show-password
+              />
+            </el-form-item>
+
+            <el-form-item prop="confirmPassword">
+              <template #label>
+                <label class="custom-label">确认新密码</label>
+              </template>
+              <el-input
+                v-model="form.confirmPassword"
+                type="password"
+                placeholder="请再次输入密码"
+                autocomplete="new-password"
+                show-password
+              />
+            </el-form-item>
+
+            <el-form-item>
+              <el-button type="primary" native-type="submit" class="reset-btn">
+                重置密码
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+
+        <!-- Sign In Link -->
+        <div class="signin-link">
+          已有账户？ <el-link type="primary" underline="never" @click="goToLogin">前往登录</el-link>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script lang="ts">
 import { isDesktopEmbed } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
@@ -145,109 +248,6 @@ export default {
   }
 }
 </script>
-
-<template>
-  <div
-    class="reset-container"
-    :class="{
-      'reset-container--web-bg': !isDesktopEmbedMode
-    }"
-  >
-    <div
-      class="reset-main"
-      :class="{ 'reset-main--web-frame': !isDesktopEmbedMode }"
-    >
-      <!-- Reset Form -->
-      <div class="reset-content">
-        <!-- 图标与标题同一行居中 -->
-        <div class="page-heading">
-          <a href="#" class="app-logo">
-            <img src="/qjcam-logo.png" alt="QJCAM" class="app-logo-img" />
-          </a>
-          <h1 class="title">重置密码</h1>
-        </div>
-
-        <div class="auth-form-card">
-          <el-form
-            ref="formRef"
-            :model="form"
-            :rules="rules"
-            @submit.prevent="resetPassword"
-            class="reset-form"
-          >
-            <el-form-item prop="account">
-              <template #label>
-                <label class="custom-label">邮箱或手机号</label>
-              </template>
-              <el-input
-                v-model="form.account"
-                type="text"
-                placeholder="请输入邮箱或手机号"
-                autocomplete="username"
-              />
-            </el-form-item>
-
-            <el-form-item prop="code">
-              <template #label>
-                <label class="custom-label">验证码</label>
-              </template>
-              <VerifyCodeBox
-                account-label="邮箱"
-                :account="form.account"
-                :show-account="false"
-                :show-code-label="false"
-                :code="form.code"
-                code-placeholder="请输入验证码"
-                :countdown="countdown"
-                send-text="获取验证码"
-                :help-link="null"
-                @update:code="form.code = $event"
-                @send-code="sendCode"
-              />
-            </el-form-item>
-
-            <el-form-item prop="password">
-              <template #label>
-                <label class="custom-label">新密码</label>
-              </template>
-              <el-input
-                v-model="form.password"
-                type="password"
-                placeholder="8-20位，至少包含字母和数字"
-                autocomplete="new-password"
-                show-password
-              />
-            </el-form-item>
-
-            <el-form-item prop="confirmPassword">
-              <template #label>
-                <label class="custom-label">确认新密码</label>
-              </template>
-              <el-input
-                v-model="form.confirmPassword"
-                type="password"
-                placeholder="请再次输入密码"
-                autocomplete="new-password"
-                show-password
-              />
-            </el-form-item>
-
-            <el-form-item>
-              <el-button type="primary" native-type="submit" class="reset-btn">
-                重置密码
-              </el-button>
-            </el-form-item>
-          </el-form>
-        </div>
-
-        <!-- Sign In Link -->
-        <div class="signin-link">
-          已有账户？ <el-link type="primary" underline="never" @click="goToLogin">前往登录</el-link>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
 
 <style scoped>
 .reset-container {

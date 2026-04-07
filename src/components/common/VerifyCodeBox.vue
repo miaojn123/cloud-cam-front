@@ -1,48 +1,3 @@
-<script lang="ts">
-import type { PropType } from 'vue'
-
-type HelpLink = {
-  text: string
-  onClick?: () => void
-}
-
-export default {
-  name: 'VerifyCodeBox',
-  props: {
-    accountLabel: { type: String, required: true },
-    account: { type: String, required: true },
-    accountPlaceholder: { type: String, default: '' },
-    accountReadonly: { type: Boolean, default: false },
-    showAccount: { type: Boolean, default: true },
-    code: { type: String, required: true },
-    showCodeLabel: { type: Boolean, default: true },
-    codeLabel: { type: String, default: '验证码' },
-    codePlaceholder: { type: String, default: '请输入验证码' },
-    countdown: { type: Number, required: true },
-    sendText: { type: String, default: '发送验证码' },
-    helpLink: { type: Object as PropType<HelpLink | null>, default: null },
-  },
-  emits: ['update:account', 'update:code', 'send-code'],
-  computed: {
-    sendButtonText(): string {
-      return this.countdown > 0 ? `${this.countdown}s` : this.sendText
-    },
-    sendDisabled(): boolean {
-      return this.countdown > 0
-    },
-  },
-  methods: {
-    onSendCode() {
-      if (this.sendDisabled) return
-      this.$emit('send-code')
-    },
-    onHelpClick() {
-      this.helpLink?.onClick?.()
-    },
-  },
-}
-</script>
-
 <template>
   <div class="verify-box">
     <div v-if="showAccount" class="verify-row">
@@ -90,6 +45,51 @@ export default {
     </div>
   </div>
 </template>
+
+<script lang="ts">
+import type { PropType } from 'vue'
+
+type HelpLink = {
+  text: string
+  onClick?: () => void
+}
+
+export default {
+  name: 'VerifyCodeBox',
+  props: {
+    accountLabel: { type: String, required: true },
+    account: { type: String, required: true },
+    accountPlaceholder: { type: String, default: '' },
+    accountReadonly: { type: Boolean, default: false },
+    showAccount: { type: Boolean, default: true },
+    code: { type: String, required: true },
+    showCodeLabel: { type: Boolean, default: true },
+    codeLabel: { type: String, default: '验证码' },
+    codePlaceholder: { type: String, default: '请输入验证码' },
+    countdown: { type: Number, required: true },
+    sendText: { type: String, default: '发送验证码' },
+    helpLink: { type: Object as PropType<HelpLink | null>, default: null },
+  },
+  emits: ['update:account', 'update:code', 'send-code'],
+  computed: {
+    sendButtonText(): string {
+      return this.countdown > 0 ? `${this.countdown}s` : this.sendText
+    },
+    sendDisabled(): boolean {
+      return this.countdown > 0
+    },
+  },
+  methods: {
+    onSendCode() {
+      if (this.sendDisabled) return
+      this.$emit('send-code')
+    },
+    onHelpClick() {
+      this.helpLink?.onClick?.()
+    },
+  },
+}
+</script>
 
 <style scoped>
 .verify-box {
@@ -202,4 +202,3 @@ export default {
   margin-left: 8px;
 }
 </style>
-

@@ -1,3 +1,30 @@
+<template>
+  <el-dialog
+    v-model="dialogVisible"
+    title="裁剪头像"
+    width="480px"
+    destroy-on-close
+    align-center
+    class="avatar-crop-dialog"
+    @opened="onDialogOpened"
+    @closed="onDialogClosed"
+  >
+    <div class="avatar-crop-dialog__canvas-wrap">
+      <img
+        v-show="imageUrl"
+        ref="cropImg"
+        :src="imageUrl"
+        alt=""
+        class="avatar-crop-dialog__img"
+      />
+    </div>
+    <template #footer>
+      <el-button @click="handleCancel">取消</el-button>
+      <el-button type="primary" @click="handleConfirm">确定</el-button>
+    </template>
+  </el-dialog>
+</template>
+
 <script lang="ts">
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
@@ -37,6 +64,9 @@ export default {
         this.cleanup()
       }
     },
+  },
+  beforeUnmount() {
+    this.cleanup()
   },
   methods: {
     revokeUrl() {
@@ -110,38 +140,8 @@ export default {
       )
     },
   },
-  beforeUnmount() {
-    this.cleanup()
-  },
 }
 </script>
-
-<template>
-  <el-dialog
-    v-model="dialogVisible"
-    title="裁剪头像"
-    width="480px"
-    destroy-on-close
-    align-center
-    class="avatar-crop-dialog"
-    @opened="onDialogOpened"
-    @closed="onDialogClosed"
-  >
-    <div class="avatar-crop-dialog__canvas-wrap">
-      <img
-        v-show="imageUrl"
-        ref="cropImg"
-        :src="imageUrl"
-        alt=""
-        class="avatar-crop-dialog__img"
-      />
-    </div>
-    <template #footer>
-      <el-button @click="handleCancel">取消</el-button>
-      <el-button type="primary" @click="handleConfirm">确定</el-button>
-    </template>
-  </el-dialog>
-</template>
 
 <style scoped>
 .avatar-crop-dialog__canvas-wrap {

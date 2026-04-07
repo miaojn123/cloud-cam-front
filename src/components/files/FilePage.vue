@@ -1,6 +1,62 @@
+<template>
+  <div class="file-page">
+    <FilesLayout :show-detail="showDetail">
+      <template #nav>
+        <FilesNav :user="getUserSummary()" @command="handleNavCommand" />
+        <div class="file-toolbar" role="toolbar" aria-label="文件工具栏">
+          <div class="file-toolbar__left">
+            <el-button class="file-toolbar__btn" @click="handleCreateFile">新建文档</el-button>
+            <el-button class="file-toolbar__btn" @click="handleCreateFolder">新建文件夹</el-button>
+            <el-button class="file-toolbar__btn" @click="handleImportFile">导入文件</el-button>
+
+            <el-input
+              v-model="search"
+              class="file-toolbar__search"
+              placeholder="搜索文件 / 文件夹名"
+              clearable
+            >
+              <template #prefix>
+                <el-icon :size="18"><EpSearch /></el-icon>
+              </template>
+            </el-input>
+          </div>
+        </div>
+      </template>
+
+      <template #aside>
+        <FilesSidebar v-model="sidebarKey" />
+      </template>
+
+      <template #main>
+        <div class="file-main">
+          <FilesListHeader
+            :title="pageTitle"
+            :show-detail="showDetail"
+            :view-mode="viewMode"
+            @toggle-detail="() => (showDetail = !showDetail)"
+            @update:view-mode="(m) => (viewMode = m)"
+          />
+
+          <FilesTable
+            :items="filteredFiles"
+            :loading="loading"
+          />
+        </div>
+      </template>
+
+      <template #detail>
+        <div class="file-detail">
+          <div class="file-detail__title">详细信息</div>
+          <div class="file-detail__hint">占位：后续展示选中文件信息</div>
+        </div>
+      </template>
+    </FilesLayout>
+  </div>
+</template>
+
 <script lang="ts">
 import FilesLayout from '@/components/files/FilesLayout.vue'
-import FilesNav from '@/components/nav/FilesNav.vue'
+import FilesNav from '@/components/files/FilesNav.vue'
 import FilesSidebar from '@/components/files/FilesSidebar.vue'
 import FilesListHeader from '@/components/files/FilesListHeader.vue'
 import FilesTable from '@/components/files/FilesTable.vue'
@@ -92,7 +148,7 @@ export default {
     },
     handleNavCommand(cmd: string) {
       if (cmd === 'userInfo') {
-        return this.$router.push('/personalProfile/personal')
+        return this.$router.push('/profile-personal')
       }
       if (cmd === 'logout') return this.handleLogout()
       ElMessage.info('功能开发中')
@@ -109,62 +165,6 @@ export default {
   }
 }
 </script>
-
-<template>
-  <div class="file-page">
-    <FilesLayout :show-detail="showDetail">
-      <template #nav>
-        <FilesNav :user="getUserSummary()" @command="handleNavCommand" />
-        <div class="file-toolbar" role="toolbar" aria-label="文件工具栏">
-          <div class="file-toolbar__left">
-            <el-button class="file-toolbar__btn" @click="handleCreateFile">新建文档</el-button>
-            <el-button class="file-toolbar__btn" @click="handleCreateFolder">新建文件夹</el-button>
-            <el-button class="file-toolbar__btn" @click="handleImportFile">导入文件</el-button>
-
-            <el-input
-              v-model="search"
-              class="file-toolbar__search"
-              placeholder="搜索文件 / 文件夹名"
-              clearable
-            >
-              <template #prefix>
-                <el-icon :size="18"><EpSearch /></el-icon>
-              </template>
-            </el-input>
-          </div>
-        </div>
-      </template>
-
-      <template #aside>
-        <FilesSidebar v-model="sidebarKey" />
-      </template>
-
-      <template #main>
-        <div class="file-main">
-          <FilesListHeader
-            :title="pageTitle"
-            :show-detail="showDetail"
-            :view-mode="viewMode"
-            @toggle-detail="() => (showDetail = !showDetail)"
-            @update:view-mode="(m) => (viewMode = m)"
-          />
-
-          <FilesTable
-            :items="filteredFiles"
-            :loading="loading"
-          />
-        </div>
-      </template>
-
-      <template #detail>
-        <div class="file-detail">
-          <div class="file-detail__title">详细信息</div>
-          <div class="file-detail__hint">占位：后续展示选中文件信息</div>
-        </div>
-      </template>
-    </FilesLayout>
-  </div>
-</template>
 
 <style scoped>
 .file-page {

@@ -1,3 +1,25 @@
+<template>
+  <div class="files-sidebar">
+    <el-menu
+      class="files-sidebar__menu"
+      :default-active="modelValue"
+      @select="onSelect"
+    >
+      <el-menu-item
+        v-for="it in items"
+        :key="it.key"
+        :index="it.key"
+        class="files-sidebar__menu-item"
+      >
+        <el-icon class="files-sidebar__icon">
+          <component :is="it.icon" />
+        </el-icon>
+        <span class="files-sidebar__label">{{ it.label }}</span>
+      </el-menu-item>
+    </el-menu>
+  </div>
+</template>
+
 <script lang="ts">
 import type { PropType } from 'vue'
 import type { SidebarKey } from './types'
@@ -40,28 +62,6 @@ export default {
 }
 </script>
 
-<template>
-  <div class="files-sidebar">
-    <el-menu
-      class="files-sidebar__menu"
-      :default-active="modelValue"
-      @select="onSelect"
-    >
-      <el-menu-item
-        v-for="it in items"
-        :key="it.key"
-        :index="it.key"
-        class="files-sidebar__menu-item"
-      >
-        <el-icon class="files-sidebar__icon">
-          <component :is="it.icon" />
-        </el-icon>
-        <span class="files-sidebar__label">{{ it.label }}</span>
-      </el-menu-item>
-    </el-menu>
-  </div>
-</template>
-
 <style scoped>
 .files-sidebar {
   height: 100%;
@@ -93,4 +93,3 @@ export default {
   font-size: 18px;
 }
 </style>
-

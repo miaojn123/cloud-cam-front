@@ -1,12 +1,3 @@
-<script lang="ts">
-export default {
-  name: 'FilesLayout',
-  props: {
-    showDetail: { type: Boolean, default: false },
-  },
-}
-</script>
-
 <template>
   <div class="files-layout">
     <slot name="nav" />
@@ -28,6 +19,15 @@ export default {
     </main>
   </div>
 </template>
+
+<script lang="ts">
+export default {
+  name: 'FilesLayout',
+  props: {
+    showDetail: { type: Boolean, default: false },
+  },
+}
+</script>
 
 <style scoped>
 .files-layout {
@@ -67,4 +67,3 @@ export default {
   overflow: hidden;
 }
 </style>
-

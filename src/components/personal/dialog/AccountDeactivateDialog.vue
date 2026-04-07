@@ -1,7 +1,113 @@
+<template>
+  <el-dialog
+    class="profile-security-dialog account-deactivate-dialog"
+    :model-value="modelValue"
+    :title="dialogTitle"
+    width="520px"
+    append-to-body
+    :close-on-click-modal="false"
+    destroy-on-close
+    @update:model-value="$emit('update:modelValue', $event)"
+  >
+    <div v-if="step === 'warn'" class="deactivate-warn">
+      <p class="deactivate-warn__lead">
+        删除账号后，全部信息将会被移除，且无法找回。是否确认要删除账号？
+      </p>
+      <p class="deactivate-warn__hint">
+        若确认删除，请在下方输入框中输入「{{ CONFIRM_DELETE_PHRASE }}」。
+      </p>
+      <el-input
+        v-model="confirmPhraseInput"
+        class="deactivate-warn__input"
+        :placeholder="CONFIRM_DELETE_PHRASE"
+        clearable
+        autocomplete="off"
+      />
+    </div>
+
+    <div v-else class="deactivate-verify">
+      <p class="deactivate-verify__tip">
+        请通过验证码或登录密码完成身份校验，通过后账号将被永久注销。
+      </p>
+      <div class="security-dialog-panel">
+        <el-radio-group v-model="verifyMode" class="deactivate-verify__methods">
+          <el-radio v-if="canShowCodeVerify" value="code" class="deactivate-verify__radio">
+            验证码验证
+          </el-radio>
+          <el-radio value="password" class="deactivate-verify__radio">
+            密码验证
+          </el-radio>
+        </el-radio-group>
+
+        <div
+          v-if="verifyMode === 'code' && hasEmail && hasPhone"
+          class="deactivate-verify__channels"
+        >
+          <span class="deactivate-verify__channels-label">验证码发送至</span>
+          <el-radio-group v-model="codeChannel" class="deactivate-verify__channels-group">
+            <el-radio value="email">
+              邮箱
+            </el-radio>
+            <el-radio value="phone">
+              手机
+            </el-radio>
+          </el-radio-group>
+        </div>
+
+        <div v-if="verifyMode === 'code'" class="deactivate-verify__box">
+          <VerifyCodeBox
+            :account-label="verifyAccountLabel"
+            :account="displayAccount"
+            account-readonly
+            :code="code"
+            :countdown="countdown"
+            @update:code="code = $event"
+            @send-code="sendCancelCode"
+          />
+        </div>
+        <div v-else class="deactivate-verify__pwd">
+          <div class="deactivate-verify__pwd-label">登录密码</div>
+          <el-input
+            v-model="password"
+            type="password"
+            show-password
+            placeholder="请输入当前登录密码（8-20 位）"
+            autocomplete="current-password"
+          />
+        </div>
+      </div>
+    </div>
+
+    <template #footer>
+      <template v-if="step === 'warn'">
+        <el-button @click="close">
+          取消
+        </el-button>
+        <el-button type="danger" :disabled="!phraseMatches" @click="onConfirmWarn">
+          删除账号
+        </el-button>
+      </template>
+      <template v-else>
+        <el-button @click="onBackToWarn">
+          上一步
+        </el-button>
+        <el-button
+          type="danger"
+          :loading="submitting"
+          :disabled="!canSubmitVerify"
+          @click="onFinalSubmit"
+        >
+          确认注销
+        </el-button>
+      </template>
+    </template>
+  </el-dialog>
+</template>
+
 <script lang="ts">
 import type { PropType } from 'vue'
 import type { Router } from 'vue-router'
-import type { CurrentUser } from '@/api/user'
+import type { CurrentUser } from '@/types/user'
 import { cancelCurrentAccountByCodeApi, cancelCurrentAccountByPasswordApi } from '@/api/user'
 import { sendCodeApi } from '@/api/auth'
 import { requestButtonThrottle } from '@/utils/requestThrottle'
@@ -215,112 +321,6 @@ export default {
   },
 }
 </script>
-
-<template>
-  <el-dialog
-    class="profile-security-dialog account-deactivate-dialog"
-    :model-value="modelValue"
-    :title="dialogTitle"
-    width="520px"
-    append-to-body
-    :close-on-click-modal="false"
-    destroy-on-close
-    @update:model-value="$emit('update:modelValue', $event)"
-  >
-    <div v-if="step === 'warn'" class="deactivate-warn">
-      <p class="deactivate-warn__lead">
-        删除账号后，全部信息将会被移除，且无法找回。是否确认要删除账号？
-      </p>
-      <p class="deactivate-warn__hint">
-        若确认删除，请在下方输入框中输入「{{ CONFIRM_DELETE_PHRASE }}」。
-      </p>
-      <el-input
-        v-model="confirmPhraseInput"
-        class="deactivate-warn__input"
-        :placeholder="CONFIRM_DELETE_PHRASE"
-        clearable
-        autocomplete="off"
-      />
-    </div>
-
-    <div v-else class="deactivate-verify">
-      <p class="deactivate-verify__tip">
-        请通过验证码或登录密码完成身份校验，通过后账号将被永久注销。
-      </p>
-      <div class="security-dialog-panel">
-        <el-radio-group v-model="verifyMode" class="deactivate-verify__methods">
-          <el-radio v-if="canShowCodeVerify" value="code" class="deactivate-verify__radio">
-            验证码验证
-          </el-radio>
-          <el-radio value="password" class="deactivate-verify__radio">
-            密码验证
-          </el-radio>
-        </el-radio-group>
-
-        <div
-          v-if="verifyMode === 'code' && hasEmail && hasPhone"
-          class="deactivate-verify__channels"
-        >
-          <span class="deactivate-verify__channels-label">验证码发送至</span>
-          <el-radio-group v-model="codeChannel" class="deactivate-verify__channels-group">
-            <el-radio value="email">
-              邮箱
-            </el-radio>
-            <el-radio value="phone">
-              手机
-            </el-radio>
-          </el-radio-group>
-        </div>
-
-        <div v-if="verifyMode === 'code'" class="deactivate-verify__box">
-          <VerifyCodeBox
-            :account-label="verifyAccountLabel"
-            :account="displayAccount"
-            account-readonly
-            :code="code"
-            :countdown="countdown"
-            @update:code="code = $event"
-            @send-code="sendCancelCode"
-          />
-        </div>
-        <div v-else class="deactivate-verify__pwd">
-          <div class="deactivate-verify__pwd-label">登录密码</div>
-          <el-input
-            v-model="password"
-            type="password"
-            show-password
-            placeholder="请输入当前登录密码（8-20 位）"
-            autocomplete="current-password"
-          />
-        </div>
-      </div>
-    </div>
-
-    <template #footer>
-      <template v-if="step === 'warn'">
-        <el-button @click="close">
-          取消
-        </el-button>
-        <el-button type="danger" :disabled="!phraseMatches" @click="onConfirmWarn">
-          删除账号
-        </el-button>
-      </template>
-      <template v-else>
-        <el-button @click="onBackToWarn">
-          上一步
-        </el-button>
-        <el-button
-          type="danger"
-          :loading="submitting"
-          :disabled="!canSubmitVerify"
-          @click="onFinalSubmit"
-        >
-          确认注销
-        </el-button>
-      </template>
-    </template>
-  </el-dialog>
-</template>
 
 <style src="./security-dialog.css"></style>
 <style scoped>

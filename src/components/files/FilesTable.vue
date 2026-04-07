@@ -1,3 +1,23 @@
+<template>
+  <div class="files-table">
+    <el-table
+      :data="items"
+      :border="true"
+      :stripe="false"
+      height="100%"
+      v-loading="loading"
+      class="files-table__table"
+    >
+      <el-table-column prop="name" label="文件名" sortable min-width="240" />
+      <el-table-column prop="updatedAt" label="最近编辑时间" sortable width="240" />
+      <el-table-column prop="owner" label="所有者" width="180" />
+      <el-table-column label="类型" sortable width="180" :formatter="typeFormatter" />
+      <el-table-column label="文件大小" sortable width="180" :formatter="sizeFormatter" />
+      <el-table-column width="120" />
+    </el-table>
+  </div>
+</template>
+
 <script lang="ts">
 import type { PropType } from 'vue'
 import type { FileItem } from './types'
@@ -25,26 +45,6 @@ export default {
   },
 }
 </script>
-
-<template>
-  <div class="files-table">
-    <el-table
-      :data="items"
-      :border="true"
-      :stripe="false"
-      height="100%"
-      v-loading="loading"
-      class="files-table__table"
-    >
-      <el-table-column prop="name" label="文件名" sortable min-width="240" />
-      <el-table-column prop="updatedAt" label="最近编辑时间" sortable width="240" />
-      <el-table-column prop="owner" label="所有者" width="180" />
-      <el-table-column label="类型" sortable width="180" :formatter="typeFormatter" />
-      <el-table-column label="文件大小" sortable width="180" :formatter="sizeFormatter" />
-      <el-table-column width="120" />
-    </el-table>
-  </div>
-</template>
 
 <style scoped>
 .files-table {
@@ -75,4 +75,3 @@ export default {
   color: #111827;
 }
 </style>
-

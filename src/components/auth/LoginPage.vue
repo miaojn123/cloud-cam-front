@@ -1,3 +1,160 @@
+<template>
+  <div
+    class="login-container"
+    :class="{
+      'login-container--web-bg': !isDesktopEmbedMode,
+      'login-container--desktop': isDesktopEmbedMode
+    }"
+  >
+    <div
+      class="login-main"
+      :class="{
+        'login-main--web-frame': !isDesktopEmbedMode,
+        'login-main--desktop': isDesktopEmbedMode
+      }"
+    >
+      <!-- Logo 与标题同一行，左右两端对齐 -->
+      <div class="page-heading">
+        <a href="#" class="app-logo">
+          <img src="/qjcam-logo.png" alt="QJCAM" class="app-logo-img" />
+        </a>
+        <h1 class="title">登录</h1>
+      </div>
+
+      <!-- Login Form -->
+      <div class="login-box">
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="rules"
+          :validate-on-rule-change="false"
+          @submit.prevent="submitLogin"
+          class="login-form"
+        >
+          <!-- 密码模式：用户名或邮箱 -->
+          <el-form-item v-if="!isCodeMode" prop="username">
+            <template #label>
+              <div class="label-row">
+                <label class="custom-label">用户名或邮箱地址</label>
+                <div class="label-links">
+                  <el-link
+                    type="primary"
+                    underline="never"
+                    class="forgot-link"
+                    @click="switchToCodeMode"
+                  >
+                    使用验证码登录
+                  </el-link>
+                </div>
+              </div>
+            </template>
+            <el-input
+              v-model="form.username"
+              placeholder="请输入用户名或邮箱"
+              autocomplete="username"
+            />
+          </el-form-item>
+
+          <!-- 验证码模式：邮箱 -->
+          <el-form-item v-else prop="email">
+            <template #label>
+              <div class="label-row">
+                <label class="custom-label">邮箱地址</label>
+                <div class="label-links">
+                  <el-link
+                    type="primary"
+                    underline="never"
+                    class="forgot-link"
+                    @click="switchToPasswordMode"
+                  >
+                    使用密码登录
+                  </el-link>
+                </div>
+              </div>
+            </template>
+            <el-input
+              v-model="form.email"
+              placeholder="请输入邮箱"
+              type="email"
+              autocomplete="email"
+            />
+          </el-form-item>
+
+          <el-form-item v-if="!isCodeMode" prop="password">
+            <template #label>
+              <div class="label-row">
+                <label class="custom-label">密码</label>
+                <div class="label-links">
+                  <el-link type="primary" underline="never" class="forgot-link" @click.stop.prevent="goToReset">
+                    忘记密码？
+                  </el-link>
+                </div>
+              </div>
+            </template>
+            <el-input
+              v-model="form.password"
+              type="password"
+              placeholder="请输入密码"
+              autocomplete="current-password"
+              show-password
+            />
+          </el-form-item>
+
+          <el-form-item v-else prop="code">
+            <template #label>
+              <label class="custom-label">验证码</label>
+            </template>
+            <VerifyCodeBox
+              account-label="邮箱"
+              :account="form.email"
+              :show-account="false"
+              :show-code-label="false"
+              :code="form.code"
+              code-placeholder="请输入验证码"
+              :countdown="countdown"
+              send-text="获取验证码"
+              :help-link="null"
+              @update:code="form.code = $event"
+              @send-code="sendCode"
+            />
+          </el-form-item>
+
+          <!-- 同意协议（必选，勾选后才可登录） -->
+          <el-form-item class="terms-item">
+            <el-checkbox v-model="form.agreeTerms" class="custom-checkbox">
+              <span class="checkbox-text">
+                我已阅读并同意
+                <el-link type="primary" underline="never" href="#" @click.prevent>用户协议</el-link>
+                和
+                <el-link type="primary" underline="never" href="#" @click.prevent>隐私政策</el-link>
+              </span>
+            </el-checkbox>
+          </el-form-item>
+
+          <el-form-item>
+            <el-button
+              type="primary"
+              native-type="submit"
+              class="sign-in-btn"
+              :disabled="!form.agreeTerms"
+            >
+              登录
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <!-- Create Account -->
+      <div class="create-account-box">
+        <span>还没有账户？</span>
+        <el-link type="primary" underline="never" @click="goToRegister">
+          立即注册
+        </el-link>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script lang="ts">
 import {
   isDesktopEmbed,
@@ -179,163 +336,6 @@ export default {
 }
 </script>
 
-<template>
-  <div
-    class="login-container"
-    :class="{
-      'login-container--web-bg': !isDesktopEmbedMode,
-      'login-container--desktop': isDesktopEmbedMode
-    }"
-  >
-    <div
-      class="login-main"
-      :class="{
-        'login-main--web-frame': !isDesktopEmbedMode,
-        'login-main--desktop': isDesktopEmbedMode
-      }"
-    >
-      <!-- Logo 与标题同一行，左右两端对齐 -->
-      <div class="page-heading">
-        <a href="#" class="app-logo">
-          <img src="/qjcam-logo.png" alt="QJCAM" class="app-logo-img" />
-        </a>
-        <h1 class="title">登录</h1>
-      </div>
-
-      <!-- Login Form -->
-      <div class="login-box">
-        <el-form
-          ref="formRef"
-          :model="form"
-          :rules="rules"
-          :validate-on-rule-change="false"
-          @submit.prevent="submitLogin"
-          class="login-form"
-        >
-          <!-- 密码模式：用户名或邮箱 -->
-          <el-form-item v-if="!isCodeMode" prop="username">
-            <template #label>
-              <div class="label-row">
-                <label class="custom-label">用户名或邮箱地址</label>
-                <div class="label-links">
-                  <el-link
-                    type="primary"
-                    underline="never"
-                    class="forgot-link"
-                    @click="switchToCodeMode"
-                  >
-                    使用验证码登录
-                  </el-link>
-                </div>
-              </div>
-            </template>
-            <el-input
-              v-model="form.username"
-              placeholder="请输入用户名或邮箱"
-              autocomplete="username"
-            />
-          </el-form-item>
-
-          <!-- 验证码模式：邮箱 -->
-          <el-form-item v-else prop="email">
-            <template #label>
-              <div class="label-row">
-                <label class="custom-label">邮箱地址</label>
-                <div class="label-links">
-                  <el-link
-                    type="primary"
-                    underline="never"
-                    class="forgot-link"
-                    @click="switchToPasswordMode"
-                  >
-                    使用密码登录
-                  </el-link>
-                </div>
-              </div>
-            </template>
-            <el-input
-              v-model="form.email"
-              placeholder="请输入邮箱"
-              type="email"
-              autocomplete="email"
-            />
-          </el-form-item>
-
-          <el-form-item v-if="!isCodeMode" prop="password">
-            <template #label>
-              <div class="label-row">
-                <label class="custom-label">密码</label>
-                <div class="label-links">
-                  <el-link type="primary" underline="never" class="forgot-link" @click.stop.prevent="goToReset">
-                    忘记密码？
-                  </el-link>
-                </div>
-              </div>
-            </template>
-            <el-input
-              v-model="form.password"
-              type="password"
-              placeholder="请输入密码"
-              autocomplete="current-password"
-              show-password
-            />
-          </el-form-item>
-
-          <el-form-item v-else prop="code">
-            <template #label>
-              <label class="custom-label">验证码</label>
-            </template>
-            <VerifyCodeBox
-              account-label="邮箱"
-              :account="form.email"
-              :show-account="false"
-              :show-code-label="false"
-              :code="form.code"
-              code-placeholder="请输入验证码"
-              :countdown="countdown"
-              send-text="获取验证码"
-              :help-link="null"
-              @update:code="form.code = $event"
-              @send-code="sendCode"
-            />
-          </el-form-item>
-
-          <!-- 同意协议（必选，勾选后才可登录） -->
-          <el-form-item class="terms-item">
-            <el-checkbox v-model="form.agreeTerms" class="custom-checkbox">
-              <span class="checkbox-text">
-                我已阅读并同意
-                <el-link type="primary" underline="never" href="#" @click.prevent>用户协议</el-link>
-                和
-                <el-link type="primary" underline="never" href="#" @click.prevent>隐私政策</el-link>
-              </span>
-            </el-checkbox>
-          </el-form-item>
-
-          <el-form-item>
-            <el-button
-              type="primary"
-              native-type="submit"
-              class="sign-in-btn"
-              :disabled="!form.agreeTerms"
-            >
-              登录
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-
-      <!-- Create Account -->
-      <div class="create-account-box">
-        <span>还没有账户？</span>
-        <el-link type="primary" underline="never" @click="goToRegister">
-          立即注册
-        </el-link>
-      </div>
-    </div>
-  </div>
-</template>
-
 <style scoped>
 .login-container {
   box-sizing: border-box;
@@ -420,7 +420,7 @@ export default {
   width: 100%;
 }
 
-/* 桌面端：标题行与表单同宽，避免左右撑满容器造成“超出边界”的观感 */
+/* 桌面端：标题行与表单同宽，避免左右撑满容器造成"超出边界"的观感 */
 .login-main.login-main--desktop .page-heading {
   max-width: 340px;
 }
@@ -671,7 +671,7 @@ export default {
 .create-account-box {
   width: 100%;
   max-width: 340px;
-  /* 登录按钮与“还没有账户”区间距：避免视觉过挤 */
+  /* 登录按钮与"还没有账户"区间距：避免视觉过挤 */
   margin-top: 20px;
   padding: 4px 16px;
   border: 1px solid #d0d7de;

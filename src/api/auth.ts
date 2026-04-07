@@ -1,4 +1,24 @@
 import { request } from './request'
+import type { AxiosRequestConfig } from 'axios'
+
+type AuthRequestConfig = AxiosRequestConfig & {
+  _skipAuthRedirect?: boolean
+}
+
+const AUTH_BASE = '/api/auth'
+
+function postAuthApi<TResponse = unknown, TPayload = unknown>(
+  path: string,
+  payload?: TPayload,
+  config?: AuthRequestConfig
+) {
+  return request<TResponse>({
+    url: `${AUTH_BASE}${path}`,
+    method: 'post',
+    ...(payload === undefined ? {} : { data: payload }),
+    ...config
+  })
+}
 
 export interface LoginResponse {
   token: string
@@ -15,50 +35,46 @@ export type SendCodeScene =
   | 'BIND_PHONE'
   | 'UNBIND_PHONE'
 
+export type SendCodeRequest = {
+  account: string
+  scene: SendCodeScene
+}
+
 export function sendCodeApi(account: string, scene: SendCodeScene) {
-  return request({
-    url: '/api/auth/send-code',
-    method: 'post',
-    data: {
-      account,
-      scene
-    }
-  })
+  const payload: SendCodeRequest = { account, scene }
+  return postAuthApi('/send-code', payload)
+}
+
+export type LoginByPasswordRequest = {
+  account: string
+  password: string
 }
 
 export function loginByPasswordApi(account: string, password: string) {
-  return request<LoginResponse>({
-    url: '/api/auth/login/password',
-    method: 'post',
-    data: {
-      account,
-      password
-    }
-  })
+  const payload: LoginByPasswordRequest = { account, password }
+  return postAuthApi<LoginResponse>('/login/password', payload)
+}
+
+export type LoginByCodeRequest = {
+  account: string
+  code: string
 }
 
 export function loginByCodeApi(account: string, code: string) {
-  return request<LoginResponse>({
-    url: '/api/auth/login/code',
-    method: 'post',
-    data: {
-      account,
-      code
-    }
-  })
+  const payload: LoginByCodeRequest = { account, code }
+  return postAuthApi<LoginResponse>('/login/code', payload)
+}
+
+export type RegisterByCodeRequest = {
+  account: string
+  code: string
+  password: string
+  username: string
 }
 
 export function registerByCodeApi(account: string, code: string, password: string, username: string) {
-  return request({
-    url: '/api/auth/register/code',
-    method: 'post',
-    data: {
-      account,
-      code,
-      password,
-      username
-    }
-  })
+  const payload: RegisterByCodeRequest = { account, code, password, username }
+  return postAuthApi('/register/code', payload)
 }
 
 export type RegisterByUsernameRequest = {
@@ -66,33 +82,22 @@ export type RegisterByUsernameRequest = {
   password: string
 }
 
-/** POST /api/auth/register/username，与 AccountRegisterRequest 一致 */
 export function registerByUsernameApi(username: string, password: string) {
   const payload: RegisterByUsernameRequest = { username, password }
-  return request<unknown>({
-    url: '/api/auth/register/username',
-    method: 'post',
-    data: payload
-  })
+  return postAuthApi<unknown>('/register/username', payload)
 }
 
-/** 匿名：忘记密码后设置新密码 */
+export type ResetPasswordRequest = {
+  account: string
+  code: string
+  newPassword: string
+}
+
 export function resetPasswordApi(account: string, code: string, newPassword: string) {
-  return request<unknown>({
-    url: '/api/auth/reset-password',
-    method: 'post',
-    data: {
-      account,
-      code,
-      newPassword
-    }
-  })
+  const payload: ResetPasswordRequest = { account, code, newPassword }
+  return postAuthApi<unknown>('/reset-password', payload)
 }
 
 export function logoutApi() {
-  return request({
-    url: '/api/auth/logout',
-    method: 'post'
-  })
+  return postAuthApi('/logout')
 }
-

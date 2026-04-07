@@ -1,5 +1,5 @@
 import type { LocationQuery } from 'vue-router'
-import type { CurrentUser } from '@/api/user'
+import type { CurrentUser } from '@/types/user'
 
 /**
  * Qt/QCefView 需在页面上下文中注入：

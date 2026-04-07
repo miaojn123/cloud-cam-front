@@ -1,3 +1,34 @@
+<template>
+  <div class="user-nav-menu">
+    <el-dropdown @command="handleCommand">
+      <el-button
+        class="el-button el-tooltip__trigger base-btn--ghost base-btn--ghost--no-frame"
+        :style="{ height: '40px', color: 'white' }"
+      >
+        <span>
+          <div class="user-trigger">
+            <span class="el-avatar el-avatar--circle user-trigger__avatar">
+              <img :src="resolvedAvatarSrc" alt="" style="object-fit: cover" />
+            </span>
+            <span class="user-trigger__name">{{ displayName }}</span>
+            <i class="el-icon user-trigger__chevron" style="font-size: 16px; color: white">
+              <el-icon :size="16"><EpArrowDownBold /></el-icon>
+            </i>
+          </div>
+        </span>
+      </el-button>
+      <template #dropdown>
+        <el-dropdown-menu style="width: 160px">
+          <el-dropdown-item command="userInfo">用户信息</el-dropdown-item>
+          <el-dropdown-item command="feedback">问题反馈</el-dropdown-item>
+          <el-dropdown-item command="help">帮助文档</el-dropdown-item>
+          <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
+  </div>
+</template>
+
 <script lang="ts">
 import type { PropType } from 'vue'
 import { buildDefaultAvatarSvgDataUrl, getNicknameInitialLetter } from '@/utils/defaultAvatar'
@@ -42,37 +73,6 @@ export default {
   },
 }
 </script>
-
-<template>
-  <div class="user-nav-menu">
-    <el-dropdown @command="handleCommand">
-      <el-button
-        class="el-button el-tooltip__trigger base-btn--ghost base-btn--ghost--no-frame"
-        :style="{ height: '40px', color: 'white' }"
-      >
-        <span>
-          <div class="user-trigger">
-            <span class="el-avatar el-avatar--circle user-trigger__avatar">
-              <img :src="resolvedAvatarSrc" alt="" style="object-fit: cover" />
-            </span>
-            <span class="user-trigger__name">{{ displayName }}</span>
-            <i class="el-icon user-trigger__chevron" style="font-size: 16px; color: white">
-              <el-icon :size="16"><EpArrowDownBold /></el-icon>
-            </i>
-          </div>
-        </span>
-      </el-button>
-      <template #dropdown>
-        <el-dropdown-menu style="width: 160px">
-          <el-dropdown-item command="userInfo">用户信息</el-dropdown-item>
-          <el-dropdown-item command="feedback">问题反馈</el-dropdown-item>
-          <el-dropdown-item command="help">帮助文档</el-dropdown-item>
-          <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-        </el-dropdown-menu>
-      </template>
-    </el-dropdown>
-  </div>
-</template>
 
 <style scoped>
 .user-nav-menu {
@@ -136,10 +136,10 @@ export default {
   font-size: 16px;
   height: 24px;
   line-height: 24px;
-  transform: translateY(2px);
 }
 
 .user-trigger__chevron {
-  transform: translateY(2px);
+  display: inline-flex;
+  align-items: center;
 }
 </style>

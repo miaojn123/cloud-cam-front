@@ -1,3 +1,78 @@
+<template>
+  <div class="profile-security-panel">
+    <div class="personal-profile-page__card personal-profile-page__card--security">
+      <div class="profile-card-body">
+        <section class="profile-form" aria-labelledby="security-form-heading">
+          <div class="profile-form-head">
+            <h2 id="security-form-heading" class="profile-form-heading">账号与安全</h2>
+            <div class="profile-form-head-rule" role="presentation" />
+          </div>
+
+          <div class="profile-form-field profile-form-field--contact">
+            <span class="profile-form-label">手机号</span>
+            <div class="profile-form-contact-row">
+              <span class="profile-form-readonly">{{ profilePhoneDisplay }}</span>
+              <el-button text class="profile-form-link" @click="onClickPhoneRow">
+                {{ phoneActionText }}
+              </el-button>
+            </div>
+          </div>
+          <div class="profile-form-field profile-form-field--contact">
+            <span class="profile-form-label">邮箱</span>
+            <div class="profile-form-contact-row">
+              <span class="profile-form-readonly">{{ profileEmailDisplay }}</span>
+              <el-button text class="profile-form-link" @click="onClickEmail">
+                {{ emailActionText }}
+              </el-button>
+            </div>
+          </div>
+          <div class="profile-form-field profile-form-field--contact">
+            <span class="profile-form-label">修改密码</span>
+            <div class="profile-form-contact-row">
+              <span class="profile-form-readonly profile-form-readonly--muted">
+                输入原密码后即可设置新登录密码
+              </span>
+              <el-button text class="profile-form-link" @click="onClickChangePassword">
+                前往修改
+              </el-button>
+            </div>
+          </div>
+          <div class="profile-form-field profile-form-field--contact">
+            <span class="profile-form-label">注销账户</span>
+            <div class="profile-form-contact-row">
+              <span class="profile-form-readonly profile-form-readonly--muted">
+                永久删除账号及关联数据（以平台规则为准）
+              </span>
+              <el-button text class="profile-form-link profile-form-link--danger" @click="onDeactivateAccount">
+                注销账户
+              </el-button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <EmailBindDialog v-model="bindEmailVisible" />
+    <PhoneBindDialog v-model="bindPhoneVisible" />
+    <ChangePasswordDialog v-model="changePasswordVisible" />
+    <EmailUnbindDialog
+      v-model="unbindEmailVisible"
+      :current-email="String(user?.email ?? '').trim()"
+      @success="onUnbindEmailSuccess"
+    />
+    <PhoneUnbindDialog
+      v-model="unbindPhoneVisible"
+      :current-phone="String(user?.phone ?? '').trim()"
+      @success="onUnbindPhoneSuccess"
+    />
+    <AccountDeactivateDialog
+      v-model="deactivateVisible"
+      :user="user"
+      :router="$router"
+    />
+  </div>
+</template>
+
 <script lang="ts">
 import AccountDeactivateDialog from './dialog/AccountDeactivateDialog.vue'
 import EmailBindDialog from './dialog/EmailBindDialog.vue'
@@ -78,7 +153,7 @@ export default {
       }
       if (b === 'phone' || b === 'email') {
         this.$nextTick(() => {
-          this.$router.replace({ path: '/personalProfile/security' })
+          this.$router.replace({ path: '/profile-security' })
         })
       }
     },
@@ -117,81 +192,6 @@ export default {
   },
 }
 </script>
-
-<template>
-  <div class="profile-security-panel">
-    <div class="personal-profile-page__card personal-profile-page__card--security">
-      <div class="profile-card-body">
-        <section class="profile-form" aria-labelledby="security-form-heading">
-          <div class="profile-form-head">
-            <h2 id="security-form-heading" class="profile-form-heading">账号与安全</h2>
-            <div class="profile-form-head-rule" role="presentation" />
-          </div>
-
-          <div class="profile-form-field profile-form-field--contact">
-            <span class="profile-form-label">手机号</span>
-            <div class="profile-form-contact-row">
-              <span class="profile-form-readonly">{{ profilePhoneDisplay }}</span>
-              <el-button text class="profile-form-link" @click="onClickPhoneRow">
-                {{ phoneActionText }}
-              </el-button>
-            </div>
-          </div>
-          <div class="profile-form-field profile-form-field--contact">
-            <span class="profile-form-label">邮箱</span>
-            <div class="profile-form-contact-row">
-              <span class="profile-form-readonly">{{ profileEmailDisplay }}</span>
-              <el-button text class="profile-form-link" @click="onClickEmail">
-                {{ emailActionText }}
-              </el-button>
-            </div>
-          </div>
-          <div class="profile-form-field profile-form-field--contact">
-            <span class="profile-form-label">修改密码</span>
-            <div class="profile-form-contact-row">
-              <span class="profile-form-readonly profile-form-readonly--muted">
-                输入原密码后即可设置新登录密码
-              </span>
-              <el-button text class="profile-form-link" @click="onClickChangePassword">
-                前往修改
-              </el-button>
-            </div>
-          </div>
-          <div class="profile-form-field profile-form-field--contact">
-            <span class="profile-form-label">注销账户</span>
-            <div class="profile-form-contact-row">
-              <span class="profile-form-readonly profile-form-readonly--muted">
-                永久删除账号及关联数据（以平台规则为准）
-              </span>
-              <el-button text class="profile-form-link profile-form-link--danger" @click="onDeactivateAccount">
-                注销账户
-              </el-button>
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <EmailBindDialog v-model="bindEmailVisible" />
-    <PhoneBindDialog v-model="bindPhoneVisible" />
-    <ChangePasswordDialog v-model="changePasswordVisible" />
-    <EmailUnbindDialog
-      v-model="unbindEmailVisible"
-      :current-email="String(user?.email ?? '').trim()"
-      @success="onUnbindEmailSuccess"
-    />
-    <PhoneUnbindDialog
-      v-model="unbindPhoneVisible"
-      :current-phone="String(user?.phone ?? '').trim()"
-      @success="onUnbindPhoneSuccess"
-    />
-    <AccountDeactivateDialog
-      v-model="deactivateVisible"
-      :user="user"
-      :router="$router"
-    />
-  </div>
-</template>
 
 <style scoped>
 .profile-security-panel {

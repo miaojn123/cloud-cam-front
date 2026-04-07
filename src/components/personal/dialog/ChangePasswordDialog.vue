@@ -1,80 +1,3 @@
-<script lang="ts">
-import type { FormInstance, FormRules } from 'element-plus'
-import { updateCurrentUserPasswordApi } from '@/api/user'
-import { buildChangePasswordFormRules, type ChangePasswordFormModel } from '@/utils/validators'
-
-export default {
-  name: 'ChangePasswordDialog',
-  props: {
-    modelValue: { type: Boolean, required: true },
-  },
-  emits: ['update:modelValue'],
-  data() {
-    return {
-      form: {
-        oldPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      } as ChangePasswordFormModel,
-      rules: {} as FormRules<ChangePasswordFormModel>,
-      submitting: false,
-    }
-  },
-  created() {
-    this.rules = buildChangePasswordFormRules(() => this.form)
-  },
-  watch: {
-    modelValue(v: boolean) {
-      if (v) this.resetForm()
-    },
-    'form.newPassword'() {
-      if (this.form.confirmPassword) {
-        this.$nextTick(() => {
-          ;(this.$refs.passwordForm as FormInstance | undefined)?.validateField('confirmPassword')
-        })
-      }
-    },
-  },
-  methods: {
-    resetForm() {
-      this.form.oldPassword = ''
-      this.form.newPassword = ''
-      this.form.confirmPassword = ''
-      this.submitting = false
-      this.$nextTick(() => {
-        ;(this.$refs.passwordForm as FormInstance | undefined)?.resetFields()
-      })
-    },
-    close() {
-      this.$emit('update:modelValue', false)
-    },
-    async onConfirm() {
-      const f = this.$refs.passwordForm as FormInstance | undefined
-      if (!f) return
-      try {
-        await f.validate()
-      } catch {
-        return
-      }
-      const oldP = this.form.oldPassword
-      const newP = String(this.form.newPassword ?? '').trim()
-      if (this.submitting) return
-      this.submitting = true
-      try {
-        const result = await updateCurrentUserPasswordApi(oldP, newP)
-        const msg = typeof result?.msg === 'string' ? result.msg : ''
-        ElMessage.success(msg || '密码重置成功')
-        this.close()
-      } catch {
-        // 拦截器已提示
-      } finally {
-        this.submitting = false
-      }
-    },
-  },
-}
-</script>
-
 <template>
   <el-dialog
     class="profile-security-dialog change-password-dialog"
@@ -139,6 +62,83 @@ export default {
     </template>
   </el-dialog>
 </template>
+
+<script lang="ts">
+import type { FormInstance, FormRules } from 'element-plus'
+import { updateCurrentUserPasswordApi } from '@/api/user'
+import { buildChangePasswordFormRules, type ChangePasswordFormModel } from '@/utils/validators'
+
+export default {
+  name: 'ChangePasswordDialog',
+  props: {
+    modelValue: { type: Boolean, required: true },
+  },
+  emits: ['update:modelValue'],
+  data() {
+    return {
+      form: {
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      } as ChangePasswordFormModel,
+      rules: {} as FormRules<ChangePasswordFormModel>,
+      submitting: false,
+    }
+  },
+  watch: {
+    modelValue(v: boolean) {
+      if (v) this.resetForm()
+    },
+    'form.newPassword'() {
+      if (this.form.confirmPassword) {
+        this.$nextTick(() => {
+          ;(this.$refs.passwordForm as FormInstance | undefined)?.validateField('confirmPassword')
+        })
+      }
+    },
+  },
+  created() {
+    this.rules = buildChangePasswordFormRules(() => this.form)
+  },
+  methods: {
+    resetForm() {
+      this.form.oldPassword = ''
+      this.form.newPassword = ''
+      this.form.confirmPassword = ''
+      this.submitting = false
+      this.$nextTick(() => {
+        ;(this.$refs.passwordForm as FormInstance | undefined)?.resetFields()
+      })
+    },
+    close() {
+      this.$emit('update:modelValue', false)
+    },
+    async onConfirm() {
+      const f = this.$refs.passwordForm as FormInstance | undefined
+      if (!f) return
+      try {
+        await f.validate()
+      } catch {
+        return
+      }
+      const oldP = this.form.oldPassword
+      const newP = String(this.form.newPassword ?? '').trim()
+      if (this.submitting) return
+      this.submitting = true
+      try {
+        const result = await updateCurrentUserPasswordApi(oldP, newP)
+        const msg = typeof result?.msg === 'string' ? result.msg : ''
+        ElMessage.success(msg || '密码重置成功')
+        this.close()
+      } catch {
+        // 拦截器已提示
+      } finally {
+        this.submitting = false
+      }
+    },
+  },
+}
+</script>
 
 <style src="./security-dialog.css"></style>
 

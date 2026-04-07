@@ -1,8 +1,58 @@
+<template>
+  <div class="personal-profile-page" v-loading="loading">
+    <PersonalProfileNav :user="getUserSummary()" @command="handleNavCommand" />
+
+    <div class="personal-profile-page__shell">
+      <nav class="personal-profile-page__aside" aria-label="个人设置子导航">
+        <ul class="personal-profile-page__menu" role="list">
+          <li role="none">
+            <router-link
+              to="/profile-personal"
+              class="personal-profile-page__menu-item"
+              active-class="is-active"
+            >
+              <el-icon class="personal-profile-page__menu-icon" :size="18">
+                <EpUser />
+              </el-icon>
+              <span>个人信息</span>
+            </router-link>
+          </li>
+          <li role="none">
+            <router-link
+              to="/profile-security"
+              class="personal-profile-page__menu-item"
+              active-class="is-active"
+            >
+              <el-icon class="personal-profile-page__menu-icon" :size="18">
+                <EpLock />
+              </el-icon>
+              <span>账户安全</span>
+            </router-link>
+          </li>
+        </ul>
+      </nav>
+
+      <main class="personal-profile-page__main" aria-label="设置详情内容">
+        <ProfileSecurityPanel v-if="isSecurityPanel" />
+        <ProfilePersonalPanel v-else />
+      </main>
+    </div>
+
+    <AvatarCropDialog
+      v-model="cropDialogVisible"
+      :file="pendingCropFile"
+      @confirm="onAvatarCropConfirm"
+    />
+  </div>
+</template>
+
 <script lang="ts">
 import type { UploadFile } from 'element-plus'
 import { buildDefaultAvatarSvgDataUrl, getNicknameInitialLetter } from '@/utils/defaultAvatar'
-import PersonalProfileNav from '@/components/nav/PersonalProfileNav.vue'
+import PersonalProfileNav from '@/components/personal/PersonalProfileNav.vue'
 import AvatarCropDialog from '@/components/personal/dialog/AvatarCropDialog.vue'
+import ProfilePersonalPanel from '@/components/personal/ProfilePersonalPanel.vue'
+import ProfileSecurityPanel from '@/components/personal/ProfileSecurityPanel.vue'
 import type { UserSummary } from '@/types/user'
 import { uploadCurrentUserAvatarApi } from '@/api/user'
 
@@ -13,7 +63,7 @@ type AvatarCropConfirmPayload = {
 
 export default {
   name: 'PersonalProfileLayout',
-  components: { PersonalProfileNav, AvatarCropDialog },
+  components: { PersonalProfileNav, AvatarCropDialog, ProfilePersonalPanel, ProfileSecurityPanel },
   provide() {
     return {
       profileLayout: this,
@@ -30,6 +80,9 @@ export default {
   computed: {
     user() {
       return this.$userStore.user
+    },
+    isSecurityPanel(): boolean {
+      return this.$route.name === 'personal-profile-security'
     },
     profileDisplayName(): string {
       const u = this.user
@@ -95,7 +148,7 @@ export default {
     },
     handleNavCommand(cmd: string) {
       if (cmd === 'userInfo') {
-        return this.$router.push('/personalProfile/personal')
+        return this.$router.push('/profile-personal')
       }
       if (cmd === 'logout') return this.handleLogout()
       ElMessage.info('功能开发中')
@@ -128,7 +181,7 @@ export default {
           await this.$userStore.fetchCurrentUser()
         }
         this.$userStore.updateAvatar(avatar)
-        // 真实头像已更新：清理预览态，避免“预览图”与 OSS 真实图不一致
+        // 真实头像已更新：清理预览态，避免"预览图"与 OSS 真实图不一致
         this.avatarPreviewDataUrl = null
         ElMessage.success('头像上传成功')
       } catch {
@@ -142,53 +195,6 @@ export default {
   },
 }
 </script>
-
-<template>
-  <div class="personal-profile-page" v-loading="loading">
-    <PersonalProfileNav :user="getUserSummary()" @command="handleNavCommand" />
-
-    <div class="personal-profile-page__shell">
-      <nav class="personal-profile-page__aside" aria-label="个人设置子导航">
-        <ul class="personal-profile-page__menu" role="list">
-          <li role="none">
-            <router-link
-              to="/personalProfile/personal"
-              class="personal-profile-page__menu-item"
-              active-class="is-active"
-            >
-              <el-icon class="personal-profile-page__menu-icon" :size="18">
-                <EpUser />
-              </el-icon>
-              <span>个人信息</span>
-            </router-link>
-          </li>
-          <li role="none">
-            <router-link
-              to="/personalProfile/security"
-              class="personal-profile-page__menu-item"
-              active-class="is-active"
-            >
-              <el-icon class="personal-profile-page__menu-icon" :size="18">
-                <EpLock />
-              </el-icon>
-              <span>账户安全</span>
-            </router-link>
-          </li>
-        </ul>
-      </nav>
-
-      <main class="personal-profile-page__main" aria-label="设置详情内容">
-        <router-view />
-      </main>
-    </div>
-
-    <AvatarCropDialog
-      v-model="cropDialogVisible"
-      :file="pendingCropFile"
-      @confirm="onAvatarCropConfirm"
-    />
-  </div>
-</template>
 
 <style scoped>
 .personal-profile-page {

@@ -4,8 +4,6 @@ import RegisterPage from '@/components/auth/RegisterPage.vue'
 import ResetPassword from '@/components/auth/ResetPassword.vue'
 import FilePage from '@/components/files/FilePage.vue'
 import PersonalProfileLayout from '@/components/personal/PersonalProfileLayout.vue'
-import ProfilePersonalPanel from '@/components/personal/ProfilePersonalPanel.vue'
-import ProfileSecurityPanel from '@/components/personal/ProfileSecurityPanel.vue'
 import { TOKEN_KEY } from '@/api'
 import { useUserStore } from '@/stores'
 import {
@@ -24,26 +22,16 @@ export const router = createRouter({
     { path: '/reset-password', name: 'reset-password', component: ResetPassword },
     { path: '/files', name: 'files', component: FilePage, meta: { requiresAuth: true } },
     {
-      path: '/personalProfile',
+      path: '/profile-personal',
+      name: 'personal-profile-personal',
       component: PersonalProfileLayout,
       meta: { requiresAuth: true },
-      redirect: { name: 'personal-profile-personal' },
-      children: [
-        {
-          path: 'personal',
-          name: 'personal-profile-personal',
-          component: ProfilePersonalPanel,
-        },
-        {
-          path: 'security',
-          name: 'personal-profile-security',
-          component: ProfileSecurityPanel,
-        },
-        {
-          path: 'settings',
-          redirect: { name: 'personal-profile-personal' },
-        },
-      ],
+    },
+    {
+      path: '/profile-security',
+      name: 'personal-profile-security',
+      component: PersonalProfileLayout,
+      meta: { requiresAuth: true },
     },
   ]
 })

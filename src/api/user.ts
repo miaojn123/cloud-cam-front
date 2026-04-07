@@ -1,26 +1,27 @@
 import { request } from './request'
 import type { AxiosRequestConfig } from 'axios'
+import type { CurrentUser } from '@/types/user'
 
 type UserRequestConfig = AxiosRequestConfig & {
   _skipAuthRedirect?: boolean
 }
 
-export interface CurrentUser {
-  uuid: string
-  userName: string
-  nickName: string
-  email: string | null
-  phone: string | null
-  sex: number
-  avatar: string
-  organization?: string | null
-  industry?: string | null
-  role: number
-  status: number
-  lastLoginAt: string | null
-  lastLoginIp: string | null
-  createdAt: string
+const USER_CURRENT_BASE = '/api/user/current'
+
+function postUserApi<TResponse = unknown, TPayload = unknown>(
+  path: string,
+  payload?: TPayload,
+  config?: UserRequestConfig
+) {
+  return request<TResponse>({
+    url: `${USER_CURRENT_BASE}${path}`,
+    method: 'post',
+    ...(payload === undefined ? {} : { data: payload }),
+    ...config
+  })
 }
+
+export type { CurrentUser }
 
 export interface CurrentUserResponse {
   user: CurrentUser
@@ -31,22 +32,14 @@ export type UploadAvatarResponse = {
 }
 
 export function getCurrentUserApi(config?: UserRequestConfig) {
-  return request<CurrentUserResponse>({
-    url: '/api/user/current',
-    method: 'post',
-    ...config
-  })
+  return postUserApi<CurrentUserResponse>('', undefined, config)
 }
 
 export function uploadCurrentUserAvatarApi(file: File) {
   const form = new FormData()
   // 后端约定字段名为 file（multipart/form-data）
   form.append('file', file)
-  return request<UploadAvatarResponse>({
-    url: '/api/user/current/avatar',
-    method: 'post',
-    data: form
-  })
+  return postUserApi<UploadAvatarResponse, FormData>('/avatar', form)
 }
 
 export type UpdateOrganizationRequest = {
@@ -55,11 +48,7 @@ export type UpdateOrganizationRequest = {
 
 export function updateCurrentUserOrganizationApi(organization: string) {
   const payload: UpdateOrganizationRequest = { organization }
-  return request<unknown>({
-    url: '/api/user/current/organization',
-    method: 'post',
-    data: payload
-  })
+  return postUserApi('/organization', payload)
 }
 
 export type UpdateIndustryRequest = {
@@ -68,11 +57,7 @@ export type UpdateIndustryRequest = {
 
 export function updateCurrentUserIndustryApi(industry: string) {
   const payload: UpdateIndustryRequest = { industry }
-  return request<unknown>({
-    url: '/api/user/current/industry',
-    method: 'post',
-    data: payload
-  })
+  return postUserApi('/industry', payload)
 }
 
 export type UpdateNickNameRequest = {
@@ -81,11 +66,7 @@ export type UpdateNickNameRequest = {
 
 export function updateCurrentUserNickNameApi(nickName: string) {
   const payload: UpdateNickNameRequest = { nickName }
-  return request<unknown>({
-    url: '/api/user/current/nickname',
-    method: 'post',
-    data: payload
-  })
+  return postUserApi('/nickname', payload)
 }
 
 export type UpdateUserNameRequest = {
@@ -94,11 +75,7 @@ export type UpdateUserNameRequest = {
 
 export function updateCurrentUserUserNameApi(username: string) {
   const payload: UpdateUserNameRequest = { username }
-  return request<unknown>({
-    url: '/api/user/current/username',
-    method: 'post',
-    data: payload
-  })
+  return postUserApi('/username', payload)
 }
 
 export type BindCurrentUserEmailRequest = {
@@ -108,11 +85,7 @@ export type BindCurrentUserEmailRequest = {
 
 export function bindCurrentUserEmailApi(email: string, code: string) {
   const payload: BindCurrentUserEmailRequest = { email, code }
-  return request<unknown>({
-    url: '/api/user/current/email/bind',
-    method: 'post',
-    data: payload
-  })
+  return postUserApi('/email/bind', payload)
 }
 
 export type UnbindCurrentUserEmailRequest = {
@@ -121,11 +94,7 @@ export type UnbindCurrentUserEmailRequest = {
 
 export function unbindCurrentUserEmailApi(code: string) {
   const payload: UnbindCurrentUserEmailRequest = { code }
-  return request<unknown>({
-    url: '/api/user/current/email/unbind',
-    method: 'post',
-    data: payload
-  })
+  return postUserApi('/email/unbind', payload)
 }
 
 export type BindCurrentUserPhoneRequest = {
@@ -135,11 +104,7 @@ export type BindCurrentUserPhoneRequest = {
 
 export function bindCurrentUserPhoneApi(phone: string, code: string) {
   const payload: BindCurrentUserPhoneRequest = { phone, code }
-  return request<unknown>({
-    url: '/api/user/current/phone/bind',
-    method: 'post',
-    data: payload
-  })
+  return postUserApi('/phone/bind', payload)
 }
 
 export type UnbindCurrentUserPhoneRequest = {
@@ -148,11 +113,7 @@ export type UnbindCurrentUserPhoneRequest = {
 
 export function unbindCurrentUserPhoneApi(code: string) {
   const payload: UnbindCurrentUserPhoneRequest = { code }
-  return request<unknown>({
-    url: '/api/user/current/phone/unbind',
-    method: 'post',
-    data: payload
-  })
+  return postUserApi('/phone/unbind', payload)
 }
 
 export type UpdateCurrentUserPasswordRequest = {
@@ -163,11 +124,7 @@ export type UpdateCurrentUserPasswordRequest = {
 /** 已登录：凭原密码修改登录密码 */
 export function updateCurrentUserPasswordApi(oldPassword: string, newPassword: string) {
   const payload: UpdateCurrentUserPasswordRequest = { oldPassword, newPassword }
-  return request<unknown>({
-    url: '/api/user/current/password',
-    method: 'post',
-    data: payload
-  })
+  return postUserApi('/password', payload)
 }
 
 export type CancelCurrentAccountByPasswordRequest = {
@@ -176,11 +133,7 @@ export type CancelCurrentAccountByPasswordRequest = {
 
 export function cancelCurrentAccountByPasswordApi(password: string) {
   const payload: CancelCurrentAccountByPasswordRequest = { password }
-  return request<unknown>({
-    url: '/api/user/current/cancel/password',
-    method: 'post',
-    data: payload
-  })
+  return postUserApi('/cancel/password', payload)
 }
 
 export type CancelCurrentAccountByCodeRequest = {
@@ -190,9 +143,5 @@ export type CancelCurrentAccountByCodeRequest = {
 
 export function cancelCurrentAccountByCodeApi(account: string, code: string) {
   const payload: CancelCurrentAccountByCodeRequest = { account, code }
-  return request<unknown>({
-    url: '/api/user/current/cancel/code',
-    method: 'post',
-    data: payload
-  })
+  return postUserApi('/cancel/code', payload)
 }

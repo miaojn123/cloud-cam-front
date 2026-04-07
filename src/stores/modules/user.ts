@@ -9,7 +9,8 @@ import {
   resetPasswordApi,
   sendCodeApi
 } from '@/api/auth'
-import { getCurrentUserApi, type CurrentUser } from '@/api/user'
+import { getCurrentUserApi } from '@/api/user'
+import type { CurrentUser } from '@/types/user'
 
 // 用户信息仅存内存，不再缓存到 localStorage。
 // 启动恢复时若有 token，直接从后端拉最新用户数据，确保头像等字段始终最新。

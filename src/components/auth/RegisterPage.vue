@@ -1,3 +1,164 @@
+<template>
+  <div
+    class="signup-container"
+    :class="{
+      'signup-container--web-bg': !isDesktopEmbedMode
+    }"
+  >
+    <div
+      class="signup-main"
+      :class="{ 'signup-main--web-frame': !isDesktopEmbedMode }"
+    >
+      <!-- Signup Form -->
+      <div class="signup-content">
+        <!-- 图标与标题同一行居中 -->
+        <div class="page-heading">
+          <a href="#" class="app-logo">
+            <img src="/qjcam-logo.png" alt="QJCAM" class="app-logo-img" />
+          </a>
+          <h1 class="title">创建账户</h1>
+        </div>
+
+        <div class="auth-form-card">
+          <el-form
+            ref="formRef"
+            :model="form"
+            :rules="rules"
+            :validate-on-rule-change="false"
+            @submit.prevent="submitRegister"
+            class="signup-form"
+          >
+            <!-- 邮箱注册 -->
+            <template v-if="!isUsernamePasswordMode">
+              <el-form-item prop="email">
+                <template #label>
+                  <div class="label-row">
+                    <label class="custom-label">邮箱地址</label>
+                    <div class="label-links">
+                      <el-link
+                        type="primary"
+                        underline="never"
+                        class="mode-switch-link"
+                        @click="switchToUsernamePasswordMode"
+                      >
+                        用户名密码注册
+                      </el-link>
+                    </div>
+                  </div>
+                </template>
+                <el-input
+                  v-model="form.email"
+                  type="email"
+                  placeholder="请输入邮箱"
+                  autocomplete="email"
+                />
+              </el-form-item>
+
+              <el-form-item prop="emailCode">
+                <template #label>
+                  <label class="custom-label">邮箱验证码</label>
+                </template>
+                <VerifyCodeBox
+                  account-label="邮箱"
+                  :account="form.email"
+                  :show-account="false"
+                  :show-code-label="false"
+                  :code="form.emailCode"
+                  code-placeholder="请输入验证码"
+                  :countdown="emailCountdown"
+                  send-text="获取验证码"
+                  :help-link="null"
+                  @update:code="form.emailCode = $event"
+                  @send-code="sendEmailCode"
+                />
+              </el-form-item>
+
+              <el-form-item prop="username">
+                <template #label>
+                  <label class="custom-label">用户名（可选）</label>
+                </template>
+                <el-input
+                  v-model="form.username"
+                  type="text"
+                  placeholder="未填时将使用默认用户名"
+                  autocomplete="username"
+                />
+              </el-form-item>
+            </template>
+
+            <!-- 用户名密码注册：POST /api/auth/register/username -->
+            <el-form-item v-else prop="username">
+              <template #label>
+                <div class="label-row">
+                  <label class="custom-label">用户名</label>
+                  <div class="label-links">
+                    <el-link
+                      type="primary"
+                      underline="never"
+                      class="mode-switch-link"
+                      @click="switchToEmailCodeMode"
+                    >
+                      邮箱验证码注册
+                    </el-link>
+                  </div>
+                </div>
+              </template>
+              <el-input
+                v-model="form.username"
+                type="text"
+                placeholder="6-20 位，英文开头"
+                autocomplete="username"
+              />
+            </el-form-item>
+
+            <!-- Password -->
+            <el-form-item prop="password">
+              <template #label>
+                <label class="custom-label">输入密码</label>
+              </template>
+              <el-input
+                v-model="form.password"
+                type="password"
+                placeholder="8-20位，至少包含字母和数字"
+                autocomplete="new-password"
+                show-password
+              />
+            </el-form-item>
+
+            <!-- 同意条款（必选，勾选后才可点击创建账户） -->
+            <el-form-item>
+              <el-checkbox v-model="form.agreeTerms" class="custom-checkbox">
+                <span class="checkbox-text">
+                  创建账户即表示您同意我们的
+                  <el-link type="primary" underline="never" href="#" @click.prevent>服务条款</el-link>
+                  和
+                  <el-link type="primary" underline="never" href="#" @click.prevent>隐私政策</el-link>。
+                </span>
+              </el-checkbox>
+            </el-form-item>
+
+            <el-form-item>
+              <el-button
+                type="primary"
+                native-type="submit"
+                class="create-account-btn"
+                :disabled="!form.agreeTerms"
+              >
+                创建账户
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+
+        <!-- Sign In Link -->
+        <div class="signin-link">
+          已有账户？ <el-link type="primary" underline="never" @click="goToLogin">前往登录</el-link>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script lang="ts">
 import { isDesktopEmbed } from '@/utils/desktopBridge'
 import { pushWithDesktopQuery } from '@/utils/desktopNav'
@@ -189,167 +350,6 @@ export default {
   }
 }
 </script>
-
-<template>
-  <div
-    class="signup-container"
-    :class="{
-      'signup-container--web-bg': !isDesktopEmbedMode
-    }"
-  >
-    <div
-      class="signup-main"
-      :class="{ 'signup-main--web-frame': !isDesktopEmbedMode }"
-    >
-      <!-- Signup Form -->
-      <div class="signup-content">
-        <!-- 图标与标题同一行居中 -->
-        <div class="page-heading">
-          <a href="#" class="app-logo">
-            <img src="/qjcam-logo.png" alt="QJCAM" class="app-logo-img" />
-          </a>
-          <h1 class="title">创建账户</h1>
-        </div>
-
-        <div class="auth-form-card">
-          <el-form
-            ref="formRef"
-            :model="form"
-            :rules="rules"
-            :validate-on-rule-change="false"
-            @submit.prevent="submitRegister"
-            class="signup-form"
-          >
-            <!-- 邮箱注册 -->
-            <template v-if="!isUsernamePasswordMode">
-              <el-form-item prop="email">
-                <template #label>
-                  <div class="label-row">
-                    <label class="custom-label">邮箱地址</label>
-                    <div class="label-links">
-                      <el-link
-                        type="primary"
-                        underline="never"
-                        class="mode-switch-link"
-                        @click="switchToUsernamePasswordMode"
-                      >
-                        用户名密码注册
-                      </el-link>
-                    </div>
-                  </div>
-                </template>
-                <el-input
-                  v-model="form.email"
-                  type="email"
-                  placeholder="请输入邮箱"
-                  autocomplete="email"
-                />
-              </el-form-item>
-
-              <el-form-item prop="emailCode">
-                <template #label>
-                  <label class="custom-label">邮箱验证码</label>
-                </template>
-                <VerifyCodeBox
-                  account-label="邮箱"
-                  :account="form.email"
-                  :show-account="false"
-                  :show-code-label="false"
-                  :code="form.emailCode"
-                  code-placeholder="请输入验证码"
-                  :countdown="emailCountdown"
-                  send-text="获取验证码"
-                  :help-link="null"
-                  @update:code="form.emailCode = $event"
-                  @send-code="sendEmailCode"
-                />
-              </el-form-item>
-
-              <el-form-item prop="username">
-                <template #label>
-                  <label class="custom-label">用户名（可选）</label>
-                </template>
-                <el-input
-                  v-model="form.username"
-                  type="text"
-                  placeholder="未填时将使用默认用户名"
-                  autocomplete="username"
-                />
-              </el-form-item>
-            </template>
-
-            <!-- 用户名密码注册：POST /api/auth/register/username -->
-            <el-form-item v-else prop="username">
-              <template #label>
-                <div class="label-row">
-                  <label class="custom-label">用户名</label>
-                  <div class="label-links">
-                    <el-link
-                      type="primary"
-                      underline="never"
-                      class="mode-switch-link"
-                      @click="switchToEmailCodeMode"
-                    >
-                      邮箱验证码注册
-                    </el-link>
-                  </div>
-                </div>
-              </template>
-              <el-input
-                v-model="form.username"
-                type="text"
-                placeholder="6-20 位，英文开头"
-                autocomplete="username"
-              />
-            </el-form-item>
-
-            <!-- Password -->
-            <el-form-item prop="password">
-              <template #label>
-                <label class="custom-label">输入密码</label>
-              </template>
-              <el-input
-                v-model="form.password"
-                type="password"
-                placeholder="8-20位，至少包含字母和数字"
-                autocomplete="new-password"
-                show-password
-              />
-            </el-form-item>
-
-            <!-- 同意条款（必选，勾选后才可点击创建账户） -->
-            <el-form-item>
-              <el-checkbox v-model="form.agreeTerms" class="custom-checkbox">
-                <span class="checkbox-text">
-                  创建账户即表示您同意我们的
-                  <el-link type="primary" underline="never" href="#" @click.prevent>服务条款</el-link>
-                  和
-                  <el-link type="primary" underline="never" href="#" @click.prevent>隐私政策</el-link>。
-                </span>
-              </el-checkbox>
-            </el-form-item>
-
-            <el-form-item>
-              <el-button
-                type="primary"
-                native-type="submit"
-                class="create-account-btn"
-                :disabled="!form.agreeTerms"
-              >
-                创建账户
-              </el-button>
-            </el-form-item>
-          </el-form>
-        </div>
-
-        <!-- Sign In Link -->
-        <div class="signin-link">
-          已有账户？ <el-link type="primary" underline="never" @click="goToLogin">前往登录</el-link>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
 
 <style scoped>
 .signup-container {

@@ -1,3 +1,122 @@
+<template>
+  <div class="profile-personal-panel">
+    <div class="personal-profile-page__card personal-profile-page__card--personal">
+      <section class="profile-identity-row" aria-label="用户基本信息">
+        <el-upload
+          ref="avatarUploadRef"
+          class="profile-avatar-upload"
+          :show-file-list="false"
+          :auto-upload="false"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          :on-change="handleAvatarFileChange"
+        >
+          <template #default>
+            <span class="profile-avatar-btn" aria-label="更换头像">
+              <span class="profile-avatar-circle">
+                <img
+                  :src="layout.displayAvatarSrc"
+                  alt=""
+                  class="profile-avatar-img"
+                />
+                <span class="profile-avatar-mask">
+                  <span class="profile-avatar-hint">更换头像</span>
+                </span>
+              </span>
+            </span>
+          </template>
+        </el-upload>
+        <div class="profile-identity-text">
+          <div class="profile-display-name">{{ layout.profileDisplayName }}</div>
+          <div class="profile-email-row">
+            <el-icon class="profile-email-icon" :size="16">
+              <EpPostcard />
+            </el-icon>
+            <span class="profile-email-text">{{ profileEmailDisplay }}</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="profile-card-body">
+        <el-form
+          ref="profileFormRef"
+          class="profile-form"
+          aria-labelledby="profile-form-heading"
+          :model="profileForm"
+          :rules="profileRules"
+          @submit.prevent
+        >
+          <div class="profile-form-head">
+            <h2 id="profile-form-heading" class="profile-form-heading">详细信息</h2>
+            <div class="profile-form-head-rule" role="presentation" />
+          </div>
+          <el-form-item class="profile-form-field" prop="userName">
+            <label class="profile-form-label" for="profile-user-name">用户名</label>
+            <el-input
+              id="profile-user-name"
+              v-model.trim="profileForm.userName"
+              class="profile-form-control"
+              autocomplete="username"
+              maxlength="20"
+              show-word-limit
+              :disabled="saving.userName"
+              @blur="onUserNameBlur"
+            />
+          </el-form-item>
+          <el-form-item class="profile-form-field" prop="nickName">
+            <label class="profile-form-label" for="profile-nick-name">昵称</label>
+            <el-input
+              id="profile-nick-name"
+              v-model.trim="profileForm.nickName"
+              class="profile-form-control"
+              autocomplete="nickname"
+              maxlength="20"
+              show-word-limit
+              :disabled="saving.nickName"
+              @blur="onNickNameBlur"
+            />
+          </el-form-item>
+          <el-form-item class="profile-form-field" prop="companyOrSchool">
+            <label class="profile-form-label" for="profile-company-school">所属公司/机构/学校</label>
+            <el-input
+              id="profile-company-school"
+              v-model.trim="profileForm.companyOrSchool"
+              class="profile-form-control"
+              autocomplete="organization"
+              maxlength="50"
+              show-word-limit
+              :disabled="saving.organization"
+              @blur="onOrganizationBlur"
+            />
+          </el-form-item>
+          <el-form-item class="profile-form-field" prop="industry">
+            <label class="profile-form-label" for="profile-industry">所属行业</label>
+            <el-input
+              id="profile-industry"
+              v-model.trim="profileForm.industry"
+              class="profile-form-control"
+              maxlength="50"
+              show-word-limit
+              :disabled="saving.industry"
+              @blur="onIndustryBlur"
+            />
+          </el-form-item>
+          <div class="profile-form-field">
+            <div class="profile-storage-title">存储空间</div>
+            <div class="profile-storage-title-rule" role="presentation" />
+            <div class="profile-storage-row" role="group" aria-label="存储空间使用情况">
+              <div class="profile-storage-bar" aria-hidden="true">
+                <div class="profile-storage-bar__fill" />
+              </div>
+              <div class="profile-storage-percent">15.71%</div>
+              <div class="profile-storage-usage">1.57G / 10G</div>
+            </div>
+          </div>
+        </el-form>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script lang="ts">
 import type { FormInstance, FormRules, UploadFile, UploadInstance } from 'element-plus'
 import {
@@ -18,22 +137,6 @@ type ProfileLayoutInject = {
 export default {
   name: 'ProfilePersonalPanel',
   inject: ['profileLayout'],
-  computed: {
-    layout(): ProfileLayoutInject {
-      return this.profileLayout as ProfileLayoutInject
-    },
-    user() {
-      return this.$userStore.user
-    },
-    profileEmailDisplay(): string {
-      const e = this.user?.email
-      return e && String(e).trim() ? String(e).trim() : '未绑定邮箱'
-    },
-    profilePhoneDisplay(): string {
-      const p = this.user?.phone
-      return p && String(p).trim() ? String(p).trim() : '未绑定手机'
-    },
-  },
   data() {
     const rules: FormRules = {
       userName: userNameFormRules,
@@ -67,6 +170,22 @@ export default {
       profileRules: rules,
     }
   },
+  computed: {
+    layout(): ProfileLayoutInject {
+      return this.profileLayout as ProfileLayoutInject
+    },
+    user() {
+      return this.$userStore.user
+    },
+    profileEmailDisplay(): string {
+      const e = this.user?.email
+      return e && String(e).trim() ? String(e).trim() : '未绑定邮箱'
+    },
+    profilePhoneDisplay(): string {
+      const p = this.user?.phone
+      return p && String(p).trim() ? String(p).trim() : '未绑定手机'
+    },
+  },
   watch: {
     user: {
       immediate: true,
@@ -80,7 +199,7 @@ export default {
         const ind = String(u.industry ?? '').trim()
         this.profileForm.companyOrSchool = org
         this.profileForm.industry = ind
-        // 刷新/重进页面时用后端已保存值作为“脏检查”基准，避免默认值不显示或误发请求
+        // 刷新/重进页面时用后端已保存值作为"脏检查"基准，避免默认值不显示或误发请求
         this.lastSaved.userName = this.profileForm.userName
         this.lastSaved.nickName = this.profileForm.nickName
         this.lastSaved.organization = org
@@ -203,133 +322,14 @@ export default {
       }
     },
     goBindPhone() {
-      this.$router.push({ path: '/personalProfile/security', query: { bind: 'phone' } })
+      this.$router.push({ path: '/profile-security', query: { bind: 'phone' } })
     },
     goBindEmail() {
-      this.$router.push({ path: '/personalProfile/security', query: { bind: 'email' } })
+      this.$router.push({ path: '/profile-security', query: { bind: 'email' } })
     },
   },
 }
 </script>
-
-<template>
-  <div class="profile-personal-panel">
-    <div class="personal-profile-page__card personal-profile-page__card--personal">
-      <section class="profile-identity-row" aria-label="用户基本信息">
-        <el-upload
-          ref="avatarUploadRef"
-          class="profile-avatar-upload"
-          :show-file-list="false"
-          :auto-upload="false"
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          :on-change="handleAvatarFileChange"
-        >
-          <template #default>
-            <span class="profile-avatar-btn" aria-label="更换头像">
-              <span class="profile-avatar-circle">
-                <img
-                  :src="layout.displayAvatarSrc"
-                  alt=""
-                  class="profile-avatar-img"
-                />
-                <span class="profile-avatar-mask">
-                  <span class="profile-avatar-hint">更换头像</span>
-                </span>
-              </span>
-            </span>
-          </template>
-        </el-upload>
-        <div class="profile-identity-text">
-          <div class="profile-display-name">{{ layout.profileDisplayName }}</div>
-          <div class="profile-email-row">
-            <el-icon class="profile-email-icon" :size="16">
-              <EpPostcard />
-            </el-icon>
-            <span class="profile-email-text">{{ profileEmailDisplay }}</span>
-          </div>
-        </div>
-      </section>
-
-      <div class="profile-card-body">
-        <el-form
-          ref="profileFormRef"
-          class="profile-form"
-          aria-labelledby="profile-form-heading"
-          :model="profileForm"
-          :rules="profileRules"
-          @submit.prevent
-        >
-          <div class="profile-form-head">
-            <h2 id="profile-form-heading" class="profile-form-heading">详细信息</h2>
-            <div class="profile-form-head-rule" role="presentation" />
-          </div>
-          <el-form-item class="profile-form-field" prop="userName">
-            <label class="profile-form-label" for="profile-user-name">用户名</label>
-            <el-input
-              id="profile-user-name"
-              v-model.trim="profileForm.userName"
-              class="profile-form-control"
-              autocomplete="username"
-              maxlength="20"
-              show-word-limit
-              :disabled="saving.userName"
-              @blur="onUserNameBlur"
-            />
-          </el-form-item>
-          <el-form-item class="profile-form-field" prop="nickName">
-            <label class="profile-form-label" for="profile-nick-name">昵称</label>
-            <el-input
-              id="profile-nick-name"
-              v-model.trim="profileForm.nickName"
-              class="profile-form-control"
-              autocomplete="nickname"
-              maxlength="20"
-              show-word-limit
-              :disabled="saving.nickName"
-              @blur="onNickNameBlur"
-            />
-          </el-form-item>
-          <el-form-item class="profile-form-field" prop="companyOrSchool">
-            <label class="profile-form-label" for="profile-company-school">所属公司/机构/学校</label>
-            <el-input
-              id="profile-company-school"
-              v-model.trim="profileForm.companyOrSchool"
-              class="profile-form-control"
-              autocomplete="organization"
-              maxlength="50"
-              show-word-limit
-              :disabled="saving.organization"
-              @blur="onOrganizationBlur"
-            />
-          </el-form-item>
-          <el-form-item class="profile-form-field" prop="industry">
-            <label class="profile-form-label" for="profile-industry">所属行业</label>
-            <el-input
-              id="profile-industry"
-              v-model.trim="profileForm.industry"
-              class="profile-form-control"
-              maxlength="50"
-              show-word-limit
-              :disabled="saving.industry"
-              @blur="onIndustryBlur"
-            />
-          </el-form-item>
-          <div class="profile-form-field">
-            <div class="profile-storage-title">存储空间</div>
-            <div class="profile-storage-title-rule" role="presentation" />
-            <div class="profile-storage-row" role="group" aria-label="存储空间使用情况">
-              <div class="profile-storage-bar" aria-hidden="true">
-                <div class="profile-storage-bar__fill" />
-              </div>
-              <div class="profile-storage-percent">15.71%</div>
-              <div class="profile-storage-usage">1.57G / 10G</div>
-            </div>
-          </div>
-        </el-form>
-      </div>
-    </div>
-  </div>
-</template>
 
 <style scoped>
 .profile-personal-panel {
@@ -573,7 +573,7 @@ export default {
   box-sizing: border-box;
 }
 
-/* el-input 自带 wrapper，这里只改 wrapper/inner，避免出现“双边框” */
+/* el-input 自带 wrapper，这里只改 wrapper/inner，避免出现"双边框" */
 .profile-form-control :deep(.el-input__wrapper) {
   width: 100%;
   box-sizing: border-box;

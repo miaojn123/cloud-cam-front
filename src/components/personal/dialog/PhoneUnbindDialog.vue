@@ -1,3 +1,40 @@
+<template>
+  <el-dialog
+    class="profile-security-dialog phone-unbind-dialog"
+    :model-value="modelValue"
+    title="解绑手机号"
+    width="480px"
+    append-to-body
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
+    destroy-on-close
+    @update:model-value="$emit('update:modelValue', $event)"
+  >
+    <p class="security-dialog-desc">
+      解绑需验证当前手机号。解绑后可重新绑定其它手机号。
+    </p>
+    <div class="security-dialog-panel">
+      <VerifyCodeBox
+        account-label="当前手机号"
+        :account="displayPhone"
+        account-readonly
+        :code="code"
+        :countdown="countdown"
+        @update:code="code = $event"
+        @send-code="sendUnbindCode"
+      />
+    </div>
+    <template #footer>
+      <el-button @click="close">
+        取消
+      </el-button>
+      <el-button type="primary" :loading="submitting" @click="onConfirm">
+        确定
+      </el-button>
+    </template>
+  </el-dialog>
+</template>
+
 <script lang="ts">
 import VerifyCodeBox from '@/components/common/VerifyCodeBox.vue'
 import { sendCodeApi } from '@/api/auth'
@@ -109,42 +146,5 @@ export default {
   },
 }
 </script>
-
-<template>
-  <el-dialog
-    class="profile-security-dialog phone-unbind-dialog"
-    :model-value="modelValue"
-    title="解绑手机号"
-    width="480px"
-    append-to-body
-    :close-on-click-modal="false"
-    :close-on-press-escape="false"
-    destroy-on-close
-    @update:model-value="$emit('update:modelValue', $event)"
-  >
-    <p class="security-dialog-desc">
-      解绑需验证当前手机号。解绑后可重新绑定其它手机号。
-    </p>
-    <div class="security-dialog-panel">
-      <VerifyCodeBox
-        account-label="当前手机号"
-        :account="displayPhone"
-        account-readonly
-        :code="code"
-        :countdown="countdown"
-        @update:code="code = $event"
-        @send-code="sendUnbindCode"
-      />
-    </div>
-    <template #footer>
-      <el-button @click="close">
-        取消
-      </el-button>
-      <el-button type="primary" :loading="submitting" @click="onConfirm">
-        确定
-      </el-button>
-    </template>
-  </el-dialog>
-</template>
 
 <style src="./security-dialog.css"></style>

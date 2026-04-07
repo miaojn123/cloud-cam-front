@@ -1,10 +1,21 @@
+<template>
+  <nav class="personal-profile-nav" id="personal-profile-nav">
+    <div class="personal-profile-nav__left">
+      <a href="/files" class="router-link-active el-tooltip__trigger">
+        <img :src="logoSrc" alt="QJCAM" />
+      </a>
+    </div>
+    <UserNavMenu :user="user" @command="$emit('command', $event)" />
+  </nav>
+</template>
+
 <script lang="ts">
 import type { PropType } from 'vue'
-import UserNavMenu from '@/components/nav/UserNavMenu.vue'
+import UserNavMenu from './UserNavMenu.vue'
 import type { UserSummary } from '@/types/user'
 
 export default {
-  name: 'FilesNav',
+  name: 'PersonalProfileNav',
   components: { UserNavMenu },
   props: {
     user: {
@@ -17,19 +28,8 @@ export default {
 }
 </script>
 
-<template>
-  <nav class="files-nav" id="files-page-nav">
-    <div class="files-nav__left">
-      <a href="/files" class="router-link-active el-tooltip__trigger">
-        <img :src="logoSrc" alt="QJCAM" />
-      </a>
-    </div>
-    <UserNavMenu :user="user" @command="$emit('command', $event)" />
-  </nav>
-</template>
-
 <style scoped>
-.files-nav {
+.personal-profile-nav {
   height: 40px;
   display: flex;
   align-items: center;
@@ -39,7 +39,7 @@ export default {
   color: #ffffff;
 }
 
-.files-nav__left img {
+.personal-profile-nav__left img {
   height: 56px;
   width: auto;
   cursor: pointer;
