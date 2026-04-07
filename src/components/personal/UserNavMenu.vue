@@ -20,6 +20,7 @@
       <template #dropdown>
         <el-dropdown-menu style="width: 160px">
           <el-dropdown-item command="userInfo">用户信息</el-dropdown-item>
+          <el-dropdown-item command="team">管理团队</el-dropdown-item>
           <el-dropdown-item command="feedback">问题反馈</el-dropdown-item>
           <el-dropdown-item command="help">帮助文档</el-dropdown-item>
           <el-dropdown-item command="logout">退出登录</el-dropdown-item>

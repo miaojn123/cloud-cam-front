@@ -3,9 +3,9 @@ export type ViewMode = 'table' | 'grid'
 export type SidebarKey =
   | 'recent'
   | 'personal'
+  | 'team'
   | 'sharedByMe'
   | 'sharedToMe'
-  | 'historyLinks'
   | 'trash'
 
 export type FileKind = 'folder' | 'file'

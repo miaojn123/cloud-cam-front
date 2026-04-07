@@ -4,16 +4,16 @@
       :data="items"
       :border="true"
       :stripe="false"
+      :fit="true"
       height="100%"
       v-loading="loading"
       class="files-table__table"
     >
-      <el-table-column prop="name" label="文件名" sortable min-width="240" />
-      <el-table-column prop="updatedAt" label="最近编辑时间" sortable width="240" />
-      <el-table-column prop="owner" label="所有者" width="180" />
-      <el-table-column label="类型" sortable width="180" :formatter="typeFormatter" />
-      <el-table-column label="文件大小" sortable width="180" :formatter="sizeFormatter" />
-      <el-table-column width="120" />
+      <el-table-column prop="name" label="文件名" sortable min-width="160" show-overflow-tooltip />
+      <el-table-column prop="updatedAt" label="最近编辑时间" sortable min-width="160" show-overflow-tooltip />
+      <el-table-column prop="owner" label="所有者" min-width="160" show-overflow-tooltip />
+      <el-table-column label="类型" sortable min-width="160" show-overflow-tooltip :formatter="typeFormatter" />
+      <el-table-column label="文件大小" sortable min-width="160" show-overflow-tooltip :formatter="sizeFormatter" />
     </el-table>
   </div>
 </template>
@@ -48,12 +48,15 @@ export default {
 
 <style scoped>
 .files-table {
-  height: calc(100% - 68px);
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
   overflow: hidden;
 }
 
 .files-table__table {
   height: 100%;
+  width: 100%;
 }
 
 .files-table :deep(.el-table) {
@@ -68,6 +71,12 @@ export default {
   height: 48px !important;
   padding-left: 16px !important;
   border-right: 2px solid rgb(240, 240, 240) !important;
+}
+
+.files-table :deep(.el-table__header th .cell) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .files-table :deep(.el-table__body td) {

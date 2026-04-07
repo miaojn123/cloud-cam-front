@@ -34,9 +34,9 @@ type MenuItem = {
 const MENU_ITEMS: readonly MenuItem[] = [
   { key: 'recent', label: '最近文件', icon: 'EpClock' },
   { key: 'personal', label: '个人文件', icon: 'EpUserFilled' },
+  { key: 'team', label: '团队文件', icon: 'EpOfficeBuilding' },
   { key: 'sharedByMe', label: '我分享的', icon: 'EpShare' },
   { key: 'sharedToMe', label: '我收到的', icon: 'EpBox' },
-  { key: 'historyLinks', label: '历史链接', icon: 'EpLink' },
   { key: 'trash', label: '回收站', icon: 'EpDelete' },
 ] as const
 
@@ -84,12 +84,16 @@ export default {
   color: #1d4ed8;
 }
 
+.files-sidebar :deep(.el-menu-item.is-active .files-sidebar__label) {
+  font-weight: 700;
+}
+
 .files-sidebar__icon {
   margin-right: 10px;
   color: inherit;
 }
 
 .files-sidebar__label {
-  font-size: 18px;
+  font-size: 16px;
 }
 </style>

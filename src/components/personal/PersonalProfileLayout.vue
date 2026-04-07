@@ -147,6 +147,8 @@ export default {
       }
     },
     handleNavCommand(cmd: string) {
+      // 顶栏头像菜单：集中处理跳转，避免组件间相互依赖
+      if (cmd === 'team') return this.$router.push('/team')
       if (cmd === 'userInfo') {
         return this.$router.push('/profile-personal')
       }

@@ -4,6 +4,7 @@ import RegisterPage from '@/components/auth/RegisterPage.vue'
 import ResetPassword from '@/components/auth/ResetPassword.vue'
 import FilePage from '@/components/files/FilePage.vue'
 import PersonalProfileLayout from '@/components/personal/PersonalProfileLayout.vue'
+import TeamPage from '@/components/team/TeamPage.vue'
 import { TOKEN_KEY } from '@/api'
 import { useUserStore } from '@/stores'
 import {
@@ -20,7 +21,14 @@ export const router = createRouter({
     { path: '/login', name: 'login', component: LoginPage },
     { path: '/register', name: 'register', component: RegisterPage },
     { path: '/reset-password', name: 'reset-password', component: ResetPassword },
-    { path: '/files', name: 'files', component: FilePage, meta: { requiresAuth: true } },
+    { path: '/files', redirect: '/personal-files' },
+    { path: '/recent-files', name: 'recent-files', component: FilePage, meta: { requiresAuth: true } },
+    { path: '/personal-files', name: 'personal-files', component: FilePage, meta: { requiresAuth: true } },
+    { path: '/team-files', name: 'team-files', component: FilePage, meta: { requiresAuth: true } },
+    { path: '/shared-files', name: 'shared-files', component: FilePage, meta: { requiresAuth: true } },
+    { path: '/received-files', name: 'received-files', component: FilePage, meta: { requiresAuth: true } },
+    { path: '/recycle-bin', name: 'recycle-bin', component: FilePage, meta: { requiresAuth: true } },
+    { path: '/team', name: 'team', component: TeamPage, meta: { requiresAuth: true } },
     {
       path: '/profile-personal',
       name: 'personal-profile-personal',

@@ -7,7 +7,7 @@
       <el-button
         class="files-list-header__ghost-btn"
         text
-        :style="{ width: '100px', height: '32px' }"
+        :style="{ height: '32px' }"
         @click="onToggleDetail"
       >
         <span class="files-list-header__ghost-inner">
@@ -80,6 +80,7 @@ export default {
   justify-content: space-between;
   padding: 0 0;
   background: #ffffff;
+  border-bottom: 1px solid var(--files-border-color, lightgray);
 }
 
 .files-list-header__breadcrumb {
@@ -104,12 +105,15 @@ export default {
 
 .files-list-header__ghost-btn {
   color: dimgray !important;
+  padding: 0 12px !important;
+  border-radius: 4px;
 }
 
 .files-list-header__ghost-inner {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  height: 32px;
 }
 
 .files-list-header__info {
@@ -117,20 +121,21 @@ export default {
 }
 
 .files-list-header__detail-label {
-  font-size: 18px;
+  font-size: 16px;
+  line-height: 32px;
 }
 
 .files-list-header__view {
   display: inline-flex;
-  gap: 6px;
+  gap: 2px;
 }
 
 .files-list-header__view-btn {
   color: #111827 !important;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .files-list-header__view-btn--clicked {
-  background: #eef2f7 !important;
+  background: lightgray !important;
 }
 </style>

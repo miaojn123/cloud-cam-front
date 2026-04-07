@@ -36,6 +36,7 @@ export default {
   background: #ffffff;
   display: flex;
   flex-direction: column;
+  --files-border-color: lightgray;
 }
 
 .files-layout__main-wrap {
@@ -51,13 +52,13 @@ export default {
 
 .files-layout__aside {
   width: 240px;
-  border-right: 1px solid #eef0f3;
+  border-right: 1px solid var(--files-border-color);
   overflow: hidden;
 }
 
 .files-layout__detail {
   width: 280px;
-  border-left: 1px solid #eef0f3;
+  border-left: 1px solid var(--files-border-color);
   background: #ffffff;
   overflow: hidden;
 }
