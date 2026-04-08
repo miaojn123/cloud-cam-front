@@ -360,20 +360,20 @@ export default {
 /* Web 独立访问：全屏背景图；Qt 内嵌不加此类，保持白底。
    Vite public 资源映射到站点根路径，须用 /background.png，勿写 /public/... */
 .login-container.login-container--web-bg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  justify-items: center;
   background-image: url('/background.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  /* 整块登录区靠右，落在背景图偏右侧纯色区域 */
-  align-items: flex-end;
-  padding-right: clamp(24px, 10vw, 120px);
-  padding-left: 16px;
+  padding: 12px 16px 16px;
 }
 
 @media (max-width: 640px) {
   .login-container.login-container--web-bg {
-    align-items: center;
-    padding-right: 16px;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -389,7 +389,7 @@ export default {
 /* WEB：外框随内容高度（不撑满视口），白底 + 阴影过渡；Qt 不加此类 */
 .login-main.login-main--web-frame {
   flex: 0 0 auto;
-  align-self: flex-end;
+  grid-column: 2;
   max-width: var(--auth-web-frame-max-width);
   width: 100%;
   margin-inline: 0;
@@ -406,7 +406,7 @@ export default {
 
 @media (max-width: 640px) {
   .login-main.login-main--web-frame {
-    align-self: center;
+    grid-column: auto;
   }
 }
 

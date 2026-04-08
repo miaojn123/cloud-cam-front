@@ -366,21 +366,22 @@ export default {
   overflow: hidden;
 }
 
-/* Web：全屏背景 + 内容区靠右（与登录页一致） */
+/* Web：全屏背景 + 表单在右半屏居中（与登录页一致） */
 .signup-container.signup-container--web-bg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  justify-items: center;
   background-image: url('/background.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  align-items: flex-end;
-  padding-right: clamp(24px, 10vw, 120px);
-  padding-left: 16px;
+  padding: 12px 16px 16px;
 }
 
 @media (max-width: 640px) {
   .signup-container.signup-container--web-bg {
-    align-items: center;
-    padding-right: 16px;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -396,7 +397,7 @@ export default {
 /* WEB：白底外框随内容高度，带阴影；Qt 不加 */
 .signup-main.signup-main--web-frame {
   flex: 0 0 auto;
-  align-self: flex-end;
+  grid-column: 2;
   max-width: var(--auth-web-frame-max-width);
   width: 100%;
   margin-inline: 0;
@@ -413,7 +414,7 @@ export default {
 
 @media (max-width: 640px) {
   .signup-main.signup-main--web-frame {
-    align-self: center;
+    grid-column: auto;
   }
 }
 
