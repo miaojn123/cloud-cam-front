@@ -1,10 +1,15 @@
-﻿import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import LoginPage from '@/components/pages/auth/LoginPage.vue'
 import RegisterPage from '@/components/pages/auth/RegisterPage.vue'
 import ResetPassword from '@/components/pages/auth/ResetPassword.vue'
 import FilePage from '@/components/pages/files/FilePage.vue'
 import UserProfileLayout from '@/components/pages/user/UserProfileLayout.vue'
-import TeamPage from '@/components/team/TeamPage.vue'
+import TeamLayout from '@/components/pages/team/TeamLayout.vue'
+import TeamJoinPanel from '@/components/pages/team/TeamJoinPanel.vue'
+import TeamCreatePanel from '@/components/pages/team/TeamCreatePanel.vue'
+import TeamMembersPanel from '@/components/pages/team/TeamMembersPanel.vue'
+import TeamProjectsPanel from '@/components/pages/team/TeamProjectsPanel.vue'
+import TeamSettingsPanel from '@/components/pages/team/TeamSettingsPanel.vue'
 import { TOKEN_KEY } from '@/api'
 import { useUserStore } from '@/stores'
 import {
@@ -28,16 +33,28 @@ export const router = createRouter({
     { path: '/shared-files', name: 'shared-files', component: FilePage, meta: { requiresAuth: true } },
     { path: '/received-files', name: 'received-files', component: FilePage, meta: { requiresAuth: true } },
     { path: '/recycle-bin', name: 'recycle-bin', component: FilePage, meta: { requiresAuth: true } },
-    { path: '/team', name: 'team', component: TeamPage, meta: { requiresAuth: true } },
+    {
+      path: '/team',
+      component: TeamLayout,
+      meta: { requiresAuth: true },
+      redirect: { name: 'team-join' },
+      children: [
+        { path: 'join', name: 'team-join', component: TeamJoinPanel },
+        { path: 'create', name: 'team-create', component: TeamCreatePanel },
+        { path: 'members', name: 'team-members', component: TeamMembersPanel },
+        { path: 'projects', name: 'team-projects', component: TeamProjectsPanel },
+        { path: 'settings', name: 'team-settings', component: TeamSettingsPanel },
+      ],
+    },
     {
       path: '/profile-personal',
-      name: 'personal-profile-personal',
+      name: 'user-profile-personal',
       component: UserProfileLayout,
       meta: { requiresAuth: true },
     },
     {
       path: '/profile-security',
-      name: 'personal-profile-security',
+      name: 'user-profile-security',
       component: UserProfileLayout,
       meta: { requiresAuth: true },
     },

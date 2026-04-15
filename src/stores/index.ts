@@ -5,3 +5,4 @@ export const pinia = createPinia()
 pinia.use(userStoreGlobalPlugin)
 
 export { useUserStore } from './modules/user'
+export { useTeamStore } from './modules/team'
