@@ -31,15 +31,6 @@ type MenuItem = {
   icon: string
 }
 
-const MENU_ITEMS: readonly MenuItem[] = [
-  { key: 'recent', label: '最近文件', icon: 'EpClock' },
-  { key: 'personal', label: '个人文件', icon: 'EpUserFilled' },
-  { key: 'team', label: '团队文件', icon: 'EpOfficeBuilding' },
-  { key: 'sharedByMe', label: '我分享的', icon: 'EpShare' },
-  { key: 'sharedToMe', label: '我收到的', icon: 'EpBox' },
-  { key: 'trash', label: '回收站', icon: 'EpDelete' },
-] as const
-
 export default {
   name: 'FilesSidebar',
   props: {
@@ -51,7 +42,14 @@ export default {
   emits: ['update:modelValue'],
   data() {
     return {
-      items: MENU_ITEMS,
+      items: [
+        { key: 'recent', label: '最近文件', icon: 'Clock' },
+        { key: 'personal', label: '个人文件', icon: 'UserFilled' },
+        { key: 'team', label: '团队文件', icon: 'OfficeBuilding' },
+        { key: 'sharedByMe', label: '我分享的', icon: 'Share' },
+        { key: 'sharedToMe', label: '我收到的', icon: 'Box' },
+        { key: 'trash', label: '回收站', icon: 'Delete' },
+      ] as MenuItem[],
     }
   },
   methods: {

@@ -2,11 +2,16 @@
 
 import type { DesktopHostBridge } from '@/utils/desktopBridge'
 import type { useUserStore } from '@/stores/modules/user'
+import type { RouteLocationNormalizedLoaded, Router } from 'vue-router'
 
-declare module 'vue' {
+declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
-    /** 由 src/plugin.ts（Pinia 插件）注入，与 useUserStore() 同一实例 */
+    /** 由 src/stores/plugin.ts（Pinia 插件）注入，与 useUserStore() 同一实例 */
     $userStore: ReturnType<typeof useUserStore>
+    /** 由 vue-router 注入 */
+    $route: RouteLocationNormalizedLoaded
+    /** 由 vue-router 注入 */
+    $router: Router
   }
 }
 
@@ -16,7 +21,7 @@ declare global {
   }
 }
 
-export {}
+export { }
 
 declare module '*.vue' {
   import type { DefineComponent } from 'vue'

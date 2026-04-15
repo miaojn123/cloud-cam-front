@@ -6,6 +6,6 @@ import type { useUserStore } from '@/stores/modules/user'
  * 仅在 id 为 user 的 store 初始化时执行，避免重复赋值。
  */
 export const userStoreGlobalPlugin: PiniaPlugin = ({ app, store }) => {
-  if (store.$id !== 'user') return
-  app.config.globalProperties.$userStore = store as ReturnType<typeof useUserStore>
+    if (store.$id !== 'user') return
+    app.config.globalProperties.$userStore = store as ReturnType<typeof useUserStore>
 }

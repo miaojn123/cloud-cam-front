@@ -11,7 +11,7 @@
         @click="onToggleDetail"
       >
         <span class="files-list-header__ghost-inner">
-          <el-icon :size="18" class="files-list-header__info"><EpInfoFilled /></el-icon>
+          <el-icon :size="18" class="files-list-header__info"><InfoFilled /></el-icon>
           <span class="files-list-header__detail-label">详细信息</span>
         </span>
       </el-button>
@@ -24,7 +24,7 @@
           :style="{ width: '32px', height: '32px' }"
           @click="setView('table')"
         >
-          <el-icon><EpMenu /></el-icon>
+          <el-icon><Menu /></el-icon>
         </el-button>
         <el-button
           class="files-list-header__view-btn"
@@ -33,7 +33,7 @@
           :style="{ width: '32px', height: '32px' }"
           @click="setView('grid')"
         >
-          <el-icon><EpGrid /></el-icon>
+          <el-icon><Grid /></el-icon>
         </el-button>
       </div>
     </div>

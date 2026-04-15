@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="file-page" :class="{ 'file-page--team': sidebarKey === 'team' }">
     <FilesLayout :show-detail="showDetail">
       <template #nav>
@@ -12,19 +12,19 @@
               aria-label="当前团队"
               @click="handleTeamClick"
             >
-              <el-icon :size="18" class="file-toolbar__team-icon"><EpOfficeBuilding /></el-icon>
+              <el-icon :size="18" class="file-toolbar__team-icon"><OfficeBuilding /></el-icon>
               <span class="file-toolbar__team-name">CLOUD CAM TEAM</span>
             </el-button>
             <el-button class="file-toolbar__btn" @click="handleCreateFile">
-              <el-icon :size="16" class="file-toolbar__btn-icon"><EpDocumentAdd /></el-icon>
-              新建文档
+              <el-icon :size="16" class="file-toolbar__btn-icon"><DocumentAdd /></el-icon>
+              新建文件
             </el-button>
             <el-button class="file-toolbar__btn" @click="handleCreateFolder">
-              <el-icon :size="16" class="file-toolbar__btn-icon"><EpFolderAdd /></el-icon>
+              <el-icon :size="16" class="file-toolbar__btn-icon"><FolderAdd /></el-icon>
               新建文件夹
             </el-button>
             <el-button class="file-toolbar__btn" @click="handleImportFile">
-              <el-icon :size="16" class="file-toolbar__btn-icon"><EpUpload /></el-icon>
+              <el-icon :size="16" class="file-toolbar__btn-icon"><Upload /></el-icon>
               导入文件
             </el-button>
 
@@ -35,7 +35,7 @@
               clearable
             >
               <template #prefix>
-                <el-icon :size="18"><EpSearch /></el-icon>
+                <el-icon :size="18"><Search /></el-icon>
               </template>
             </el-input>
           </div>
@@ -84,16 +84,16 @@
 </template>
 
 <script lang="ts">
-import FilesLayout from '@/components/files/FilesLayout.vue'
-import FilesNav from '@/components/files/FilesNav.vue'
-import FilesSidebar from '@/components/files/FilesSidebar.vue'
-import FilesListHeader from '@/components/files/FilesListHeader.vue'
-import FilesTable from '@/components/files/FilesTable.vue'
-import ContextMenu from '@/components/files/ContextMenu.vue'
-import type { FileItem, SidebarKey, UserSummary, ViewMode } from '@/components/files/types'
-import { filterFilesByQuery, mockFilesForSidebar } from '@/components/files/mock'
-import { getContextMenuItems } from '@/components/files/contextMenu/getItems'
-import type { ContextMenuItem, ContextMenuPos } from '@/components/files/contextMenu/types'
+import FilesLayout from '@/components/pages/files/FilesLayout.vue'
+import FilesNav from '@/components/pages/files/FilesNav.vue'
+import FilesSidebar from '@/components/pages/files/FilesSidebar.vue'
+import FilesListHeader from '@/components/pages/files/FilesListHeader.vue'
+import FilesTable from '@/components/pages/files/FilesTable.vue'
+import ContextMenu from '@/components/pages/files/ContextMenu.vue'
+import type { FileItem, SidebarKey, UserSummary, ViewMode } from '@/components/pages/files/types'
+import { filterFilesByQuery, mockFilesForSidebar } from '@/components/pages/files/mock'
+import { getContextMenuItems } from '@/components/pages/files/contextMenu/getItems'
+import type { ContextMenuItem, ContextMenuPos } from '@/components/pages/files/contextMenu/types'
 
 const ROUTE_TO_SIDEBAR_KEY: Readonly<Record<string, SidebarKey>> = {
   '/recent-files': 'recent',
@@ -170,11 +170,10 @@ export default {
       handler() {
         const nextPath = SIDEBAR_KEY_TO_ROUTE[this.sidebarKey]
         if (nextPath && this.$route.path !== nextPath) {
-          // 只在“路径不一致”时同步，避免 watch 循环
+          // 仅在路径不一致时同步，避免 watch 循环。
           this.$router.replace(nextPath)
         }
-        // 后端文件接口未接入前，这里先根据菜单返回 mock；接入后替换为 service 调用即可。
-        // 当前截图为空态，因此 mock 默认返回空数组。
+        // 文件接口接入前先按侧边栏返回 mock，后续可替换为 service 调用。
         this.files = mockFilesForSidebar(this.sidebarKey)
       }
     }
@@ -218,7 +217,7 @@ export default {
       }
     },
     handleNavCommand(cmd: string) {
-      // 顶栏头像菜单：集中处理跳转，避免组件间相互依赖
+      // 顶栏头像菜单：集中处理跳转，避免组件间相互依赖。
       if (cmd === 'team') return this.$router.push('/team')
       if (cmd === 'userInfo') {
         return this.$router.push('/profile-personal')
@@ -246,7 +245,7 @@ export default {
       this.contextMenuVisible = false
     },
     onContextMenuSelect(id: string) {
-      // 这里先用消息占位：接入不同菜单的真实行为（打开工作台/分享弹窗等）时替换
+      // 这里先用消息占位，后续接入具体菜单行为。
       if (!this.contextMenuRow) return
       ElMessage.info(`${this.pageTitle}：${id}`)
     },
@@ -372,3 +371,4 @@ export default {
   font-size: 12px;
 }
 </style>
+

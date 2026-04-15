@@ -135,7 +135,7 @@ type ProfileLayoutInject = {
 }
 
 export default {
-  name: 'ProfilePersonalPanel',
+  name: 'UserProfilePanel',
   inject: ['profileLayout'],
   data() {
     const rules: FormRules = {

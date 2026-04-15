@@ -1,6 +1,6 @@
 <template>
   <div class="personal-profile-page" v-loading="loading">
-    <PersonalProfileNav :user="getUserSummary()" @command="handleNavCommand" />
+    <UserProfileNav :user="getUserSummary()" @command="handleNavCommand" />
 
     <div class="personal-profile-page__shell">
       <nav class="personal-profile-page__aside" aria-label="个人设置子导航">
@@ -33,8 +33,8 @@
       </nav>
 
       <main class="personal-profile-page__main" aria-label="设置详情内容">
-        <ProfileSecurityPanel v-if="isSecurityPanel" />
-        <ProfilePersonalPanel v-else />
+        <UserSecurityPanel v-if="isSecurityPanel" />
+        <UserProfilePanel v-else />
       </main>
     </div>
 
@@ -49,10 +49,10 @@
 <script lang="ts">
 import type { UploadFile } from 'element-plus'
 import { buildDefaultAvatarSvgDataUrl, getNicknameInitialLetter } from '@/utils/defaultAvatar'
-import PersonalProfileNav from '@/components/personal/PersonalProfileNav.vue'
-import AvatarCropDialog from '@/components/personal/dialog/AvatarCropDialog.vue'
-import ProfilePersonalPanel from '@/components/personal/ProfilePersonalPanel.vue'
-import ProfileSecurityPanel from '@/components/personal/ProfileSecurityPanel.vue'
+import UserProfileNav from '@/components/pages/user/UserProfileNav.vue'
+import AvatarCropDialog from '@/components/pages/user/dialog/AvatarCropDialog.vue'
+import UserProfilePanel from '@/components/pages/user/UserProfilePanel.vue'
+import UserSecurityPanel from '@/components/pages/user/UserSecurityPanel.vue'
 import type { UserSummary } from '@/types/user'
 import { uploadCurrentUserAvatarApi } from '@/api/user'
 
@@ -62,8 +62,8 @@ type AvatarCropConfirmPayload = {
 }
 
 export default {
-  name: 'PersonalProfileLayout',
-  components: { PersonalProfileNav, AvatarCropDialog, ProfilePersonalPanel, ProfileSecurityPanel },
+  name: 'UserProfileLayout',
+  components: { UserProfileNav, AvatarCropDialog, UserProfilePanel, UserSecurityPanel },
   provide() {
     return {
       profileLayout: this,

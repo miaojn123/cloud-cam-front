@@ -260,8 +260,8 @@ export default {
       this.isCodeMode = false
       this.getFormRef()?.clearValidate()
     },
-    sendCode(): void {
-      /* created 中替换为节流包装 */
+    sendCode(): Promise<void> {
+      return this.sendCodeCore()
     },
     async sendCodeCore() {
       if (this.countdown > 0) return
@@ -287,8 +287,8 @@ export default {
         ElMessage.error('发送验证码失败')
       }
     },
-    submitLogin(): void {
-      /* created 中替换为节流包装 */
+    submitLogin(): Promise<void> {
+      return this.submitLoginCore()
     },
     async submitLoginCore() {
       const formRef = this.getFormRef()

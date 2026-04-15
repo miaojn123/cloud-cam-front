@@ -1,5 +1,5 @@
 import { createPinia } from 'pinia'
-import { userStoreGlobalPlugin } from '@/plugin'
+import { userStoreGlobalPlugin } from './plugin'
 
 export const pinia = createPinia()
 pinia.use(userStoreGlobalPlugin)

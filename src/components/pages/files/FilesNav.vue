@@ -1,9 +1,9 @@
 <template>
   <nav class="files-nav" id="files-page-nav">
     <div class="files-nav__left">
-      <a href="/files" class="router-link-active el-tooltip__trigger">
+      <router-link to="/files" class="router-link-active el-tooltip__trigger">
         <img :src="logoSrc" alt="QJCAM" />
-      </a>
+      </router-link>
     </div>
     <UserNavMenu :user="user" @command="$emit('command', $event)" />
   </nav>
@@ -11,7 +11,7 @@
 
 <script lang="ts">
 import type { PropType } from 'vue'
-import UserNavMenu from '@/components/personal/UserNavMenu.vue'
+import UserNavMenu from '@/components/pages/user/UserNavMenu.vue'
 import type { UserSummary } from '@/types/user'
 
 export default {

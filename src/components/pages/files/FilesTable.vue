@@ -14,8 +14,8 @@
         <template #default="{ row }">
           <span class="files-table__name">
             <el-icon :size="16" class="files-table__name-icon">
-              <EpFolder v-if="row.kind === 'folder'" />
-              <EpDocument v-else />
+              <Folder v-if="row.kind === 'folder'" />
+              <Document v-else />
             </el-icon>
             <span class="files-table__name-text">{{ row.name }}</span>
           </span>

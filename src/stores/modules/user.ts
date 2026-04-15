@@ -1,16 +1,8 @@
 import { defineStore } from 'pinia'
 import { TOKEN_KEY } from '@/api'
-import {
-  loginByCodeApi,
-  loginByPasswordApi,
-  logoutApi,
-  registerByCodeApi,
-  registerByUsernameApi,
-  resetPasswordApi,
-  sendCodeApi
-} from '@/api/auth'
-import { getCurrentUserApi } from '@/api/user'
 import type { CurrentUser } from '@/types/user'
+import { useCurrentUser, type FetchCurrentUserOptions } from '@/composables/user/useCurrentUser'
+import { useUserAuth } from '@/composables/user/useUserAuth'
 
 // 用户信息仅存内存，不再缓存到 localStorage。
 // 启动恢复时若有 token，直接从后端拉最新用户数据，确保头像等字段始终最新。
@@ -20,9 +12,8 @@ interface UserState {
   user: CurrentUser | null
 }
 
-type FetchCurrentUserOptions = {
-  skipAuthRedirect?: boolean
-}
+const userAuth = useUserAuth()
+const currentUser = useCurrentUser()
 
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
@@ -41,48 +32,31 @@ export const useUserStore = defineStore('user', {
       localStorage.removeItem(TOKEN_KEY)
     },
     async sendLoginCode(account: string) {
-      return sendCodeApi(account, 'LOGIN')
+      return userAuth.sendLoginCode(account)
     },
     async sendRegisterCode(account: string) {
-      return sendCodeApi(account, 'REGISTER')
+      return userAuth.sendRegisterCode(account)
     },
     async sendResetCode(account: string) {
-      // 占位：重置密码验证码场景需与后端约定 scene 字符串
-      // 后端若暂未区分场景，也可先沿用 send-code 接口统一发送
-      return sendCodeApi(account, 'RESET_PASSWORD')
+      return userAuth.sendResetCode(account)
     },
     async loginByPassword(account: string, password: string) {
-      const result = await loginByPasswordApi(account, password)
-      const token = result.data?.token || ''
-      if (!token) {
-        throw new Error('登录成功但未返回 token')
-      }
-      this.setToken(token)
-      return token
+      return userAuth.loginByPassword(account, password, (token) => this.setToken(token))
     },
     async loginByCode(account: string, code: string) {
-      const result = await loginByCodeApi(account, code)
-      const token = result.data?.token || ''
-      if (!token) {
-        throw new Error('登录成功但未返回 token')
-      }
-      this.setToken(token)
-      return token
+      return userAuth.loginByCode(account, code, (token) => this.setToken(token))
     },
     async registerByCode(account: string, code: string, password: string, username: string) {
-      return registerByCodeApi(account, code, password, username)
+      return userAuth.registerByCode(account, code, password, username)
     },
     async registerByUsername(username: string, password: string) {
-      return registerByUsernameApi(username, password)
+      return userAuth.registerByUsername(username, password)
     },
     async resetPassword(account: string, code: string, newPassword: string) {
-      return resetPasswordApi(account, code, newPassword)
+      return userAuth.resetPassword(account, code, newPassword)
     },
     async fetchCurrentUser(options?: FetchCurrentUserOptions) {
-      const result = await getCurrentUserApi({
-        _skipAuthRedirect: options?.skipAuthRedirect
-      })
-      this.user = result.data?.user || null
+      this.user = await currentUser.fetchCurrentUser(options)
       return this.user
     },
     updateAvatar(avatar: string) {
@@ -90,11 +64,7 @@ export const useUserStore = defineStore('user', {
       this.user = { ...this.user, avatar }
     },
     async logout() {
-      try {
-        await logoutApi()
-      } finally {
-        this.clearAuth()
-      }
+      await userAuth.logout(() => this.clearAuth())
     }
   }
 })

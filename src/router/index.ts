@@ -1,9 +1,9 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import LoginPage from '@/components/auth/LoginPage.vue'
-import RegisterPage from '@/components/auth/RegisterPage.vue'
-import ResetPassword from '@/components/auth/ResetPassword.vue'
-import FilePage from '@/components/files/FilePage.vue'
-import PersonalProfileLayout from '@/components/personal/PersonalProfileLayout.vue'
+﻿import { createRouter, createWebHistory } from 'vue-router'
+import LoginPage from '@/components/pages/auth/LoginPage.vue'
+import RegisterPage from '@/components/pages/auth/RegisterPage.vue'
+import ResetPassword from '@/components/pages/auth/ResetPassword.vue'
+import FilePage from '@/components/pages/files/FilePage.vue'
+import UserProfileLayout from '@/components/pages/user/UserProfileLayout.vue'
 import TeamPage from '@/components/team/TeamPage.vue'
 import { TOKEN_KEY } from '@/api'
 import { useUserStore } from '@/stores'
@@ -32,30 +32,34 @@ export const router = createRouter({
     {
       path: '/profile-personal',
       name: 'personal-profile-personal',
-      component: PersonalProfileLayout,
+      component: UserProfileLayout,
       meta: { requiresAuth: true },
     },
     {
       path: '/profile-security',
       name: 'personal-profile-security',
-      component: PersonalProfileLayout,
+      component: UserProfileLayout,
       meta: { requiresAuth: true },
     },
   ]
 })
 
 router.beforeEach(async (to) => {
-  // 默认浏览器打开时与嵌入式 CEF 不共享 storage，桌面端可在首跳 URL 带 token，此处写入后立即 strip
+  // Browser and embedded CEF do not share storage by default.
+  // Desktop can pass token in the first URL; persist it, then strip it from query.
   const urlToken = pickExternalAuthTokenFromQuery(to.query)
   if (urlToken) {
     const userStore = useUserStore()
-    // 先写入 token 并立即清理地址栏，避免 token 进入历史记录/误分享
-    // 注意：外置浏览器场景下，后端接口可能暂不可用（未启动/代理失败），此处不应强制回登录页
+    // Save token first and clean the address bar immediately to avoid leaking token
+    // into browser history, logs, or sharing links.
+    // In external browser scenarios backend might be temporarily unavailable,
+    // so do not force redirect to login at this point.
     userStore.setToken(urlToken)
     try {
       await userStore.fetchCurrentUser({ skipAuthRedirect: true })
     } catch {
-      // 保持 token 以便后续页面自行重试；若 token 无效，接口层会提示并可由用户重新登录
+      // Keep token for follow-up retries. If token is invalid, API layer will
+      // surface the error and user can sign in again.
     }
     return {
       path: to.path,
@@ -67,14 +71,15 @@ router.beforeEach(async (to) => {
 
   const token = localStorage.getItem(TOKEN_KEY)
   if (to.meta.requiresAuth && !token) {
-    // 桌面端需要保留 ?client=desktop，否则 Qt 侧会拒绝桥接（例如登录成功回调）。
+    // Desktop flow must keep client=desktop or Qt bridge may reject callback.
     const q = preserveDesktopClientQuery(to.query)
     return Object.keys(q).length ? { path: '/login', query: q } : '/login'
   }
-  // 桌面嵌入登录页由 Qt 接管后续流程，避免这里自动跳到 /files。
+  // In desktop embed, login continuation is handled by Qt, so do not auto jump.
   if (to.path === '/login' && token && !isDesktopEmbed(to.query)) {
     return '/files'
   }
   return true
 })
+
 

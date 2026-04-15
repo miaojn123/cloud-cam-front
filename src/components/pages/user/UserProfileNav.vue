@@ -15,7 +15,7 @@ import UserNavMenu from './UserNavMenu.vue'
 import type { UserSummary } from '@/types/user'
 
 export default {
-  name: 'PersonalProfileNav',
+  name: 'UserProfileNav',
   components: { UserNavMenu },
   props: {
     user: {

@@ -1,4 +1,4 @@
-import throttle from 'lodash/throttle'
+import { throttle } from 'lodash'
 
 /** 发送验证码、提交表单等按钮的节流间隔（毫秒） */
 export const REQUEST_BUTTON_THROTTLE_MS = 1200

@@ -47,8 +47,7 @@ export type UpdateOrganizationRequest = {
 }
 
 export function updateCurrentUserOrganizationApi(organization: string) {
-  const payload: UpdateOrganizationRequest = { organization }
-  return postUserApi('/organization', payload)
+  return postUserApi('/organization', { organization })
 }
 
 export type UpdateIndustryRequest = {
@@ -56,8 +55,7 @@ export type UpdateIndustryRequest = {
 }
 
 export function updateCurrentUserIndustryApi(industry: string) {
-  const payload: UpdateIndustryRequest = { industry }
-  return postUserApi('/industry', payload)
+  return postUserApi('/industry', { industry })
 }
 
 export type UpdateNickNameRequest = {
@@ -65,8 +63,7 @@ export type UpdateNickNameRequest = {
 }
 
 export function updateCurrentUserNickNameApi(nickName: string) {
-  const payload: UpdateNickNameRequest = { nickName }
-  return postUserApi('/nickname', payload)
+  return postUserApi('/nickname', { nickName })
 }
 
 export type UpdateUserNameRequest = {
@@ -74,8 +71,7 @@ export type UpdateUserNameRequest = {
 }
 
 export function updateCurrentUserUserNameApi(username: string) {
-  const payload: UpdateUserNameRequest = { username }
-  return postUserApi('/username', payload)
+  return postUserApi('/username', { username })
 }
 
 export type BindCurrentUserEmailRequest = {
@@ -84,8 +80,7 @@ export type BindCurrentUserEmailRequest = {
 }
 
 export function bindCurrentUserEmailApi(email: string, code: string) {
-  const payload: BindCurrentUserEmailRequest = { email, code }
-  return postUserApi('/email/bind', payload)
+  return postUserApi('/email/bind', { email, code })
 }
 
 export type UnbindCurrentUserEmailRequest = {
@@ -93,8 +88,7 @@ export type UnbindCurrentUserEmailRequest = {
 }
 
 export function unbindCurrentUserEmailApi(code: string) {
-  const payload: UnbindCurrentUserEmailRequest = { code }
-  return postUserApi('/email/unbind', payload)
+  return postUserApi('/email/unbind', { code })
 }
 
 export type BindCurrentUserPhoneRequest = {
@@ -103,8 +97,7 @@ export type BindCurrentUserPhoneRequest = {
 }
 
 export function bindCurrentUserPhoneApi(phone: string, code: string) {
-  const payload: BindCurrentUserPhoneRequest = { phone, code }
-  return postUserApi('/phone/bind', payload)
+  return postUserApi('/phone/bind', { phone, code })
 }
 
 export type UnbindCurrentUserPhoneRequest = {
@@ -112,8 +105,7 @@ export type UnbindCurrentUserPhoneRequest = {
 }
 
 export function unbindCurrentUserPhoneApi(code: string) {
-  const payload: UnbindCurrentUserPhoneRequest = { code }
-  return postUserApi('/phone/unbind', payload)
+  return postUserApi('/phone/unbind', { code })
 }
 
 export type UpdateCurrentUserPasswordRequest = {
@@ -123,8 +115,7 @@ export type UpdateCurrentUserPasswordRequest = {
 
 /** 已登录：凭原密码修改登录密码 */
 export function updateCurrentUserPasswordApi(oldPassword: string, newPassword: string) {
-  const payload: UpdateCurrentUserPasswordRequest = { oldPassword, newPassword }
-  return postUserApi('/password', payload)
+  return postUserApi('/password', { oldPassword, newPassword })
 }
 
 export type CancelCurrentAccountByPasswordRequest = {
@@ -132,8 +123,7 @@ export type CancelCurrentAccountByPasswordRequest = {
 }
 
 export function cancelCurrentAccountByPasswordApi(password: string) {
-  const payload: CancelCurrentAccountByPasswordRequest = { password }
-  return postUserApi('/cancel/password', payload)
+  return postUserApi('/cancel/password', { password })
 }
 
 export type CancelCurrentAccountByCodeRequest = {
@@ -142,6 +132,5 @@ export type CancelCurrentAccountByCodeRequest = {
 }
 
 export function cancelCurrentAccountByCodeApi(account: string, code: string) {
-  const payload: CancelCurrentAccountByCodeRequest = { account, code }
-  return postUserApi('/cancel/code', payload)
+  return postUserApi('/cancel/code', { account, code })
 }

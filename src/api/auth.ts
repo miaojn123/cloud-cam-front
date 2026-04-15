@@ -41,8 +41,7 @@ export type SendCodeRequest = {
 }
 
 export function sendCodeApi(account: string, scene: SendCodeScene) {
-  const payload: SendCodeRequest = { account, scene }
-  return postAuthApi('/send-code', payload)
+  return postAuthApi('/send-code', { account, scene })
 }
 
 export type LoginByPasswordRequest = {
@@ -51,8 +50,7 @@ export type LoginByPasswordRequest = {
 }
 
 export function loginByPasswordApi(account: string, password: string) {
-  const payload: LoginByPasswordRequest = { account, password }
-  return postAuthApi<LoginResponse>('/login/password', payload)
+  return postAuthApi<LoginResponse>('/login/password', { account, password })
 }
 
 export type LoginByCodeRequest = {
@@ -61,8 +59,7 @@ export type LoginByCodeRequest = {
 }
 
 export function loginByCodeApi(account: string, code: string) {
-  const payload: LoginByCodeRequest = { account, code }
-  return postAuthApi<LoginResponse>('/login/code', payload)
+  return postAuthApi<LoginResponse>('/login/code', { account, code })
 }
 
 export type RegisterByCodeRequest = {
@@ -73,8 +70,7 @@ export type RegisterByCodeRequest = {
 }
 
 export function registerByCodeApi(account: string, code: string, password: string, username: string) {
-  const payload: RegisterByCodeRequest = { account, code, password, username }
-  return postAuthApi('/register/code', payload)
+  return postAuthApi('/register/code', { account, code, password, username })
 }
 
 export type RegisterByUsernameRequest = {
@@ -83,8 +79,7 @@ export type RegisterByUsernameRequest = {
 }
 
 export function registerByUsernameApi(username: string, password: string) {
-  const payload: RegisterByUsernameRequest = { username, password }
-  return postAuthApi<unknown>('/register/username', payload)
+  return postAuthApi<unknown>('/register/username', { username, password })
 }
 
 export type ResetPasswordRequest = {
@@ -94,8 +89,7 @@ export type ResetPasswordRequest = {
 }
 
 export function resetPasswordApi(account: string, code: string, newPassword: string) {
-  const payload: ResetPasswordRequest = { account, code, newPassword }
-  return postAuthApi<unknown>('/reset-password', payload)
+  return postAuthApi<unknown>('/reset-password', { account, code, newPassword })
 }
 
 export function logoutApi() {
