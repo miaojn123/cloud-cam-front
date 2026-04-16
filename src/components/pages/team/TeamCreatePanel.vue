@@ -583,21 +583,24 @@ export default {
         // 调用 API 创建团队
         const result = await createTeamApi({
           teamName: this.formData.teamName,
-          description: this.formData.description,
           region: regionLabel,
           industry: industryLabel,
-          email: this.formData.email,
         })
-        
+
         // 保存团队ID
-        this.createdTeamId = result.teamId
-        
+        const teamInfo = result.data?.teamInfo
+        if (!teamInfo) {
+          ElMessage.error('创建失败：未获取到团队信息')
+          return
+        }
+        this.createdTeamId = teamInfo.teamId
+
         // 添加到我的团队列表并切换为当前团队
         this.$teamStore.addMyTeam({
-          id: result.teamId,
-          name: result.teamName,
-          region: result.region,
-          industry: result.industry,
+          id: teamInfo.teamId,
+          name: teamInfo.teamName,
+          region: teamInfo.region,
+          industry: teamInfo.industry,
         })
 
         // 显示成功对话框

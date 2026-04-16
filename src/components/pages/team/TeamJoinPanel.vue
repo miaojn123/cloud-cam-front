@@ -108,10 +108,17 @@ export default {
       return this.$teamStore?.pendingTeams || []
     },
   },
+  watch: {
+    '$route.path': {
+      handler() {
+        // 每次路由变化时重新加载团队数据
+        this.loadTeams()
+      }
+    }
+  },
   mounted() {
     this.loadTeams()
   },
-  methods: {
     async loadTeams() {
       this.loading = true
       try {
