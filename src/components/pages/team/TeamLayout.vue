@@ -120,23 +120,23 @@ export default {
     teamSummary(): TeamSummary | null {
       return this.currentTeam
     },
-    currentRouteName(): string {
-      return this.$route.name as string
+    currentRoutePath(): string {
+      return this.$route.path
     },
     isJoinPanel(): boolean {
-      return this.currentRouteName === 'team-join'
+      return this.currentRoutePath === '/team/join'
     },
     isCreatePanel(): boolean {
-      return this.currentRouteName === 'team-create'
+      return this.currentRoutePath === '/team/create'
     },
     isMembersPanel(): boolean {
-      return this.currentRouteName === 'team-members'
+      return this.currentRoutePath === '/team/members'
     },
     isProjectsPanel(): boolean {
-      return this.currentRouteName === 'team-projects'
+      return this.currentRoutePath === '/team/projects'
     },
     isSettingsPanel(): boolean {
-      return this.currentRouteName === 'team-settings'
+      return this.currentRoutePath === '/team/settings'
     },
     currentTeamId(): string | null {
       return this.$teamStore?.currentTeamId || null
@@ -166,20 +166,19 @@ export default {
       }
       this.loading = true
       try {
-        // 调用 API 获取团队成员
-        const members = await getTeamMembersApi({ teamUuid: this.currentTeamId })
-        const memberCount = members?.length || 0
-        // 查找当前用户在团队中的角色
-        const currentUserId = localStorage.getItem('userId')
-        const currentMember = members?.find((m: any) => m.userId === currentUserId)
-        const currentTeam = this.$teamStore?.myTeams?.find(t => t.id === this.currentTeamId)
+        const result = await getTeamMembersApi({ teamUuid: this.currentTeamId })
+        const members = result.data?.members || []
+        const memberCount = members.length
+        const currentUserId = this.$userStore?.user?.uuid || ''
+        const currentMember = members.find((m: any) => m.userId === currentUserId)
+        const currentTeamData = this.$teamStore?.myTeams?.find(t => t.id === this.currentTeamId)
         
         this.currentTeam = {
           teamId: this.currentTeamId,
-          teamName: currentTeam?.name || '未知团队',
+          teamName: currentTeamData?.name || '未知团队',
           memberCount: memberCount,
           projectCount: 0,
-          role: currentMember?.role || currentTeam?.role || 'member',
+          role: currentMember?.role || currentTeamData?.role || 'member',
         }
       } catch {
         this.currentTeam = null

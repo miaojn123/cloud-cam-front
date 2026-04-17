@@ -113,12 +113,6 @@ export default {
           { required: true, message: '请输入团队名称', trigger: 'blur' },
           { min: 2, max: 50, message: '团队名称长度在 2 到 50 个字符', trigger: 'blur' },
         ],
-        region: [
-          { required: true, message: '请选择所在地区', trigger: 'change' },
-        ],
-        industry: [
-          { required: true, message: '请选择行业', trigger: 'change' },
-        ],
       } as FormRules,
       creating: false,
       successDialogVisible: false,
@@ -588,19 +582,19 @@ export default {
         })
 
         // 保存团队ID
-        const teamInfo = result.data?.teamInfo
+        const teamInfo = result.data
         if (!teamInfo) {
           ElMessage.error('创建失败：未获取到团队信息')
           return
         }
-        this.createdTeamId = teamInfo.teamId
+        this.createdTeamId = teamInfo.teamUuid
 
         // 添加到我的团队列表并切换为当前团队
         this.$teamStore.addMyTeam({
-          id: teamInfo.teamId,
+          id: teamInfo.teamUuid,
           name: teamInfo.teamName,
-          region: teamInfo.region,
-          industry: teamInfo.industry,
+          region: teamInfo.region || '',
+          industry: teamInfo.industry || '',
         })
 
         // 显示成功对话框

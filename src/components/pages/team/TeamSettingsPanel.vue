@@ -216,14 +216,17 @@ export default {
       if (!this.currentTeamId) return
       try {
         const result = await getTeamSettingsApi({ teamId: this.currentTeamId })
-        this.teamInfo = {
-          id: result.teamId,
-          name: result.teamName,
-        }
-        this.editForm.name = result.teamName
-        this.settings = {
-          allowShare: result.allowShare,
-          inviteMethod: result.inviteMethod,
+        const settings = result.data?.settings
+        if (settings) {
+          this.teamInfo = {
+            id: settings.teamId,
+            name: settings.teamName,
+          }
+          this.editForm.name = settings.teamName
+          this.settings = {
+            allowShare: settings.allowShare,
+            inviteMethod: settings.inviteMethod,
+          }
         }
       } catch {
         // 错误已在 request 拦截器中处理
@@ -233,7 +236,7 @@ export default {
       if (!this.currentTeamId) return
       try {
         const result = await getTeamMembersApi({ teamUuid: this.currentTeamId })
-        this.members = result || []
+        this.members = result.data?.members || []
       } catch {
         // 错误已在 request 拦截器中处理
       }

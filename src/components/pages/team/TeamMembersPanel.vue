@@ -315,7 +315,7 @@ export default {
       if (!this.currentTeamId) return
       try {
         const result = await getTeamSettingsApi({ teamId: this.currentTeamId })
-        this.inviteMethod = result.inviteMethod || 'owner'
+        this.inviteMethod = result.data?.settings?.inviteMethod || 'owner'
       } catch {
         this.inviteMethod = 'owner'
       }
@@ -331,7 +331,7 @@ export default {
       if (!this.currentTeamId) return
       try {
         const result = await getTeamMembersApi({ teamUuid: this.currentTeamId })
-        this.members = (result || []).map((m: any) => ({
+        this.members = (result.data?.members || []).map((m: any) => ({
           id: m.userId || m.id,
           userName: m.userName,
           nickName: m.nickName,
@@ -348,7 +348,7 @@ export default {
       if (!this.currentTeamId) return
       try {
         const result = await getPendingMembersApi({ teamId: this.currentTeamId })
-        this.pendingMembers = (result || []).map((m: any) => ({
+        this.pendingMembers = (result.data?.pendingMembers || []).map((m: any) => ({
           id: m.userId || m.id,
           userName: m.userName,
           nickName: m.nickName,

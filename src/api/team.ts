@@ -47,7 +47,13 @@ export interface TeamInfo {
 }
 
 export type CreateTeamResponse = {
-  teamInfo: TeamInfo
+  teamUuid: string
+  teamName: string
+  ownerUuid: string
+  company?: string
+  region?: string
+  industry?: string
+  createTime?: string
 }
 
 export function createTeamApi(data: CreateTeamRequest) {

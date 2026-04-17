@@ -35,13 +35,31 @@ export const useTeamStore = defineStore('team', {
   },
 
   actions: {
-    // 设置我的团队列表
+    // 设置我的团队列表（合并已有的本地团队）
     setMyTeams(teams: Team[]) {
-      this.myTeams = teams.map(team => ({
-        ...team,
-        id: team.teamId || team.id,
-        name: team.teamName || team.name,
-      }))
+      // 保存已有的本地团队ID（用于去重）
+      const existingIds = new Set(this.myTeams.map(t => t.id))
+      
+      // 合并数据：API返回的团队 + 本地添加的团队
+      const mergedTeams = [
+        ...teams.map(team => ({
+          ...team,
+          id: team.teamId || team.id,
+          name: team.teamName || team.name,
+        })),
+        ...this.myTeams // 保留本地添加的团队
+      ]
+      
+      // 去重（API返回的数据优先）
+      const uniqueTeams = mergedTeams.reduce((acc, team) => {
+        if (!acc.some(t => t.id === team.id)) {
+          acc.push(team)
+        }
+        return acc
+      }, [] as typeof mergedTeams)
+      
+      this.myTeams = uniqueTeams
+      
       // 如果没有当前团队且有团队列表，设置第一个为当前团队
       if (!this.currentTeamId && this.myTeams.length > 0) {
         this.currentTeamId = this.myTeams[0].id
