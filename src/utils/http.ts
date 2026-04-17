@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { type AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 
 export interface AjaxResult<T = unknown> {
   code: number
@@ -81,7 +81,7 @@ async function refreshSessionIfNeeded() {
   return refreshPromise
 }
 
-http.interceptors.request.use((config) => {
+http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem(TOKEN_KEY)
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -90,11 +90,11 @@ http.interceptors.request.use((config) => {
 })
 
 http.interceptors.response.use(
-  async (response: any) => {
+  async (response: AxiosResponse<AjaxResult<unknown>>) => {
     const result = response.data as AjaxResult<unknown>
     const requestConfig = (response.config || {}) as RetryableRequestConfig
     if (!result || typeof result.code !== 'number') {
-      return response as any
+      return response
     }
     if (result.code === UNAUTHORIZED_CODE) {
       if (requestConfig._skipAuthRedirect) {
@@ -121,9 +121,9 @@ http.interceptors.response.use(
       ElMessage.error(result.msg || '请求失败')
       return Promise.reject(new Error(result.msg || '请求失败'))
     }
-    return result as any
+    return result
   },
-  (error) => {
+  (error: AxiosError) => {
     const status = error?.response?.status
     const requestConfig = (error?.config || {}) as RetryableRequestConfig
     if (requestConfig._skipAuthRedirect) {

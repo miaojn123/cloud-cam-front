@@ -149,7 +149,15 @@
 
 <script lang="ts">
 import type { FormInstance, FormRules } from 'element-plus'
-import { getTeamSettingsApi, updateTeamSettingsApi, updateTeamApi, deleteTeamApi, getTeamMembersApi, transferTeamApi } from '@/api/team'
+import {
+  getTeamSettingsApi,
+  updateTeamSettingsApi,
+  updateTeamApi,
+  deleteTeamApi,
+  getTeamMembersApi,
+  transferTeamApi,
+  type TeamMember,
+} from '@/api/team'
 
 interface TeamInfo {
   id: string
@@ -188,7 +196,7 @@ export default {
       showTransferDialog: false,
       transferring: false,
       deleting: false,
-      members: [] as any[],
+      members: [] as TeamMember[],
       transferForm: {
         newOwnerId: '',
       },
@@ -200,7 +208,7 @@ export default {
     },
     currentUserRole(): string {
       const currentUserId = localStorage.getItem('userId')
-      const currentMember = this.members.find((m: any) => m.userId === currentUserId || m.id === currentUserId)
+      const currentMember = this.members.find((member) => member.userId === currentUserId)
       return currentMember?.role || 'member'
     },
     isOwner(): boolean {
@@ -216,17 +224,16 @@ export default {
       if (!this.currentTeamId) return
       try {
         const result = await getTeamSettingsApi({ teamId: this.currentTeamId })
+        const currentTeam = this.$teamStore?.myTeams?.find(team => team.id === this.currentTeamId)
         const settings = result.data?.settings
-        if (settings) {
-          this.teamInfo = {
-            id: settings.teamId,
-            name: settings.teamName,
-          }
-          this.editForm.name = settings.teamName
-          this.settings = {
-            allowShare: settings.allowShare,
-            inviteMethod: settings.inviteMethod,
-          }
+        this.teamInfo = {
+          id: this.currentTeamId,
+          name: currentTeam?.name || '',
+        }
+        this.editForm.name = currentTeam?.name || ''
+        this.settings = {
+          allowShare: settings?.allowShare ?? false,
+          inviteMethod: settings?.inviteMethod ?? 'owner',
         }
       } catch {
         // 错误已在 request 拦截器中处理
@@ -284,7 +291,7 @@ export default {
         await deleteTeamApi({ teamUuid: this.currentTeamId })
         ElMessage.success('团队已解散')
         this.$teamStore.removeMyTeam(this.currentTeamId)
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (error !== 'cancel') {
           console.error('解散团队失败:', error)
         }

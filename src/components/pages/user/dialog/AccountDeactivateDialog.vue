@@ -62,7 +62,7 @@
             :code="code"
             :countdown="countdown"
             @update:code="code = $event"
-            @send-code="sendCancelCode"
+            @send-code="sendDeleteCode"
           />
         </div>
         <div v-else class="deactivate-verify__pwd">
@@ -109,7 +109,7 @@ import AppDialog from '@/components/common/AppDialog.vue'
 import type { PropType } from 'vue'
 import type { Router } from 'vue-router'
 import type { CurrentUser } from '@/types/user'
-import { cancelCurrentAccountByCodeApi, cancelCurrentAccountByPasswordApi } from '@/api/user'
+import { deleteCurrentAccountByCodeApi, deleteCurrentAccountByPasswordApi } from '@/api/user'
 import { sendCodeApi } from '@/api/auth'
 import { requestButtonThrottle } from '@/utils/requestThrottle'
 import VerifyCodeBox from '@/components/common/VerifyCodeBox.vue'
@@ -230,13 +230,13 @@ export default {
     },
   },
   created() {
-    this.sendCancelCode = requestButtonThrottle(this.sendCancelCodeCore.bind(this))
+    this.sendDeleteCode = requestButtonThrottle(this.sendDeleteCodeCore.bind(this))
   },
   beforeUnmount() {
     this.stopCountdown()
   },
   methods: {
-    sendCancelCode(): void {
+    sendDeleteCode(): void {
       /* created 中替换为节流包装 */
     },
     resetDialog() {
@@ -289,12 +289,12 @@ export default {
       this.stopCountdown()
       this.confirmPhraseInput = ''
     },
-    async sendCancelCodeCore() {
+    async sendDeleteCodeCore() {
       if (this.countdown > 0 || this.verifyMode !== 'code') return
       const acc = this.sendAccount
       if (!acc) return
       try {
-        await sendCodeApi(acc, 'ACCOUNT_CANCEL')
+        await sendCodeApi(acc, 'ACCOUNT_DELETE')
         ElMessage.success('验证码已发送')
         this.startCountdown(60)
       } catch {
@@ -306,9 +306,9 @@ export default {
       this.submitting = true
       try {
         if (this.verifyMode === 'password') {
-          await cancelCurrentAccountByPasswordApi(this.password)
+          await deleteCurrentAccountByPasswordApi(this.password)
         } else {
-          await cancelCurrentAccountByCodeApi(this.sendAccount, this.code.trim())
+          await deleteCurrentAccountByCodeApi(this.sendAccount, this.code.trim())
         }
         ElMessage.success('账号已注销')
         this.$userStore.clearAuth()

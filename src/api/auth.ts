@@ -29,7 +29,7 @@ export type SendCodeScene =
   | 'LOGIN'
   | 'REGISTER'
   | 'RESET_PASSWORD'
-  | 'ACCOUNT_CANCEL'
+  | 'ACCOUNT_DELETE'
   | 'BIND_EMAIL'
   | 'UNBIND_EMAIL'
   | 'BIND_PHONE'

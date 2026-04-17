@@ -118,19 +118,19 @@ export function updateCurrentUserPasswordApi(oldPassword: string, newPassword: s
   return postUserApi('/password', { oldPassword, newPassword })
 }
 
-export type CancelCurrentAccountByPasswordRequest = {
+export type DeleteCurrentAccountByPasswordRequest = {
   password: string
 }
 
-export function cancelCurrentAccountByPasswordApi(password: string) {
-  return postUserApi('/cancel/password', { password })
+export function deleteCurrentAccountByPasswordApi(password: string) {
+  return postUserApi('/delete/password', { password })
 }
 
-export type CancelCurrentAccountByCodeRequest = {
+export type DeleteCurrentAccountByCodeRequest = {
   account: string
   code: string
 }
 
-export function cancelCurrentAccountByCodeApi(account: string, code: string) {
-  return postUserApi('/cancel/code', { account, code })
+export function deleteCurrentAccountByCodeApi(account: string, code: string) {
+  return postUserApi('/delete/code', { account, code })
 }

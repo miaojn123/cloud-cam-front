@@ -4,68 +4,28 @@
 
     <div class="team-page__shell">
       <nav class="team-page__aside" aria-label="团队管理子导航">
-        <ul class="team-page__menu" role="list">
-          <li role="none">
-            <router-link
-              to="/team/join"
-              class="team-page__menu-item"
-              active-class="is-active"
-            >
-              <el-icon class="team-page__menu-icon" :size="18">
-                <Plus />
-              </el-icon>
-              <span>加入团队</span>
-            </router-link>
-          </li>
-          <li role="none">
-            <router-link
-              to="/team/create"
-              class="team-page__menu-item"
-              active-class="is-active"
-            >
-              <el-icon class="team-page__menu-icon" :size="18">
-                <FolderAdd />
-              </el-icon>
-              <span>创建团队</span>
-            </router-link>
-          </li>
-          <li role="none">
-            <router-link
-              to="/team/members"
-              class="team-page__menu-item"
-              active-class="is-active"
-            >
-              <el-icon class="team-page__menu-icon" :size="18">
-                <User />
-              </el-icon>
-              <span>团队成员</span>
-            </router-link>
-          </li>
-          <li role="none">
-            <router-link
-              to="/team/projects"
-              class="team-page__menu-item"
-              active-class="is-active"
-            >
-              <el-icon class="team-page__menu-icon" :size="18">
-                <Folder />
-              </el-icon>
-              <span>团队项目</span>
-            </router-link>
-          </li>
-          <li role="none">
-            <router-link
-              to="/team/settings"
-              class="team-page__menu-item"
-              active-class="is-active"
-            >
-              <el-icon class="team-page__menu-icon" :size="18">
-                <Setting />
-              </el-icon>
-              <span>团队设置</span>
-            </router-link>
-          </li>
-        </ul>
+        <el-menu class="team-page__menu" :default-active="activeMenuKey" @select="handleMenuSelect">
+          <el-menu-item index="join">
+            <el-icon class="team-page__menu-icon"><Plus /></el-icon>
+            <span class="team-page__menu-label">加入团队</span>
+          </el-menu-item>
+          <el-menu-item index="create">
+            <el-icon class="team-page__menu-icon"><FolderAdd /></el-icon>
+            <span class="team-page__menu-label">创建团队</span>
+          </el-menu-item>
+          <el-menu-item index="members">
+            <el-icon class="team-page__menu-icon"><User /></el-icon>
+            <span class="team-page__menu-label">团队成员</span>
+          </el-menu-item>
+          <el-menu-item index="projects">
+            <el-icon class="team-page__menu-icon"><Folder /></el-icon>
+            <span class="team-page__menu-label">团队项目</span>
+          </el-menu-item>
+          <el-menu-item index="settings">
+            <el-icon class="team-page__menu-icon"><Setting /></el-icon>
+            <span class="team-page__menu-label">团队设置</span>
+          </el-menu-item>
+        </el-menu>
       </nav>
 
       <main class="team-page__main" aria-label="团队管理详情内容">
@@ -83,6 +43,7 @@
 </template>
 
 <script lang="ts">
+import type { TeamMember } from '@/api/team'
 import TeamProfileNav from '@/components/pages/team/TeamProfileNav.vue'
 import TeamJoinPanel from '@/components/pages/team/TeamJoinPanel.vue'
 import TeamCreatePanel from '@/components/pages/team/TeamCreatePanel.vue'
@@ -120,23 +81,30 @@ export default {
     teamSummary(): TeamSummary | null {
       return this.currentTeam
     },
-    currentRoutePath(): string {
-      return this.$route.path
+    currentRouteName(): string {
+      return this.$route.name as string
     },
     isJoinPanel(): boolean {
-      return this.currentRoutePath === '/team/join'
+      return this.currentRouteName === 'team-join'
     },
     isCreatePanel(): boolean {
-      return this.currentRoutePath === '/team/create'
+      return this.currentRouteName === 'team-create'
     },
     isMembersPanel(): boolean {
-      return this.currentRoutePath === '/team/members'
+      return this.currentRouteName === 'team-members'
     },
     isProjectsPanel(): boolean {
-      return this.currentRoutePath === '/team/projects'
+      return this.currentRouteName === 'team-projects'
     },
     isSettingsPanel(): boolean {
-      return this.currentRoutePath === '/team/settings'
+      return this.currentRouteName === 'team-settings'
+    },
+    activeMenuKey(): string {
+      if (this.isCreatePanel) return 'create'
+      if (this.isMembersPanel) return 'members'
+      if (this.isProjectsPanel) return 'projects'
+      if (this.isSettingsPanel) return 'settings'
+      return 'join'
     },
     currentTeamId(): string | null {
       return this.$teamStore?.currentTeamId || null
@@ -144,9 +112,6 @@ export default {
     hasJoinedTeam(): boolean {
       return this.currentTeamId !== null
     },
-  },
-  mounted() {
-    this.loadCurrentTeam()
   },
   watch: {
     currentTeamId: {
@@ -158,7 +123,21 @@ export default {
       immediate: true,
     },
   },
+  mounted() {
+    this.loadCurrentTeam()
+  },
   methods: {
+    handleMenuSelect(key: string) {
+      const routeMap: Record<string, string> = {
+        join: '/team/join',
+        create: '/team/create',
+        members: '/team/members',
+        projects: '/team/projects',
+        settings: '/team/settings',
+      }
+      const target = routeMap[key]
+      if (target) return this.$router.push(target)
+    },
     async loadCurrentTeam() {
       if (!this.currentTeamId) {
         this.currentTeam = null
@@ -166,19 +145,18 @@ export default {
       }
       this.loading = true
       try {
-        const result = await getTeamMembersApi({ teamUuid: this.currentTeamId })
-        const members = result.data?.members || []
+        const members = (await getTeamMembersApi({ teamUuid: this.currentTeamId })).data?.members || []
         const memberCount = members.length
-        const currentUserId = this.$userStore?.user?.uuid || ''
-        const currentMember = members.find((m: any) => m.userId === currentUserId)
-        const currentTeamData = this.$teamStore?.myTeams?.find(t => t.id === this.currentTeamId)
-        
+        const currentUserId = localStorage.getItem('userId')
+        const currentMember = members.find((member: TeamMember) => member.userId === currentUserId)
+        const currentTeam = this.$teamStore?.myTeams?.find(t => t.id === this.currentTeamId)
+
         this.currentTeam = {
           teamId: this.currentTeamId,
-          teamName: currentTeamData?.name || '未知团队',
-          memberCount: memberCount,
+          teamName: currentTeam?.name || '未知团队',
+          memberCount,
           projectCount: 0,
-          role: currentMember?.role || currentTeamData?.role || 'member',
+          role: currentMember?.role || currentTeam?.role || 'member',
         }
       } catch {
         this.currentTeam = null
@@ -235,44 +213,44 @@ export default {
   background: #ffffff;
   border-right: 1px solid #eef0f3;
   overflow: auto;
+  padding: 8px;
 }
 
 .team-page__menu {
-  list-style: none;
-  margin: 0;
-  padding: 12px 0;
+  border-right: none;
 }
 
-.team-page__menu-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 14px;
-  color: #374151;
-  text-align: left;
-  transition: background 0.15s ease, color 0.15s ease;
-  text-decoration: none;
-  box-sizing: border-box;
+.team-page__aside :deep(.el-menu-item) {
+  height: 44px;
+  line-height: 44px;
+  border-radius: 6px;
+  margin: 2px 6px;
+  color: #4b5563;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.team-page__menu-item:hover {
-  background: #f3f4f6;
+.team-page__aside :deep(.el-menu-item:hover) {
+  background: #f5f8ff;
+  color: #1d4ed8;
 }
 
-.team-page__menu-item.is-active {
-  color: var(--app-brand-primary);
-  font-weight: 600;
-  background: rgba(13, 71, 107, 0.06);
-  box-shadow: inset 4px 0 0 var(--app-brand-primary);
+.team-page__aside :deep(.el-menu-item.is-active) {
+  background: #e8f0ff;
+  color: #1d4ed8;
+}
+
+.team-page__aside :deep(.el-menu-item.is-active .team-page__menu-label) {
+  font-weight: 700;
 }
 
 .team-page__menu-icon {
-  flex-shrink: 0;
+  margin-right: 10px;
+  color: inherit;
+}
+
+.team-page__menu-label {
+  font-size: 16px;
+  color: inherit;
 }
 
 .team-page__main {

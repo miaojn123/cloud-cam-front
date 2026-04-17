@@ -1,26 +1,13 @@
 <template>
-  <header class="team-profile-nav">
-    <div class="team-profile-nav__inner">
-      <!-- 左侧：团队信息 -->
-      <div class="team-profile-nav__team-info">
-        <div class="team-profile-nav__avatar">
-          <img v-if="team?.teamAvatar" :src="team.teamAvatar" alt="团队头像" />
-          <div v-else class="team-profile-nav__avatar-placeholder">
-            <el-icon :size="24"><OfficeBuilding /></el-icon>
-          </div>
-        </div>
-        <div class="team-profile-nav__meta">
-          <span class="team-profile-nav__name">{{ team?.teamName || '团队管理' }}</span>
-          <span class="team-profile-nav__stats">
-            {{ team?.memberCount || 0 }} 成员 · {{ team?.projectCount || 0 }} 项目
-          </span>
-        </div>
-      </div>
-
-      <!-- 右侧：用户菜单 -->
-      <UserNavMenu :user="userSummary" :team-name="team?.teamName || ''" @command="$emit('command', $event)" />
+  <nav class="team-top-nav" aria-label="团队页面顶栏">
+    <div class="team-top-nav__left">
+      <router-link to="/files" class="router-link-active el-tooltip__trigger">
+        <img :src="logoSrc" alt="QJCAM" />
+      </router-link>
     </div>
-  </header>
+
+    <UserNavMenu :user="userSummary" :team-name="team?.teamName || ''" @command="$emit('command', $event)" />
+  </nav>
 </template>
 
 <script lang="ts">
@@ -37,6 +24,7 @@ export default {
       type: Object as PropType<TeamSummary | null>,
       default: null,
     },
+    logoSrc: { type: String, default: '/assets/images/logos/qjcam-logo-white.svg' },
   },
   emits: ['command'],
   computed: {
@@ -54,66 +42,33 @@ export default {
 </script>
 
 <style scoped>
-.team-profile-nav {
-  flex: 0 0 auto;
-  height: 64px;
-  background: var(--app-brand-primary);
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-}
-
-.team-profile-nav__inner {
-  width: 100%;
+.team-top-nav {
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.team-profile-nav__team-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.team-profile-nav__avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.team-profile-nav__avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.team-profile-nav__avatar-placeholder {
+  padding: 0 16px;
+  background: var(--app-nav-bg);
   color: #ffffff;
+}
+
+.team-top-nav__left {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
 }
 
-.team-profile-nav__meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.team-top-nav__left img {
+  height: 56px;
+  width: auto;
+  cursor: pointer;
+  margin-top: -4px;
+  margin-left: -8px;
 }
 
-.team-profile-nav__name {
+.team-top-nav__title {
   font-size: 16px;
   font-weight: 600;
   color: #ffffff;
-}
-
-.team-profile-nav__stats {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.75);
 }
 </style>

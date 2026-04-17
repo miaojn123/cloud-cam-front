@@ -2,7 +2,7 @@
   <div class="file-page" :class="{ 'file-page--team': sidebarKey === 'team' }">
     <FilesLayout :show-detail="showDetail">
       <template #nav>
-        <FilesNav :user="getUserSummary()" @command="handleNavCommand" />
+        <FilesNav v-if="!isDesktopEmbedMode" :user="getUserSummary()" @command="handleNavCommand" />
         <div class="file-toolbar" role="toolbar" aria-label="文件工具栏">
           <div class="file-toolbar__left">
             <!-- 团队信息：后续接入接口后替换为动态数据 -->
@@ -13,7 +13,7 @@
               @click="handleTeamClick"
             >
               <el-icon :size="18" class="file-toolbar__team-icon"><OfficeBuilding /></el-icon>
-              <span class="file-toolbar__team-name">CLOUD CAM TEAM</span>
+              <span class="file-toolbar__team-name">MY CAM TEAM</span>
             </el-button>
             <el-button class="file-toolbar__btn" @click="handleCreateFile">
               <el-icon :size="16" class="file-toolbar__btn-icon"><DocumentAdd /></el-icon>
@@ -59,6 +59,7 @@
           <FilesTable
             :items="filteredFiles"
             :loading="loading"
+            @row-click="onRowClick"
             @row-contextmenu="onRowContextMenu"
           />
         </div>
@@ -94,6 +95,7 @@ import type { FileItem, SidebarKey, UserSummary, ViewMode } from '@/components/p
 import { filterFilesByQuery, mockFilesForSidebar } from '@/components/pages/files/mock'
 import { getContextMenuItems } from '@/components/pages/files/contextMenu/getItems'
 import type { ContextMenuItem, ContextMenuPos } from '@/components/pages/files/contextMenu/types'
+import { isDesktopEmbed, preserveDesktopClientQuery } from '@/utils/desktopBridge'
 
 const ROUTE_TO_SIDEBAR_KEY: Readonly<Record<string, SidebarKey>> = {
   '/recent-files': 'recent',
@@ -113,6 +115,8 @@ const SIDEBAR_KEY_TO_ROUTE: Readonly<Record<SidebarKey, string>> = {
   sharedToMe: '/received-files',
   trash: '/recycle-bin',
 } as const
+
+const TEST_WORKSPACE_UUID = '550e8400-e29b-41d4-a716-446655440000'
 
 export default {
   name: 'FilePage',
@@ -139,6 +143,9 @@ export default {
     }
   },
   computed: {
+    isDesktopEmbedMode(): boolean {
+      return isDesktopEmbed(this.$route.query)
+    },
     user() {
       return this.$userStore.user
     },
@@ -161,6 +168,10 @@ export default {
     $route: {
       immediate: true,
       handler() {
+        if (this.$route.name === 'workspace') {
+          if (this.sidebarKey !== 'personal') this.sidebarKey = 'personal'
+          return
+        }
         const nextKey = ROUTE_TO_SIDEBAR_KEY[this.$route.path]
         if (nextKey && nextKey !== this.sidebarKey) this.sidebarKey = nextKey
       },
@@ -169,9 +180,11 @@ export default {
       immediate: true,
       handler() {
         const nextPath = SIDEBAR_KEY_TO_ROUTE[this.sidebarKey]
-        if (nextPath && this.$route.path !== nextPath) {
+        const keepWorkspaceRoute = this.$route.name === 'workspace' && this.sidebarKey === 'personal'
+        if (nextPath && this.$route.path !== nextPath && !keepWorkspaceRoute) {
           // 仅在路径不一致时同步，避免 watch 循环。
-          this.$router.replace(nextPath)
+          const desktopQuery = preserveDesktopClientQuery(this.$route.query)
+          this.$router.replace(Object.keys(desktopQuery).length ? { path: nextPath, query: desktopQuery } : nextPath)
         }
         // 文件接口接入前先按侧边栏返回 mock，后续可替换为 service 调用。
         this.files = mockFilesForSidebar(this.sidebarKey)
@@ -234,6 +247,9 @@ export default {
     handleImportFile() {
       ElMessage.info('导入文件：待接入接口')
     },
+    onRowClick() {
+      this.$router.push(`/workspace/${TEST_WORKSPACE_UUID}`)
+    },
     onRowContextMenu(payload: { row: FileItem; event: MouseEvent }) {
       const { row, event } = payload
       this.contextMenuRow = row
@@ -264,7 +280,7 @@ export default {
   height: 50px;
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 8px;
   background: #ffffff;
   border-bottom: 1px solid var(--files-border-color, lightgray);
 }
@@ -282,9 +298,10 @@ export default {
   gap: 8px;
   height: 32px;
   line-height: 32px;
-  margin-left: 14px;
-  width: 180px;
-  padding: 0 8px;
+  margin-left: 8px;
+  width: 212px;
+  padding: 0 12px;
+  box-sizing: border-box;
   border-radius: 6px;
   color: #111827 !important;
 }
@@ -295,7 +312,7 @@ export default {
 
 .file-toolbar__team-name {
   display: inline-block;
-  width: 120px;
+  flex: 1 1 auto;
   min-width: 0;
   font-size: 16px;
   font-weight: 600;
@@ -314,12 +331,19 @@ export default {
   border-color: var(--app-brand-primary) !important;
   color: #ffffff !important;
   height: 32px;
-  line-height: 32px;
+  line-height: 1;
   padding: 0 14px;
   border-radius: 6px;
 }
 
+.file-toolbar__btn :deep(span) {
+  display: inline-flex;
+  align-items: center;
+}
+
 .file-toolbar__btn-icon {
+  display: inline-flex;
+  align-items: center;
   margin-right: 6px;
 }
 

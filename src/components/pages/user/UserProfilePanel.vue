@@ -227,7 +227,7 @@ export default {
       if (!form) return false
       try {
         // validateField 失败会抛错，通过则继续
-        await form.validateField(prop as any)
+        await form.validateField(prop)
         return true
       } catch {
         return false

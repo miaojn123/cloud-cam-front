@@ -4,32 +4,20 @@
 
     <div class="personal-profile-page__shell">
       <nav class="personal-profile-page__aside" aria-label="个人设置子导航">
-        <ul class="personal-profile-page__menu" role="list">
-          <li role="none">
-            <router-link
-              to="/profile-personal"
-              class="personal-profile-page__menu-item"
-              active-class="is-active"
-            >
-              <el-icon class="personal-profile-page__menu-icon" :size="18">
-                <User />
-              </el-icon>
-              <span>个人信息</span>
-            </router-link>
-          </li>
-          <li role="none">
-            <router-link
-              to="/profile-security"
-              class="personal-profile-page__menu-item"
-              active-class="is-active"
-            >
-              <el-icon class="personal-profile-page__menu-icon" :size="18">
-                <Lock />
-              </el-icon>
-              <span>账户安全</span>
-            </router-link>
-          </li>
-        </ul>
+        <el-menu
+          class="personal-profile-page__menu"
+          :default-active="activeMenuKey"
+          @select="handleMenuSelect"
+        >
+          <el-menu-item index="personal">
+            <el-icon class="personal-profile-page__menu-icon"><User /></el-icon>
+            <span class="personal-profile-page__menu-label">个人信息</span>
+          </el-menu-item>
+          <el-menu-item index="security">
+            <el-icon class="personal-profile-page__menu-icon"><Lock /></el-icon>
+            <span class="personal-profile-page__menu-label">账户安全</span>
+          </el-menu-item>
+        </el-menu>
       </nav>
 
       <main class="personal-profile-page__main" aria-label="设置详情内容">
@@ -82,7 +70,7 @@ export default {
       return this.$userStore.user
     },
     isSecurityPanel(): boolean {
-      return this.$route.name === 'personal-profile-security'
+      return this.$route.name === 'user-profile-security'
     },
     profileDisplayName(): string {
       const u = this.user
@@ -102,6 +90,9 @@ export default {
       if (a && String(a).trim()) return String(a).trim()
       return buildDefaultAvatarSvgDataUrl(this.nicknameInitial)
     },
+    activeMenuKey(): string {
+      return this.isSecurityPanel ? 'security' : 'personal'
+    },
   },
   watch: {
     cropDialogVisible(val: boolean) {
@@ -111,6 +102,10 @@ export default {
     },
   },
   methods: {
+    handleMenuSelect(key: string) {
+      if (key === 'security') return this.$router.push('/profile-security')
+      return this.$router.push('/profile-personal')
+    },
     getUserSummary(): UserSummary | null {
       const u = this.user
       if (!u) return null
@@ -210,44 +205,44 @@ export default {
   background: #ffffff;
   border-right: 1px solid #eef0f3;
   overflow: auto;
+  padding: 8px;
 }
 
 .personal-profile-page__menu {
-  list-style: none;
-  margin: 0;
-  padding: 12px 0;
+  border-right: none;
 }
 
-.personal-profile-page__menu-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 14px;
-  color: #374151;
-  text-align: left;
-  transition: background 0.15s ease, color 0.15s ease;
-  text-decoration: none;
-  box-sizing: border-box;
+.personal-profile-page__aside :deep(.el-menu-item) {
+  height: 44px;
+  line-height: 44px;
+  border-radius: 6px;
+  margin: 2px 6px;
+  color: #4b5563;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.personal-profile-page__menu-item:hover {
-  background: #f3f4f6;
+.personal-profile-page__aside :deep(.el-menu-item:hover) {
+  background: #f5f8ff;
+  color: #1d4ed8;
 }
 
-.personal-profile-page__menu-item.is-active {
-  color: var(--app-brand-primary);
-  font-weight: 600;
-  background: rgba(13, 71, 107, 0.06);
-  box-shadow: inset 4px 0 0 var(--app-brand-primary);
+.personal-profile-page__aside :deep(.el-menu-item.is-active) {
+  background: #e8f0ff;
+  color: #1d4ed8;
+}
+
+.personal-profile-page__aside :deep(.el-menu-item.is-active .personal-profile-page__menu-label) {
+  font-weight: 700;
 }
 
 .personal-profile-page__menu-icon {
-  flex-shrink: 0;
+  margin-right: 10px;
+  color: inherit;
+}
+
+.personal-profile-page__menu-label {
+  font-size: 16px;
+  color: inherit;
 }
 
 .personal-profile-page__main {

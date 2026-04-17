@@ -63,7 +63,7 @@ export default {
 <style scoped>
 .files-sidebar {
   height: 100%;
-  padding: 10px 8px;
+  padding: 8px;
 }
 
 .files-sidebar__menu {

@@ -25,6 +25,7 @@ export default [
         ...globals.browser,
         // unplugin-auto-import + ElementPlusResolver 注入的 API
         ElMessage: 'readonly',
+        ElMessageBox: 'readonly',
       }
     },
     plugins: {

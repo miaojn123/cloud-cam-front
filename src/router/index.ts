@@ -29,6 +29,7 @@ export const router = createRouter({
     { path: '/files', redirect: '/personal-files' },
     { path: '/recent-files', name: 'recent-files', component: FilePage, meta: { requiresAuth: true } },
     { path: '/personal-files', name: 'personal-files', component: FilePage, meta: { requiresAuth: true } },
+    { path: '/workspace/:uuid', name: 'workspace', component: FilePage, meta: { requiresAuth: true } },
     { path: '/team-files', name: 'team-files', component: FilePage, meta: { requiresAuth: true } },
     { path: '/shared-files', name: 'shared-files', component: FilePage, meta: { requiresAuth: true } },
     { path: '/received-files', name: 'received-files', component: FilePage, meta: { requiresAuth: true } },

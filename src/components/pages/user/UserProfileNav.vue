@@ -44,6 +44,6 @@ export default {
   width: auto;
   cursor: pointer;
   margin-top: -4px;
-  margin-left: -16px;
+  margin-left: -8px;
 }
 </style>

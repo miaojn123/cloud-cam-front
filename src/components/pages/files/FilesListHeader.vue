@@ -74,18 +74,18 @@ export default {
 
 <style scoped>
 .files-list-header {
-  height: 68px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0;
+  padding: 0 16px;
   background: #ffffff;
   border-bottom: 1px solid var(--files-border-color, lightgray);
 }
 
 .files-list-header__breadcrumb {
   width: 100%;
-  margin: 18px;
+  margin: 0;
   user-select: none;
 }
 

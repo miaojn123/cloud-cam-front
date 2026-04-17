@@ -2,12 +2,13 @@
   <div class="files-table">
     <el-table
       :data="items"
-      :border="true"
+      :border="false"
       :stripe="false"
       :fit="true"
       height="100%"
       v-loading="loading"
       class="files-table__table"
+      @row-click="onRowClick"
       @row-contextmenu="onRowContextMenu"
     >
       <el-table-column prop="name" label="文件名" sortable min-width="160" show-overflow-tooltip>
@@ -36,7 +37,6 @@ import { formatBytes } from './mock'
 
 export default {
   name: 'FilesTable',
-  emits: ['row-contextmenu'],
   props: {
     items: {
       type: Array as PropType<FileItem[]>,
@@ -47,12 +47,16 @@ export default {
       default: false,
     },
   },
+  emits: ['row-click', 'row-contextmenu'],
   methods: {
     sizeFormatter(row: FileItem) {
       return formatBytes(row.sizeBytes)
     },
     typeFormatter(row: FileItem) {
       return row.kind === 'folder' ? '文件夹' : '文件'
+    },
+    onRowClick(row: FileItem) {
+      this.$emit('row-click', row)
     },
     onRowContextMenu(row: FileItem, column: unknown, e: MouseEvent) {
       e.preventDefault()
@@ -68,6 +72,9 @@ export default {
   min-height: 0;
   height: 100%;
   overflow: hidden;
+  padding: 12px;
+  box-sizing: border-box;
+  background: #ffffff;
 }
 
 .files-table__table {
@@ -76,16 +83,18 @@ export default {
 }
 
 .files-table :deep(.el-table) {
-  --el-table-border-color: #f0f0f0;
+  --el-table-border-color: transparent;
   --el-table-header-bg-color: #ffffff;
   --el-table-bg-color: #ffffff;
+  border: none !important;
 }
 
 .files-table :deep(.el-table__header th) {
   background: #ffffff !important;
   font-size: 15px !important;
   height: 48px !important;
-  border-right: 2px solid rgb(240, 240, 240) !important;
+  border-right: none !important;
+  border-bottom: none !important;
 }
 
 .files-table :deep(.el-table__header th .cell) {
@@ -100,6 +109,7 @@ export default {
   font-size: 13px;
   color: #6b7280;
   font-weight: 600;
+  border-bottom: none !important;
 }
 
 .files-table :deep(.el-table__body td .cell) {
@@ -124,5 +134,10 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.files-table :deep(.el-table::before),
+.files-table :deep(.el-table__inner-wrapper::before) {
+  display: none;
 }
 </style>

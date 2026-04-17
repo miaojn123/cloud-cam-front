@@ -197,6 +197,7 @@
 </template>
 
 <script lang="ts">
+import type { FormInstance } from 'element-plus'
 import {
   getTeamMembersApi,
   getPendingMembersApi,
@@ -205,6 +206,9 @@ import {
   updateMemberRoleApi,
   removeMemberApi,
   reviewMemberApi,
+  type TeamSettings,
+  type TeamMember as ApiTeamMember,
+  type PendingMember as ApiPendingMember,
 } from '@/api/team'
 
 interface TeamMember {
@@ -230,6 +234,8 @@ interface PendingMember {
   invitedAt: string
 }
 
+type ValidateCallback = (error?: Error) => void
+
 export default {
   name: 'TeamMembersPanel',
   data() {
@@ -244,7 +250,7 @@ export default {
         account: [
           { required: true, message: '请输入邮箱或手机号', trigger: 'blur' },
           {
-            validator: (rule: any, value: string, callback: any) => {
+            validator: (_rule: unknown, value: string, callback: ValidateCallback) => {
               if (!value) {
                 callback(new Error('请输入邮箱或手机号'))
                 return
@@ -278,7 +284,7 @@ export default {
     },
     currentUserRole(): string {
       const currentUserId = localStorage.getItem('userId')
-      const currentMember = this.members.find((m: any) => m.userId === currentUserId || m.id === currentUserId)
+      const currentMember = this.members.find((member) => member.userId === currentUserId || member.id === currentUserId)
       return currentMember?.role || 'member'
     },
     isOwner(): boolean {
@@ -315,7 +321,8 @@ export default {
       if (!this.currentTeamId) return
       try {
         const result = await getTeamSettingsApi({ teamId: this.currentTeamId })
-        this.inviteMethod = result.data?.settings?.inviteMethod || 'owner'
+        const settings = result.data?.settings as TeamSettings | undefined
+        this.inviteMethod = settings?.inviteMethod || 'owner'
       } catch {
         this.inviteMethod = 'owner'
       }
@@ -331,14 +338,15 @@ export default {
       if (!this.currentTeamId) return
       try {
         const result = await getTeamMembersApi({ teamUuid: this.currentTeamId })
-        this.members = (result.data?.members || []).map((m: any) => ({
-          id: m.userId || m.id,
-          userName: m.userName,
-          nickName: m.nickName,
-          email: m.email,
-          avatar: m.avatar || '',
-          role: m.role,
-          joinedAt: m.joinedAt,
+        this.members = (result.data?.members || []).map((member: ApiTeamMember) => ({
+          id: member.userId,
+          userId: member.userId,
+          userName: member.userName,
+          nickName: member.nickName,
+          email: member.email,
+          avatar: member.avatar || '',
+          role: member.role,
+          joinedAt: member.joinedAt,
         }))
       } catch {
         // 错误已在 request 拦截器中处理
@@ -348,15 +356,16 @@ export default {
       if (!this.currentTeamId) return
       try {
         const result = await getPendingMembersApi({ teamId: this.currentTeamId })
-        this.pendingMembers = (result.data?.pendingMembers || []).map((m: any) => ({
-          id: m.userId || m.id,
-          userName: m.userName,
-          nickName: m.nickName,
-          email: m.email,
-          avatar: m.avatar || '',
-          status: m.status,
-          inviterName: m.inviterName,
-          invitedAt: m.invitedAt,
+        this.pendingMembers = (result.data?.pendingMembers || []).map((member: ApiPendingMember) => ({
+          id: member.userId,
+          userId: member.userId,
+          userName: member.userName,
+          nickName: member.nickName,
+          email: member.email,
+          avatar: member.avatar || '',
+          status: member.status,
+          inviterName: member.inviterName,
+          invitedAt: member.invitedAt,
         }))
       } catch {
         // 错误已在 request 拦截器中处理
@@ -496,7 +505,7 @@ export default {
         return
       }
 
-      const formRef = this.$refs.inviteFormRef as any
+      const formRef = this.$refs.inviteFormRef as FormInstance | undefined
       if (!formRef) return
 
       try {

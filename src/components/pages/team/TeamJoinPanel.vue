@@ -46,7 +46,7 @@
             </div>
           </div>
           <!-- 空状态 -->
-          <el-empty v-if="joinedTeams.length === 0 && !loading" description="暂无已加入的团队" :image-size="80" />
+          <el-empty v-if="joinedTeams.length === 0" description="暂无已加入的团队" :image-size="80" />
         </div>
       </div>
 
@@ -78,40 +78,10 @@
             </div>
           </div>
           <!-- 空状态 -->
-          <el-empty v-if="pendingTeams.length === 0 && !loading" description="暂无待加入的团队" :image-size="80" />
+          <el-empty v-if="pendingTeams.length === 0" description="暂无待加入的团队" :image-size="80" />
         </div>
       </div>
     </div>
-
-    <!-- 转让所有权对话框 -->
-    <el-dialog
-      v-model="showTransferDialog"
-      title="转让团队所有权"
-      width="420px"
-      :close-on-click-modal="false"
-    >
-      <div class="transfer-content">
-        <p class="transfer-tip">选择要接收团队所有权的成员：</p>
-        <el-select
-          v-model="selectedNewOwner"
-          placeholder="请选择成员"
-          class="owner-select"
-        >
-          <el-option
-            v-for="member in localMembers"
-            :key="member.id"
-            :label="member.nickName || member.userName"
-            :value="member.id"
-          />
-        </el-select>
-      </div>
-      <template #footer>
-        <el-button @click="handleCancelTransfer">取消</el-button>
-        <el-button type="primary" @click="handleTransferAndExit">
-          确认转让并退出
-        </el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -125,10 +95,6 @@ export default {
       joiningId: '',
       exitingId: '',
       loading: false,
-      showTransferDialog: false,
-      currentExitTeam: null as { id: string; name: string } | null,
-      localMembers: [] as any[],
-      selectedNewOwner: '',
     }
   },
   computed: {
@@ -141,9 +107,14 @@ export default {
     pendingTeams() {
       return this.$teamStore?.pendingTeams || []
     },
-    currentUserId(): string {
-      return this.$userStore?.user?.uuid || ''
-    },
+  },
+  watch: {
+    '$route.path': {
+      handler() {
+        // 每次路由变化时重新加载团队数据
+        this.loadTeams()
+      },
+    }
   },
   mounted() {
     this.loadTeams()
@@ -153,10 +124,22 @@ export default {
       this.loading = true
       try {
         const result = await getJoinTeamApi()
-        this.$teamStore.setMyTeams(result.data?.myTeams || [])
-        
+        this.$teamStore.setMyTeams(
+          (result.data?.myTeams || []).map((team) => ({
+            ...team,
+            id: team.teamId,
+            name: team.teamName,
+          }))
+        )
+
         const inviteResult = await getReceivedInviteApi()
-        this.$teamStore.setPendingTeams(inviteResult.data?.invites || [])
+        this.$teamStore.setPendingTeams(
+          (inviteResult.data?.invites || []).map((team) => ({
+            ...team,
+            id: team.teamId,
+            name: team.teamName,
+          }))
+        )
       } catch {
         // 错误已在 request 拦截器中处理
       } finally {
@@ -186,83 +169,24 @@ export default {
         this.joiningId = ''
       }
     },
-    isTeamOwner(teamId: string): boolean {
-      const allMembers = this.$teamStore?.teamMembers[teamId] || []
-      const currentUserId = this.currentUserId
-      const member = allMembers.find(m => m.userId === currentUserId || m.id === currentUserId)
-      return member?.role === 'owner'
-    },
     async handleExitTeam(team: { id: string; name: string }) {
-      if (this.isTeamOwner(team.id)) {
-        ElMessageBox.confirm(
-          `您是团队「${team.name}」的所有者，退出团队将解散该团队。\n\n是否先转让团队所有权给其他成员？`,
-          '退出即解散',
-          {
-            type: 'warning',
-            confirmButtonText: '转让后退出',
-            cancelButtonText: '直接解散',
-            distinguishCancelAndClose: true,
-          }
-        ).then(() => {
-          this.currentExitTeam = team
-          this.selectedNewOwner = ''
-          this.localMembers = this.$teamStore?.getTransferableMembers(team.id) || []
-          if (this.localMembers.length === 0) {
-            ElMessage.warning('没有可转让的成员，将直接解散团队')
-            this.doExitTeam(team)
-          } else {
-            this.showTransferDialog = true
-          }
-        }).catch((action: string) => {
-          if (action === 'cancel') {
-            this.doExitTeam(team)
-          }
-        })
-      } else {
-        ElMessageBox.confirm(
+      try {
+        await ElMessageBox.confirm(
           `确定要退出团队「${team.name}」吗？`,
           '确认退出',
           { type: 'warning' }
-        ).then(() => {
-          this.doExitTeam(team)
-        }).catch(() => {})
-      }
-    },
-    async doExitTeam(team: { id: string; name: string }) {
-      this.exitingId = team.id
-      try {
+        )
+        this.exitingId = team.id
         await exitTeamApi({ teamUuid: team.id })
         this.$teamStore.removeMyTeam(team.id)
         ElMessage.success(`已退出「${team.name}」`)
-      } catch {
-        // 错误已在 request 拦截器中处理
+      } catch (error: unknown) {
+        if (error !== 'cancel') {
+          console.error('退出团队失败:', error)
+        }
       } finally {
         this.exitingId = ''
       }
-    },
-    async handleTransferAndExit() {
-      if (!this.selectedNewOwner) {
-        ElMessage.warning('请选择要接收团队的新所有者')
-        return
-      }
-      this.showTransferDialog = false
-      try {
-        await exitTeamApi({ teamUuid: this.currentExitTeam?.id || '', newOwnerId: this.selectedNewOwner })
-        this.$teamStore.updateMemberRole(this.currentExitTeam?.id || '', this.selectedNewOwner, 'owner')
-        ElMessage.success('团队所有权已转让')
-        if (this.currentExitTeam) {
-          this.$teamStore.removeMyTeam(this.currentExitTeam.id)
-        }
-        ElMessage.success('已退出团队')
-      } catch {
-        // 错误已在 request 拦截器中处理
-      }
-      this.currentExitTeam = null
-    },
-    handleCancelTransfer() {
-      this.showTransferDialog = false
-      this.currentExitTeam = null
-      ElMessage.info('已取消操作')
     },
   },
 }
@@ -382,7 +306,9 @@ export default {
 .team-status {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
 }
 
 .status-icon {
@@ -419,19 +345,5 @@ export default {
   margin-top: 8px;
   font-size: 13px;
   color: #9ca3af;
-}
-
-.transfer-content {
-  padding: 8px 0;
-}
-
-.transfer-tip {
-  margin: 0 0 16px 0;
-  font-size: 14px;
-  color: #374151;
-}
-
-.owner-select {
-  width: 100%;
 }
 </style>

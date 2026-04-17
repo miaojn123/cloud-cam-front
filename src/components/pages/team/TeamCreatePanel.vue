@@ -99,6 +99,12 @@ interface CreateTeamFormData {
   industry: string
 }
 
+interface CascaderOption {
+  value: string
+  label: string
+  children?: CascaderOption[]
+}
+
 export default {
   name: 'TeamCreatePanel',
   data() {
@@ -609,7 +615,7 @@ export default {
     getRegionLabel(regionValues: string[]): string {
       if (!regionValues || regionValues.length === 0) return ''
       let result = ''
-      const findLabel = (options: any[], values: string[], index: number): string => {
+      const findLabel = (options: CascaderOption[], values: string[], index: number): string => {
         if (index >= values.length) return result
         const option = options.find(o => o.value === values[index])
         if (option) {
