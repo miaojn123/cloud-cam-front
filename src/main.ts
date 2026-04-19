@@ -5,8 +5,6 @@ import '@/style.css'
 import App from '@/App.vue'
 import { router } from '@/router'
 import { pinia, useUserStore } from '@/stores'
-import { TOKEN_KEY } from '@/api'
-import { isDesktopEmbed } from '@/utils/desktopBridge'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 const app = createApp(App)
@@ -18,16 +16,6 @@ Object.entries(ElementPlusIconsVue).forEach(([key, component]) => {
 })
 app.use(pinia)
 // 主动创建 user store，触发 plugin 将 $userStore 挂到 globalProperties
-const userStore = useUserStore()
-const token = localStorage.getItem(TOKEN_KEY)
-if (token) {
-  // 启动时主动校验一次登录态，避免 token 过期后落入“有 token 但无有效会话”的半登录态。
-  userStore.fetchCurrentUser().catch(() => {
-    // 桌面嵌入模式下允许离线重试，不在启动阶段直接清 token。
-    if (!isDesktopEmbed()) {
-      userStore.clearAuth()
-    }
-  })
-}
+useUserStore()
 app.use(router)
 app.mount('#app')

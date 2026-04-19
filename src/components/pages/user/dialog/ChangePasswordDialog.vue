@@ -128,7 +128,7 @@ export default {
       if (this.submitting) return
       this.submitting = true
       try {
-        const result = await updateCurrentUserPasswordApi(oldP, newP)
+        const result = await updateCurrentUserPasswordApi({ oldPassword: oldP, newPassword: newP })
         const msg = typeof result?.msg === 'string' ? result.msg : ''
         ElMessage.success(msg || '密码重置成功')
         this.close()

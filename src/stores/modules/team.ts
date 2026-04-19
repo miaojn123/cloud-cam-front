@@ -16,30 +16,34 @@ export interface Team {
 }
 
 interface TeamState {
+  /** 当前用户已加入的团队列表 */
   myTeams: Team[]
+  /** 当前选中的团队 ID */
   currentTeamId: string | null
+  /** 待加入/待处理的团队列表 */
   pendingTeams: Team[]
 }
 
 export const useTeamStore = defineStore('team', {
   state: (): TeamState => ({
+    /** 已加入团队 */
     myTeams: [],
+    /** 当前激活团队 */
     currentTeamId: null,
+    /** 待加入团队 */
     pendingTeams: [],
   }),
 
   getters: {
+    /** 当前激活团队详情。 */
     currentTeam: (state) => {
       return state.myTeams.find(team => team.id === state.currentTeamId) || null
     },
   },
 
   actions: {
-    // 设置我的团队列表（合并已有的本地团队）
+    /** 设置已加入团队列表，并与本地团队合并去重。 */
     setMyTeams(teams: Team[]) {
-      // 保存已有的本地团队ID（用于去重）
-      const existingIds = new Set(this.myTeams.map(t => t.id))
-      
       // 合并数据：API返回的团队 + 本地添加的团队
       const mergedTeams = [
         ...teams.map(team => ({
@@ -66,7 +70,7 @@ export const useTeamStore = defineStore('team', {
       }
     },
 
-    // 设置待加入团队列表
+    /** 设置待加入团队列表。 */
     setPendingTeams(teams: Team[]) {
       this.pendingTeams = teams.map(team => ({
         ...team,
@@ -75,12 +79,14 @@ export const useTeamStore = defineStore('team', {
       }))
     },
 
+    /** 设置当前激活团队。 */
     setCurrentTeam(teamId: string) {
       if (this.myTeams.some(team => team.id === teamId)) {
         this.currentTeamId = teamId
       }
     },
 
+    /** 添加已加入团队并切换到该团队。 */
     addMyTeam(team: Team) {
       const teamData = {
         ...team,
@@ -95,6 +101,7 @@ export const useTeamStore = defineStore('team', {
       this.currentTeamId = teamData.id
     },
 
+    /** 移除已加入团队，并处理当前团队回退。 */
     removeMyTeam(teamId: string) {
       const index = this.myTeams.findIndex(team => team.id === teamId)
       if (index !== -1) {
@@ -108,6 +115,7 @@ export const useTeamStore = defineStore('team', {
       }
     },
 
+    /** 添加待加入团队（重复 id 自动忽略）。 */
     addPendingTeam(team: Team) {
       const teamData = {
         ...team,
@@ -119,6 +127,7 @@ export const useTeamStore = defineStore('team', {
       }
     },
 
+    /** 从待加入列表移除团队。 */
     removePendingTeam(teamId: string) {
       const index = this.pendingTeams.findIndex(team => team.id === teamId)
       if (index !== -1) {
@@ -126,7 +135,7 @@ export const useTeamStore = defineStore('team', {
       }
     },
 
-    // 加入待加入的团队
+    /** 接受待加入团队并迁移到已加入列表。 */
     joinTeam(teamId: string) {
       const team = this.pendingTeams.find(t => t.id === teamId)
       if (team) {
@@ -135,7 +144,7 @@ export const useTeamStore = defineStore('team', {
       }
     },
 
-    // 更新团队名称
+    /** 更新指定团队名称。 */
     updateTeamName(teamId: string, name: string) {
       const team = this.myTeams.find(t => t.id === teamId)
       if (team) {

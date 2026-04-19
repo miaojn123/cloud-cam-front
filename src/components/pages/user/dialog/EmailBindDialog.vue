@@ -107,7 +107,7 @@ export default {
       }
       if (this.countdown > 0) return
       try {
-        await sendCodeApi(email, 'BIND_EMAIL')
+        await sendCodeApi({ account: email, scene: 'BIND_EMAIL' })
         ElMessage.success('验证码已发送')
         this.startCountdown(60)
       } catch {
@@ -128,7 +128,7 @@ export default {
       if (this.submitting) return
       this.submitting = true
       try {
-        const result = await bindCurrentUserEmailApi(email, code)
+        const result = await bindCurrentUserEmailApi({ email, code })
         const msg = typeof result?.msg === 'string' ? result.msg : ''
         ElMessage.success(msg || '绑定邮箱成功')
         await this.$userStore.fetchCurrentUser()

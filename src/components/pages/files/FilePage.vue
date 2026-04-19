@@ -2,7 +2,7 @@
   <div class="file-page" :class="{ 'file-page--team': sidebarKey === 'team' }">
     <FilesLayout :show-detail="showDetail">
       <template #nav>
-        <FilesNav v-if="!isDesktopEmbedMode" :user="getUserSummary()" @command="handleNavCommand" />
+        <UserNav :user="getUserSummary()" @command="handleNavCommand" />
         <div class="file-toolbar" role="toolbar" aria-label="文件工具栏">
           <div class="file-toolbar__left">
             <!-- 团队信息：后续接入接口后替换为动态数据 -->
@@ -58,7 +58,7 @@
 
           <FilesTable
             :items="filteredFiles"
-            :loading="loading"
+            :loading="loading || filesLoading"
             @row-click="onRowClick"
             @row-contextmenu="onRowContextMenu"
           />
@@ -86,16 +86,18 @@
 
 <script lang="ts">
 import FilesLayout from '@/components/pages/files/FilesLayout.vue'
-import FilesNav from '@/components/pages/files/FilesNav.vue'
+import UserNav from '@/components/pages/user/UserNav.vue'
 import FilesSidebar from '@/components/pages/files/FilesSidebar.vue'
 import FilesListHeader from '@/components/pages/files/FilesListHeader.vue'
 import FilesTable from '@/components/pages/files/FilesTable.vue'
 import ContextMenu from '@/components/pages/files/ContextMenu.vue'
-import type { FileItem, SidebarKey, UserSummary, ViewMode } from '@/components/pages/files/types'
-import { filterFilesByQuery, mockFilesForSidebar } from '@/components/pages/files/mock'
+import type { FileItem, SidebarKey, ViewMode } from '@/components/pages/files/types'
+import { filterFilesByQuery } from '@/components/pages/files/mock'
 import { getContextMenuItems } from '@/components/pages/files/contextMenu/getItems'
 import type { ContextMenuItem, ContextMenuPos } from '@/components/pages/files/contextMenu/types'
 import { isDesktopEmbed, preserveDesktopClientQuery } from '@/utils/desktopBridge'
+import type { UserSummary } from '@/types/user'
+import { useFiles } from '@/composables/files/useFiles'
 
 const ROUTE_TO_SIDEBAR_KEY: Readonly<Record<string, SidebarKey>> = {
   '/recent-files': 'recent',
@@ -122,7 +124,7 @@ export default {
   name: 'FilePage',
   components: {
     FilesLayout,
-    FilesNav,
+    UserNav,
     FilesSidebar,
     FilesListHeader,
     FilesTable,
@@ -135,7 +137,6 @@ export default {
       search: '',
       viewMode: 'table' as ViewMode,
       showDetail: false,
-      files: [] as FileItem[],
       contextMenuVisible: false,
       contextMenuPos: { x: 0, y: 0 } as ContextMenuPos,
       contextMenuItems: [] as ContextMenuItem[],
@@ -148,6 +149,15 @@ export default {
     },
     user() {
       return this.$userStore.user
+    },
+    filesStore() {
+      return this.$filesStore
+    },
+    files(): FileItem[] {
+      return this.filesStore.items
+    },
+    filesLoading(): boolean {
+      return this.filesStore.loading
     },
     filteredFiles(): FileItem[] {
       return filterFilesByQuery(this.files, this.search)
@@ -178,7 +188,7 @@ export default {
     },
     sidebarKey: {
       immediate: true,
-      handler() {
+      async handler() {
         const nextPath = SIDEBAR_KEY_TO_ROUTE[this.sidebarKey]
         const keepWorkspaceRoute = this.$route.name === 'workspace' && this.sidebarKey === 'personal'
         if (nextPath && this.$route.path !== nextPath && !keepWorkspaceRoute) {
@@ -186,20 +196,7 @@ export default {
           const desktopQuery = preserveDesktopClientQuery(this.$route.query)
           this.$router.replace(Object.keys(desktopQuery).length ? { path: nextPath, query: desktopQuery } : nextPath)
         }
-        // 文件接口接入前先按侧边栏返回 mock，后续可替换为 service 调用。
-        this.files = mockFilesForSidebar(this.sidebarKey)
-      }
-    }
-  },
-  async mounted() {
-    if (!this.user) {
-      this.loading = true
-      try {
-        await this.$userStore.fetchCurrentUser()
-      } catch {
-        ElMessage.error('获取用户信息失败')
-      } finally {
-        this.loading = false
+        await this.fetchFilesBySidebar(this.sidebarKey)
       }
     }
   },
@@ -246,6 +243,14 @@ export default {
     },
     handleImportFile() {
       ElMessage.info('导入文件：待接入接口')
+    },
+    async fetchFilesBySidebar(key: SidebarKey) {
+      const filesService = useFiles()
+      try {
+        await filesService.fetchFilesBySidebarKey(key)
+      } catch {
+        ElMessage.error('获取文件列表失败')
+      }
     },
     onRowClick() {
       this.$router.push(`/workspace/${TEST_WORKSPACE_UUID}`)

@@ -294,7 +294,7 @@ export default {
       const acc = this.sendAccount
       if (!acc) return
       try {
-        await sendCodeApi(acc, 'ACCOUNT_DELETE')
+        await sendCodeApi({ account: acc, scene: 'ACCOUNT_DELETE' })
         ElMessage.success('验证码已发送')
         this.startCountdown(60)
       } catch {
@@ -306,9 +306,9 @@ export default {
       this.submitting = true
       try {
         if (this.verifyMode === 'password') {
-          await deleteCurrentAccountByPasswordApi(this.password)
+          await deleteCurrentAccountByPasswordApi({ password: this.password })
         } else {
-          await deleteCurrentAccountByCodeApi(this.sendAccount, this.code.trim())
+          await deleteCurrentAccountByCodeApi({ account: this.sendAccount, code: this.code.trim() })
         }
         ElMessage.success('账号已注销')
         this.$userStore.clearAuth()

@@ -3,14 +3,14 @@ import LoginPage from '@/components/pages/auth/LoginPage.vue'
 import RegisterPage from '@/components/pages/auth/RegisterPage.vue'
 import ResetPassword from '@/components/pages/auth/ResetPassword.vue'
 import FilePage from '@/components/pages/files/FilePage.vue'
-import UserProfileLayout from '@/components/pages/user/UserProfileLayout.vue'
-import TeamLayout from '@/components/pages/team/TeamLayout.vue'
+import UserPage from '@/components/pages/user/UserPage.vue'
+import TeamPage from '@/components/pages/team/TeamPage.vue'
 import TeamJoinPanel from '@/components/pages/team/TeamJoinPanel.vue'
 import TeamCreatePanel from '@/components/pages/team/TeamCreatePanel.vue'
 import TeamMembersPanel from '@/components/pages/team/TeamMembersPanel.vue'
 import TeamProjectsPanel from '@/components/pages/team/TeamProjectsPanel.vue'
 import TeamSettingsPanel from '@/components/pages/team/TeamSettingsPanel.vue'
-import { TOKEN_KEY } from '@/api'
+import { TOKEN_KEY } from '@/utils/http'
 import { useUserStore } from '@/stores'
 import {
   isDesktopEmbed,
@@ -36,7 +36,7 @@ export const router = createRouter({
     { path: '/recycle-bin', name: 'recycle-bin', component: FilePage, meta: { requiresAuth: true } },
     {
       path: '/team',
-      component: TeamLayout,
+      component: TeamPage,
       meta: { requiresAuth: true },
       redirect: { name: 'team-join' },
       children: [
@@ -50,24 +50,25 @@ export const router = createRouter({
     {
       path: '/profile-personal',
       name: 'user-profile-personal',
-      component: UserProfileLayout,
+      component: UserPage,
       meta: { requiresAuth: true },
     },
     {
       path: '/profile-security',
       name: 'user-profile-security',
-      component: UserProfileLayout,
+      component: UserPage,
       meta: { requiresAuth: true },
     },
   ]
 })
 
 router.beforeEach(async (to) => {
+  const userStore = useUserStore()
+
   // Browser and embedded CEF do not share storage by default.
   // Desktop can pass token in the first URL; persist it, then strip it from query.
   const urlToken = pickExternalAuthTokenFromQuery(to.query)
   if (urlToken) {
-    const userStore = useUserStore()
     // Save token first and clean the address bar immediately to avoid leaking token
     // into browser history, logs, or sharing links.
     // In external browser scenarios backend might be temporarily unavailable,
@@ -93,8 +94,27 @@ router.beforeEach(async (to) => {
     const q = preserveDesktopClientQuery(to.query)
     return Object.keys(q).length ? { path: '/login', query: q } : '/login'
   }
+
+  if (to.meta.requiresAuth && token && !userStore.user) {
+    try {
+      await userStore.fetchCurrentUser({ skipAuthRedirect: true })
+    } catch {
+      userStore.clearAuth()
+      const q = preserveDesktopClientQuery(to.query)
+      return Object.keys(q).length ? { path: '/login', query: q } : '/login'
+    }
+  }
+
   // In desktop embed, login continuation is handled by Qt, so do not auto jump.
   if (to.path === '/login' && token && !isDesktopEmbed(to.query)) {
+    if (!userStore.user) {
+      try {
+        await userStore.fetchCurrentUser({ skipAuthRedirect: true })
+      } catch {
+        userStore.clearAuth()
+        return true
+      }
+    }
     return '/files'
   }
   return true

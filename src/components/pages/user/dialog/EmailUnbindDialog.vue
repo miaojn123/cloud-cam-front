@@ -120,7 +120,7 @@ export default {
       }
       if (this.countdown > 0) return
       try {
-        await sendCodeApi(email, 'UNBIND_EMAIL')
+        await sendCodeApi({ account: email, scene: 'UNBIND_EMAIL' })
         ElMessage.success('验证码已发送')
         this.startCountdown(60)
       } catch {
@@ -136,7 +136,7 @@ export default {
       if (this.submitting) return
       this.submitting = true
       try {
-        const result = await unbindCurrentUserEmailApi(code)
+        const result = await unbindCurrentUserEmailApi({ code })
         const msg = typeof result?.msg === 'string' ? result.msg : ''
         ElMessage.success(msg || '解绑邮箱成功')
         this.close()

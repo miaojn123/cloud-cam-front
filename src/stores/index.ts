@@ -6,3 +6,4 @@ pinia.use(userStoreGlobalPlugin)
 
 export { useUserStore } from './modules/user'
 export { useTeamStore } from './modules/team'
+export { useFilesStore } from './modules/files'

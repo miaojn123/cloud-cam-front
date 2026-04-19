@@ -1,6 +1,6 @@
 <template>
   <div class="personal-profile-page" v-loading="loading">
-    <UserProfileNav :user="getUserSummary()" @command="handleNavCommand" />
+    <UserNav :user="getUserSummary()" @command="handleNavCommand" />
 
     <div class="personal-profile-page__shell">
       <nav class="personal-profile-page__aside" aria-label="个人设置子导航">
@@ -37,7 +37,7 @@
 <script lang="ts">
 import type { UploadFile } from 'element-plus'
 import { buildDefaultAvatarSvgDataUrl, getNicknameInitialLetter } from '@/utils/defaultAvatar'
-import UserProfileNav from '@/components/pages/user/UserProfileNav.vue'
+import UserNav from '@/components/pages/user/UserNav.vue'
 import AvatarCropDialog from '@/components/pages/user/dialog/AvatarCropDialog.vue'
 import UserProfilePanel from '@/components/pages/user/UserProfilePanel.vue'
 import UserSecurityPanel from '@/components/pages/user/UserSecurityPanel.vue'
@@ -50,8 +50,8 @@ type AvatarCropConfirmPayload = {
 }
 
 export default {
-  name: 'UserProfileLayout',
-  components: { UserProfileNav, AvatarCropDialog, UserProfilePanel, UserSecurityPanel },
+  name: 'UserPage',
+  components: { UserNav, AvatarCropDialog, UserProfilePanel, UserSecurityPanel },
   provide() {
     return {
       profileLayout: this,
@@ -160,7 +160,7 @@ export default {
         const file = new File([payload.blob], `avatar_${Date.now()}.jpg`, {
           type: payload.blob.type || 'image/jpeg',
         })
-        const result = await uploadCurrentUserAvatarApi(file)
+        const result = await uploadCurrentUserAvatarApi({ file })
         const avatar = result.data?.avatar ? String(result.data.avatar).trim() : ''
         if (!this.$userStore.user) {
           await this.$userStore.fetchCurrentUser()

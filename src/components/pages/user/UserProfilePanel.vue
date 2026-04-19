@@ -250,7 +250,7 @@ export default {
       if (!ok) return
       this.saving.userName = true
       try {
-        await updateCurrentUserUserNameApi(next)
+        await updateCurrentUserUserNameApi({ username: next })
         this.lastSaved.userName = next
         this.syncStoreProfile({ userName: next })
         ElMessage.success('修改成功')
@@ -269,7 +269,7 @@ export default {
       if (!ok) return
       this.saving.nickName = true
       try {
-        await updateCurrentUserNickNameApi(next)
+        await updateCurrentUserNickNameApi({ nickName: next })
         this.lastSaved.nickName = next
         this.syncStoreProfile({ nickName: next })
         ElMessage.success('修改成功')
@@ -291,7 +291,7 @@ export default {
       }
       this.saving.organization = true
       try {
-        await updateCurrentUserOrganizationApi(next)
+        await updateCurrentUserOrganizationApi({ organization: next })
         this.lastSaved.organization = next
         ElMessage.success('修改成功')
       } catch {
@@ -312,7 +312,7 @@ export default {
       }
       this.saving.industry = true
       try {
-        await updateCurrentUserIndustryApi(next)
+        await updateCurrentUserIndustryApi({ industry: next })
         this.lastSaved.industry = next
         ElMessage.success('修改成功')
       } catch {

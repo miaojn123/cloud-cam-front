@@ -1,4 +1,4 @@
-import { request } from './request'
+import http, { type AjaxResult } from '@/utils/http'
 import type { AxiosRequestConfig } from 'axios'
 import type { CurrentUser } from '@/types/user'
 
@@ -8,17 +8,18 @@ type UserRequestConfig = AxiosRequestConfig & {
 
 const USER_CURRENT_BASE = '/api/user/current'
 
+/** 统一发送当前用户模块 POST 请求。 */
 function postUserApi<TResponse = unknown, TPayload = unknown>(
   path: string,
   payload?: TPayload,
   config?: UserRequestConfig
 ) {
-  return request<TResponse>({
+  return http({
     url: `${USER_CURRENT_BASE}${path}`,
     method: 'post',
     ...(payload === undefined ? {} : { data: payload }),
     ...config
-  })
+  }) as Promise<AjaxResult<TResponse>>
 }
 
 export type { CurrentUser }
@@ -31,14 +32,20 @@ export type UploadAvatarResponse = {
   avatar: string
 }
 
+export type UploadCurrentUserAvatarRequest = {
+  file: File
+}
+
+/** 获取当前登录用户信息。 */
 export function getCurrentUserApi(config?: UserRequestConfig) {
   return postUserApi<CurrentUserResponse>('', undefined, config)
 }
 
-export function uploadCurrentUserAvatarApi(file: File) {
+/** 上传当前用户头像。 */
+export function uploadCurrentUserAvatarApi(request: UploadCurrentUserAvatarRequest) {
   const form = new FormData()
   // 后端约定字段名为 file（multipart/form-data）
-  form.append('file', file)
+  form.append('file', request.file)
   return postUserApi<UploadAvatarResponse, FormData>('/avatar', form)
 }
 
@@ -46,32 +53,36 @@ export type UpdateOrganizationRequest = {
   organization: string
 }
 
-export function updateCurrentUserOrganizationApi(organization: string) {
-  return postUserApi('/organization', { organization })
+/** 更新当前用户所属组织。 */
+export function updateCurrentUserOrganizationApi(request: UpdateOrganizationRequest) {
+  return postUserApi('/organization', request)
 }
 
 export type UpdateIndustryRequest = {
   industry: string
 }
 
-export function updateCurrentUserIndustryApi(industry: string) {
-  return postUserApi('/industry', { industry })
+/** 更新当前用户行业。 */
+export function updateCurrentUserIndustryApi(request: UpdateIndustryRequest) {
+  return postUserApi('/industry', request)
 }
 
 export type UpdateNickNameRequest = {
   nickName: string
 }
 
-export function updateCurrentUserNickNameApi(nickName: string) {
-  return postUserApi('/nickname', { nickName })
+/** 更新当前用户昵称。 */
+export function updateCurrentUserNickNameApi(request: UpdateNickNameRequest) {
+  return postUserApi('/nickname', request)
 }
 
 export type UpdateUserNameRequest = {
   username: string
 }
 
-export function updateCurrentUserUserNameApi(username: string) {
-  return postUserApi('/username', { username })
+/** 更新当前用户名。 */
+export function updateCurrentUserUserNameApi(request: UpdateUserNameRequest) {
+  return postUserApi('/username', request)
 }
 
 export type BindCurrentUserEmailRequest = {
@@ -79,16 +90,18 @@ export type BindCurrentUserEmailRequest = {
   code: string
 }
 
-export function bindCurrentUserEmailApi(email: string, code: string) {
-  return postUserApi('/email/bind', { email, code })
+/** 绑定当前用户邮箱。 */
+export function bindCurrentUserEmailApi(request: BindCurrentUserEmailRequest) {
+  return postUserApi('/email/bind', request)
 }
 
 export type UnbindCurrentUserEmailRequest = {
   code: string
 }
 
-export function unbindCurrentUserEmailApi(code: string) {
-  return postUserApi('/email/unbind', { code })
+/** 解绑当前用户邮箱。 */
+export function unbindCurrentUserEmailApi(request: UnbindCurrentUserEmailRequest) {
+  return postUserApi('/email/unbind', request)
 }
 
 export type BindCurrentUserPhoneRequest = {
@@ -96,16 +109,18 @@ export type BindCurrentUserPhoneRequest = {
   code: string
 }
 
-export function bindCurrentUserPhoneApi(phone: string, code: string) {
-  return postUserApi('/phone/bind', { phone, code })
+/** 绑定当前用户手机号。 */
+export function bindCurrentUserPhoneApi(request: BindCurrentUserPhoneRequest) {
+  return postUserApi('/phone/bind', request)
 }
 
 export type UnbindCurrentUserPhoneRequest = {
   code: string
 }
 
-export function unbindCurrentUserPhoneApi(code: string) {
-  return postUserApi('/phone/unbind', { code })
+/** 解绑当前用户手机号。 */
+export function unbindCurrentUserPhoneApi(request: UnbindCurrentUserPhoneRequest) {
+  return postUserApi('/phone/unbind', request)
 }
 
 export type UpdateCurrentUserPasswordRequest = {
@@ -114,16 +129,17 @@ export type UpdateCurrentUserPasswordRequest = {
 }
 
 /** 已登录：凭原密码修改登录密码 */
-export function updateCurrentUserPasswordApi(oldPassword: string, newPassword: string) {
-  return postUserApi('/password', { oldPassword, newPassword })
+export function updateCurrentUserPasswordApi(request: UpdateCurrentUserPasswordRequest) {
+  return postUserApi('/password', request)
 }
 
 export type DeleteCurrentAccountByPasswordRequest = {
   password: string
 }
 
-export function deleteCurrentAccountByPasswordApi(password: string) {
-  return postUserApi('/delete/password', { password })
+/** 通过密码注销当前账号。 */
+export function deleteCurrentAccountByPasswordApi(request: DeleteCurrentAccountByPasswordRequest) {
+  return postUserApi('/delete/password', request)
 }
 
 export type DeleteCurrentAccountByCodeRequest = {
@@ -131,6 +147,7 @@ export type DeleteCurrentAccountByCodeRequest = {
   code: string
 }
 
-export function deleteCurrentAccountByCodeApi(account: string, code: string) {
-  return postUserApi('/delete/code', { account, code })
+/** 通过验证码注销当前账号。 */
+export function deleteCurrentAccountByCodeApi(request: DeleteCurrentAccountByCodeRequest) {
+  return postUserApi('/delete/code', request)
 }

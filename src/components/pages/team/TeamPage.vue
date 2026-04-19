@@ -1,6 +1,6 @@
 <template>
   <div class="team-page" v-loading="loading">
-    <TeamProfileNav :team="teamSummary" @command="handleNavCommand" />
+    <UserNav :user="getUserSummary()" @command="handleNavCommand" />
 
     <div class="team-page__shell">
       <nav class="team-page__aside" aria-label="团队管理子导航">
@@ -44,13 +44,14 @@
 
 <script lang="ts">
 import type { TeamMember } from '@/api/team'
-import TeamProfileNav from '@/components/pages/team/TeamProfileNav.vue'
+import UserNav from '@/components/pages/user/UserNav.vue'
 import TeamJoinPanel from '@/components/pages/team/TeamJoinPanel.vue'
 import TeamCreatePanel from '@/components/pages/team/TeamCreatePanel.vue'
 import TeamMembersPanel from '@/components/pages/team/TeamMembersPanel.vue'
 import TeamProjectsPanel from '@/components/pages/team/TeamProjectsPanel.vue'
 import TeamSettingsPanel from '@/components/pages/team/TeamSettingsPanel.vue'
 import { getTeamMembersApi } from '@/api/team'
+import type { UserSummary } from '@/types/user'
 
 export interface TeamSummary {
   teamId: string
@@ -62,9 +63,9 @@ export interface TeamSummary {
 }
 
 export default {
-  name: 'TeamLayout',
+  name: 'TeamPage',
   components: {
-    TeamProfileNav,
+    UserNav,
     TeamJoinPanel,
     TeamCreatePanel,
     TeamMembersPanel,
@@ -78,9 +79,6 @@ export default {
     }
   },
   computed: {
-    teamSummary(): TeamSummary | null {
-      return this.currentTeam
-    },
     currentRouteName(): string {
       return this.$route.name as string
     },
@@ -127,6 +125,16 @@ export default {
     this.loadCurrentTeam()
   },
   methods: {
+    getUserSummary(): UserSummary | null {
+      const u = this.$userStore.user
+      if (!u) return null
+      const avatar = u.avatar && String(u.avatar).trim() ? String(u.avatar).trim() : ''
+      return {
+        userName: u.userName || '',
+        nickName: u.nickName || '',
+        avatar,
+      }
+    },
     handleMenuSelect(key: string) {
       const routeMap: Record<string, string> = {
         join: '/team/join',

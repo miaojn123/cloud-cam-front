@@ -1,33 +1,40 @@
 <template>
-  <div class="user-nav-menu">
-    <el-dropdown @command="handleCommand">
-      <el-button
-        class="el-button el-tooltip__trigger base-btn--ghost base-btn--ghost--no-frame"
-        :style="{ height: '40px', color: 'white' }"
-      >
-        <span>
-          <div class="user-trigger">
-            <span class="el-avatar el-avatar--circle user-trigger__avatar">
-              <img :src="resolvedAvatarSrc" alt="" style="object-fit: cover" />
-            </span>
-            <span class="user-trigger__name">{{ displayName }}</span>
-            <i class="el-icon user-trigger__chevron" style="font-size: 16px; color: white">
-              <el-icon :size="16"><ArrowDownBold /></el-icon>
-            </i>
-          </div>
-        </span>
-      </el-button>
-      <template #dropdown>
-        <el-dropdown-menu style="width: 160px">
-          <el-dropdown-item command="userInfo">用户信息</el-dropdown-item>
-          <el-dropdown-item command="team">管理团队</el-dropdown-item>
-          <el-dropdown-item command="feedback">问题反馈</el-dropdown-item>
-          <el-dropdown-item command="help">帮助文档</el-dropdown-item>
-          <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-        </el-dropdown-menu>
-      </template>
-    </el-dropdown>
-  </div>
+  <nav class="personal-profile-nav" id="personal-profile-nav">
+    <div class="personal-profile-nav__left">
+      <router-link to="/files" class="router-link-active el-tooltip__trigger">
+        <img :src="logoSrc" alt="QJCAM" />
+      </router-link>
+    </div>
+    <div class="user-nav-menu">
+      <el-dropdown @command="handleCommand">
+        <el-button
+          class="el-button el-tooltip__trigger base-btn--ghost base-btn--ghost--no-frame"
+          :style="{ height: '40px', color: 'white' }"
+        >
+          <span>
+            <div class="user-trigger">
+              <span class="el-avatar el-avatar--circle user-trigger__avatar">
+                <img :src="resolvedAvatarSrc" alt="" style="object-fit: cover" />
+              </span>
+              <span class="user-trigger__name">{{ displayName }}</span>
+              <i class="el-icon user-trigger__chevron" style="font-size: 16px; color: white">
+                <el-icon :size="16"><ArrowDownBold /></el-icon>
+              </i>
+            </div>
+          </span>
+        </el-button>
+        <template #dropdown>
+          <el-dropdown-menu style="width: 160px">
+            <el-dropdown-item command="userInfo">用户信息</el-dropdown-item>
+            <el-dropdown-item command="team">管理团队</el-dropdown-item>
+            <el-dropdown-item command="feedback">问题反馈</el-dropdown-item>
+            <el-dropdown-item command="help">帮助文档</el-dropdown-item>
+            <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+    </div>
+  </nav>
 </template>
 
 <script lang="ts">
@@ -35,16 +42,16 @@ import type { PropType } from 'vue'
 import { buildDefaultAvatarSvgDataUrl, getNicknameInitialLetter } from '@/utils/defaultAvatar'
 import type { UserSummary } from '@/types/user'
 
-/** 顶栏小头像用略大图生成，缩放到 24px 显示更清晰 */
 const NAV_AVATAR_SVG_SIZE = 48
 
 export default {
-  name: 'UserNavMenu',
+  name: 'UserNav',
   props: {
     user: {
       type: Object as PropType<UserSummary | null>,
       default: null,
     },
+    logoSrc: { type: String, default: '/assets/images/logos/qjcam-logo-white.svg' },
   },
   emits: ['command'],
   computed: {
@@ -55,7 +62,6 @@ export default {
       const un = String(u.userName ?? '').trim()
       return nick || un || '用户'
     },
-    /** 有有效头像地址则用图，否则灰底首字 SVG（与资料页一致） */
     resolvedAvatarSrc(): string {
       const u = this.user
       if (!u) return buildDefaultAvatarSvgDataUrl('?', NAV_AVATAR_SVG_SIZE)
@@ -76,6 +82,24 @@ export default {
 </script>
 
 <style scoped>
+.personal-profile-nav {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: var(--app-nav-bg);
+  color: #ffffff;
+}
+
+.personal-profile-nav__left img {
+  height: 56px;
+  width: auto;
+  cursor: pointer;
+  margin-top: -4px;
+  margin-left: -8px;
+}
+
 .user-nav-menu {
   display: flex;
   align-items: center;
